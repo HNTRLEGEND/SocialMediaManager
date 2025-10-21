@@ -1,0 +1,226 @@
+{
+  "name": "LEAD MANAGER - Universal Template v1.0",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// NODE 00: ZENTRALE KONFIGURATION (Template-Einstellungen)\n// ============================================================================\n//\n// ZWECK:\n// Zentrale Verwaltung aller Workflow-Parameter für einfache Anpassung an\n// verschiedene Branchen und Anwendungsfälle.\n//\n// ANPASSUNG FÜR ANDERE BRANCHEN:\n// 1. Ändere UNTERNEHMEN (Zeile 20-30)\n// 2. Passe BRANCHENFELDER an (Zeile 35-80)\n// 3. Konfiguriere SCORING_GEWICHTUNG (Zeile 85-120)\n// 4. Setze GOOGLE_SHEETS_IDS (Zeile 125-140)\n// ============================================================================\n\n// ---------------------------------------------------------------------------\n// 1️⃣ UNTERNEHMENS-KONFIGURATION\n// ---------------------------------------------------------------------------\nconst UNTERNEHMEN = {\n  name: \"SEINE Batteriesysteme GmbH\",\n  branche: \"Batteriespeichersysteme & Energietechnik\",\n  kontakt_email: \"sales@seine-batteriesysteme.de\",\n  kontakt_telefon: \"+49 123 456789\",\n  website: \"https://seine-batteriesysteme.de\"\n};\n\n// ---------------------------------------------------------------------------\n// 2️⃣ BRANCHEN-SPEZIFISCHE FELDER\n// ---------------------------------------------------------------------------\nconst BRANCHENFELDER = {\n  energie: {\n    \"Energieverbrauch_Tag_kWh\": {\n      typ: \"number\",\n      pflicht: false,\n      default: 0,\n      beschreibung: \"Täglicher Energieverbrauch in Kilowattstunden\",\n      min: 0,\n      max: 100000\n    },\n    \"Energieverbrauch_Jahr_kWh\": {\n      typ: \"number\",\n      pflicht: true,\n      default: 0,\n      beschreibung: \"Jährlicher Energieverbrauch in Kilowattstunden\",\n      min: 0,\n      max: 10000000\n    },\n    \"Energieerzeugung_PV_Jahr_kWh\": {\n      typ: \"number\",\n      pflicht: false,\n      default: 0,\n      beschreibung: \"Jährliche Photovoltaik-Stromerzeugung\",\n      min: 0,\n      max: 10000000\n    },\n    \"Speicherkapazitaet_kWh\": {\n      typ: \"number\",\n      pflicht: false,\n      default: 0,\n      beschreibung: \"Aktuelle Speicherkapazität in kWh\",\n      min: 0,\n      max: 100000\n    },\n    \"Wechselrichterleistung_kW\": {\n      typ: \"number\",\n      pflicht: false,\n      default: 0,\n      beschreibung: \"Leistung des Wechselrichters in Kilowatt\",\n      min: 0,\n      max: 10000\n    },\n    \"Batterietyp\": {\n      typ: \"string\",\n      pflicht: false,\n      default: \"LiFePO4\",\n      beschreibung: \"Typ der Batterietechnologie\",\n      optionen: [\"LiFePO4\", \"NMC\", \"Blei-Säure\", \"Andere\"]\n    }\n  },\n  projekt: {\n    \"Anfrage_typ\": {\n      typ: \"string\",\n      pflicht: false,\n      default: \"Nicht angegeben\",\n      beschreibung: \"Art der Anfrage\",\n      optionen: [\"Neubau\", \"Erweiterung\", \"Wartung\", \"Beratung\"]\n    },\n    \"Projektziel\": {\n      typ: \"string\",\n      pflicht: false,\n      default: \"Nicht angegeben\",\n      beschreibung: \"Hauptziel des Projekts\"\n    },\n    \"Einsatzbereich\": {\n      typ: \"string\",\n      pflicht: false,\n      default: \"Nicht angegeben\",\n      beschreibung: \"Wo wird das System eingesetzt?\"\n    },\n    \"Einsatzzweck\": {\n      typ: \"string\",\n      pflicht: false,\n      default: \"Nicht angegeben\",\n      beschreibung: \"Wofür wird das System verwendet?\"\n    },\n    \"Investitionsrahmen\": {\n      typ: \"string\",\n      pflicht: false,\n      default: \"<50k\",\n      beschreibung: \"Verfügbares Budget\",\n      optionen: [\"<50k\", \"50-100k\", \"100-200k\", \">200k\"]\n    }\n  }\n};\n\n// ---------------------------------------------------------------------------\n// 3️⃣ LEAD-SCORING GEWICHTUNG\n// ---------------------------------------------------------------------------\nconst SCORING_GEWICHTUNG = {\n  projektvolumen: {\n    gewicht: 25,\n    beschreibung: \"Geschätztes Projektvolumen und Investitionsbereitschaft\"\n  },\n  energieintensitaet: {\n    gewicht: 30,\n    beschreibung: \"Energieverbrauch als Indikator für Projektgröße\"\n  },\n  datenvollstaendigkeit: {\n    gewicht: 20,\n    beschreibung: \"Wie viele Pflichtfelder sind ausgefüllt?\"\n  },\n  kontaktqualitaet: {\n    gewicht: 15,\n    beschreibung: \"Business-Email, Telefon, vollständige Kontaktdaten\"\n  },\n  dringlichkeit: {\n    gewicht: 10,\n    beschreibung: \"Zeitliche Dringlichkeit basierend auf Anfrage-Text\"\n  }\n};\n\n// ---------------------------------------------------------------------------\n// 4️⃣ LEAD-KATEGORISIERUNG\n// ---------------------------------------------------------------------------\nconst LEAD_SCHWELLWERTE = {\n  HOT: 8.0,\n  WARM: 6.0,\n  COLD: 4.0,\n  QUALIFIED_MINIMUM: 6.0\n};\n\n// ---------------------------------------------------------------------------\n// 5️⃣ GOOGLE SHEETS KONFIGURATION\n// ---------------------------------------------------------------------------\nconst GOOGLE_SHEETS = {\n  spreadsheet_id: \"10laYq9f2hcNln34h-HEvXNAbgYNWN0092m3cHbZg9IM\",\n  tabs: {\n    MASTER_LOG: {\n      name: \"MASTER_LOG\",\n      gid: \"gid=0\",\n      beschreibung: \"Haupt-Leadliste mit allen Informationen\"\n    },\n    CONTACTS: {\n      name: \"CONTACTS\",\n      gid: 1900517109,\n      beschreibung: \"Alle Kontakte (primär + sekundär)\"\n    },\n    COUNTER: {\n      name: \"COUNTER\",\n      gid: 1665426076,\n      beschreibung: \"ID-Zähler für Lead-IDs und Offer-IDs\"\n    },\n    DOCUMENT_LIBRARY: {\n      name: \"DOCUMENT_LIBRARY\",\n      gid: 2124089290,\n      beschreibung: \"Verknüpfungen zu erstellten Dossiers\"\n    }\n  }\n};\n\n// ---------------------------------------------------------------------------\n// 6️⃣ GOOGLE DOCS KONFIGURATION\n// ---------------------------------------------------------------------------\nconst GOOGLE_DOCS = {\n  dossier_folder_id: \"1e7RXLWfffQeZyG7Pd0kuRGwtrAo0-J-x\",\n  dossier_titel_template: \"LEAD-{Lead_ID}_{Firmenname}_{fullName}_{Datum}\"\n};\n\n// ---------------------------------------------------------------------------\n// 7️⃣ EXTERNE API KONFIGURATION\n// ---------------------------------------------------------------------------\nconst API_CONFIG = {\n  scraping: {\n    max_pages: 5,\n    timeout_ms: 15000,\n    max_content_length: 5000\n  },\n  hunter: {\n    max_emails: 5,\n    confidence_minimum: 50\n  },\n  linkedin: {\n    search_results: 3,\n    timeout_ms: 10000\n  }\n};\n\n// ---------------------------------------------------------------------------\n// 8️⃣ STANDARD-WERTE\n// ---------------------------------------------------------------------------\nconst DEFAULTS = {\n  string: \"Nicht angegeben\",\n  number: 0,\n  email: \"keine-email@nicht-angegeben.local\",\n  phone: \"Nicht angegeben\",\n  website: \"Nicht angegeben\",\n  adresse: \"Nicht angegeben\",\n  firma: \"Privatperson\",\n  land: \"DE\"\n};\n\n// ---------------------------------------------------------------------------\n// 9️⃣ DATENQUALITÄTS-ANFORDERUNGEN\n// ---------------------------------------------------------------------------\nconst PFLICHTFELDER = {\n  minimum: [\n    \"Email\",\n    \"Energieverbrauch_Jahr_kWh\"\n  ],\n  empfohlen: [\n    \"Phone\",\n    \"Firmenname\",\n    \"Adresse\",\n    \"Projektziel\"\n  ],\n  optional: [\n    \"Website\",\n    \"Investitionsrahmen\",\n    \"Einsatzbereich\"\n  ]\n};\n\n// ---------------------------------------------------------------------------\n// 🔟 WORKFLOW-STEUERUNG\n// ---------------------------------------------------------------------------\nconst WORKFLOW_CONFIG = {\n  save_unqualified_leads: true,\n  send_error_notifications: true,\n  error_notification_email: \"admin@seine-batteriesysteme.de\",\n  retry: {\n    max_attempts: 3,\n    delay_ms: 2000\n  },\n  log_level: \"info\"\n};\n\n// ---------------------------------------------------------------------------\n// 📤 AUSGABE\n// ---------------------------------------------------------------------------\nreturn [{\n  json: {\n    UNTERNEHMEN,\n    BRANCHENFELDER,\n    SCORING_GEWICHTUNG,\n    LEAD_SCHWELLWERTE,\n    GOOGLE_SHEETS,\n    GOOGLE_DOCS,\n    API_CONFIG,\n    DEFAULTS,\n    PFLICHTFELDER,\n    WORKFLOW_CONFIG,\n    config_version: \"1.0.0\",\n    erstellt_am: new Date().toISOString(),\n    beschreibung: \"Zentrale Template-Konfiguration für Lead-Manager Workflow\"\n  }\n}];"
+      },
+      "id": "00_config_node",
+      "name": "00_Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "10_webhook_trigger",
+      "name": "10_Webhook_Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "lead-intake-uuid"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// NODE 20: DATENVALIDIERUNG & KLASSIFIZIERUNG\n// ============================================================================\n\nconst config = $('00_Config').first().json;\nconst BRANCHENFELDER = config.BRANCHENFELDER;\nconst DEFAULTS = config.DEFAULTS;\nconst PFLICHTFELDER = config.PFLICHTFELDER;\n\nconst items = $input.all().map(item => {\n  let input = item.json.body || item.json.query || item.json;\n\n  console.log('🔵 Webhook empfangen mit Feldern:', Object.keys(input));\n\n  function safeExtract(obj, feldnamen, fallback = '') {\n    if (!obj) return fallback;\n    for (const feldname of feldnamen) {\n      if (obj[feldname] !== undefined && obj[feldname] !== null && obj[feldname] !== '') {\n        return String(obj[feldname]).trim();\n      }\n      const matchingKey = Object.keys(obj).find(\n        key => key.toLowerCase() === feldname.toLowerCase()\n      );\n      if (matchingKey && obj[matchingKey]) {\n        return String(obj[matchingKey]).trim();\n      }\n    }\n    return fallback;\n  }\n\n  function safeNumber(value, fallback = 0) {\n    if (typeof value === 'string') {\n      value = value.replace(/[^\\d.-]/g, '');\n    }\n    const num = parseFloat(value);\n    return isNaN(num) ? fallback : num;\n  }\n\n  const now = new Date();\n  const timestamp = now.toISOString();\n  const year = now.getFullYear().toString().slice(-2);\n  const datum = now.toLocaleDateString('de-DE');\n  const uhrzeit = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });\n\n  const firstName = safeExtract(input, ['Vorname', 'first_name', 'firstName', 'vorname']);\n  const lastName = safeExtract(input, ['Nachname', 'last_name', 'lastName', 'nachname']);\n  const fullName = safeExtract(input, ['fullName', 'full_name', 'Name', 'name']) || \n                   (firstName && lastName ? `${firstName} ${lastName}` : DEFAULTS.string);\n\n  const leadIdFromWebhook = safeExtract(input, ['Lead_ID', 'Lead-ID', 'lead_id', 'LeadID', 'leadid']);\n\n  const email = safeExtract(input, ['Email', 'email', 'E-Mail', 'e-mail', 'kontakt_email']);\n  const phone = safeExtract(input, ['Phone', 'phone', 'Telefon', 'telefon', 'tel', 'Telephone']);\n  const adresse = safeExtract(input, ['Adresse', 'address', 'full_address', 'Anschrift']);\n  const website = safeExtract(input, ['Website', 'website', 'web', 'homepage', 'url']);\n  const firmenname = safeExtract(input, ['Firmenname', 'company_name', 'companyName', 'Unternehmen', 'Firma']);\n  const customerType = safeExtract(input, ['Customer_Type', 'customer_type', 'Kundentyp', 'kundentyp'], 'Private');\n\n  const energieverbrauchTag = safeNumber(safeExtract(input, ['Energieverbrauch_Tag_kWh', 'energieverbrauch_tag', 'daily_energy_consumption']), 0);\n  const energieverbrauchJahr = safeNumber(safeExtract(input, ['Energieverbrauch_Jahr_kWh', 'energieverbrauch_jahr', 'annual_energy_consumption', 'Jahresverbrauch']), 0);\n  const pvErzeugung = safeNumber(safeExtract(input, ['Energieerzeugung_PV_Jahr_kWh', 'pv_erzeugung', 'solar_generation']), 0);\n  const speicherkapazitaet = safeNumber(safeExtract(input, ['Speicherkapazitaet_kWh', 'speicher', 'storage_capacity', 'Batteriekapazitaet']), 0);\n  const wechselrichterLeistung = safeNumber(safeExtract(input, ['Wechselrichterleistung_kW', 'wechselrichter', 'inverter_power']), 0);\n  const batterietyp = safeExtract(input, ['Batterietyp', 'batterietyp', 'battery_type'], 'LiFePO4');\n\n  const anfrageTyp = safeExtract(input, ['Anfrage_typ', 'anfrage_typ', 'inquiry_type', 'Anfragetyp']);\n  const projektziel = safeExtract(input, ['Projektziel', 'project_goal', 'projektziel', 'Ziel']);\n  const einsatzbereich = safeExtract(input, ['Einsatzbereich', 'usage_area', 'einsatzbereich']);\n  const einsatzzweck = safeExtract(input, ['Einsatzzweck', 'purpose', 'einsatzzweck', 'Zweck']);\n  const investitionsrahmen = safeExtract(input, ['Investitionsrahmen', 'investitionskapazitaet_range', 'budget_range', 'Budget'], '<50k');\n  const kommentar = safeExtract(input, ['Kommentar', 'kommentar', 'message', 'comment', 'Nachricht', 'Anmerkung']);\n\n  let datenqualitaet = 0;\n  let ausgefuellteFelder = 0;\n  const gesamtFelder = PFLICHTFELDER.minimum.length + PFLICHTFELDER.empfohlen.length;\n\n  PFLICHTFELDER.minimum.forEach(feld => {\n    const mapping = { 'Email': email, 'Energieverbrauch_Jahr_kWh': energieverbrauchJahr };\n    const wert = mapping[feld];\n    if (wert && wert !== DEFAULTS.string && wert !== 0) ausgefuellteFelder++;\n  });\n\n  PFLICHTFELDER.empfohlen.forEach(feld => {\n    const mapping = { 'Phone': phone, 'Firmenname': firmenname, 'Adresse': adresse, 'Projektziel': projektziel };\n    const wert = mapping[feld];\n    if (wert && wert !== DEFAULTS.string && wert !== 0) ausgefuellteFelder++;\n  });\n\n  datenqualitaet = Math.round((ausgefuellteFelder / gesamtFelder) * 100);\n\n  let emailGueltig = false;\n  let emailTyp = 'unbekannt';\n  if (email && email.includes('@')) {\n    emailGueltig = true;\n    const emailDomain = email.split('@')[1];\n    const privateDomains = ['gmail.com', 'yahoo.de', 'gmx.de', 'web.de', 'outlook.com', 'hotmail.com', 't-online.de'];\n    emailTyp = privateDomains.includes(emailDomain) ? 'private' : 'business';\n  }\n\n  let dringlichkeit = 'normal';\n  if (kommentar) {\n    const kommentarLower = kommentar.toLowerCase();\n    const dringlichkeitswoerter = ['dringend', 'schnell', 'sofort', 'asap', 'eilig', 'zeitnah', 'kurzfristig', 'umgehend'];\n    if (dringlichkeitswoerter.some(wort => kommentarLower.includes(wort))) {\n      dringlichkeit = 'hoch';\n    }\n  }\n\n  return {\n    json: {\n      webhookData: input,\n      ...(leadIdFromWebhook ? { Lead_ID: leadIdFromWebhook } : {}),\n      timestamp: timestamp,\n      jahr: year,\n      datum: datum,\n      uhrzeit: uhrzeit,\n      Customer_Type: customerType,\n      Firmenname: firmenname || DEFAULTS.firma,\n      Email: email || DEFAULTS.email,\n      Email_Gueltig: emailGueltig,\n      Email_Typ: emailTyp,\n      fullName: fullName,\n      Vorname: firstName || DEFAULTS.string,\n      Nachname: lastName || DEFAULTS.string,\n      Phone: phone || DEFAULTS.phone,\n      Adresse: adresse || DEFAULTS.adresse,\n      Website: website || DEFAULTS.website,\n      Energieverbrauch_Tag_kWh: energieverbrauchTag,\n      Energieverbrauch_Jahr_kWh: energieverbrauchJahr,\n      Energieerzeugung_PV_Jahr_kWh: pvErzeugung,\n      Speicherkapazitaet_kWh: speicherkapazitaet,\n      Wechselrichterleistung_kW: wechselrichterLeistung,\n      Batterietyp: batterietyp,\n      Anfrage_typ: anfrageTyp || DEFAULTS.string,\n      Projektziel: projektziel || DEFAULTS.string,\n      Einsatzbereich: einsatzbereich || DEFAULTS.string,\n      Einsatzzweck: einsatzzweck || DEFAULTS.string,\n      Investitionsrahmen: investitionsrahmen,\n      Kommentar: kommentar || DEFAULTS.string,\n      Datenqualitaet_Prozent: datenqualitaet,\n      Dringlichkeit: dringlichkeit,\n      Validierung_Status: 'validiert',\n      Validierung_Timestamp: timestamp,\n      Ausgefuellte_Felder: ausgefuellteFelder,\n      Gesamt_Felder: gesamtFelder\n    }\n  };\n});\n\nconsole.log(`✅ ${items.length} Webhook-Items validiert und klassifiziert`);\nreturn items;"
+      },
+      "id": "20_validate_classify",
+      "name": "20_Validate_Classify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('00_Config').first().json.GOOGLE_SHEETS.spreadsheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('00_Config').first().json.GOOGLE_SHEETS.tabs.COUNTER.name }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "30_read_counter",
+      "name": "30_Read_Counter",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [600, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// NODE 40: LEAD-ID & OFFER-ID GENERIERUNG\n// ============================================================================\n\nconst config = $('00_Config').first().json;\nconst counterData = $input.first().json;\nconst webhookNode = $('20_Validate_Classify').first();\nconst webhookData = webhookNode.json;\n\nconsole.log('📊 Counter-Daten:', counterData);\n\nlet leadId = null;\nlet leadIdQuelle = 'unbekannt';\n\nleadId = webhookData['Lead_ID'] || webhookData['Lead-ID'] || webhookData.lead_id || webhookData.LeadID || webhookData.leadid;\n\nif (leadId) {\n  leadIdQuelle = 'webhook';\n  console.log(`✅ Lead_ID aus Webhook übernommen: ${leadId}`);\n} else {\n  let lastNumber = 250001;\n  if (counterData && counterData.Last_Number) {\n    let lastNumStr = String(counterData.Last_Number);\n    if (lastNumStr.startsWith('LEAD_')) {\n      lastNumStr = lastNumStr.replace('LEAD_', '');\n    }\n    lastNumber = parseInt(lastNumStr, 10);\n    if (isNaN(lastNumber) || lastNumber < 1) {\n      console.warn(`⚠️ Ungültiger Counter-Wert: ${counterData.Last_Number}. Nutze Default: 250001`);\n      lastNumber = 250001;\n    }\n  }\n  const newLeadNumber = lastNumber + 1;\n  leadId = `LEAD_${String(newLeadNumber).padStart(6, '0')}`;\n  leadIdQuelle = 'generiert';\n  console.log(`🆕 Neue Lead_ID generiert: ${leadId} (Vorgänger: ${lastNumber})`);\n}\n\nconst year = new Date().getFullYear().toString().slice(-2);\nlet lastOfferNumber = 1;\n\nconst counterRows = $('30_Read_Counter').all();\nconst offerCounterRow = counterRows.find(row => row.json.ID_Type === 'OFFER_ID' || row.json.ID_Type === 'Offer-ID');\n\nif (offerCounterRow) {\n  const lastOfferStr = String(offerCounterRow.json.Last_Number);\n  const match = lastOfferStr.match(/OFFER_\\d+_(\\d+)/);\n  if (match && match[1]) {\n    lastOfferNumber = parseInt(match[1], 10);\n  }\n}\n\nconst newOfferNumber = lastOfferNumber + 1;\nconst offerId = `OFFER_${year}_${String(newOfferNumber).padStart(4, '0')}`;\n\nconsole.log(`📄 Offer-ID generiert: ${offerId}`);\n\nconst trackingId = `TRACK_${new Date().toISOString().split('T')[0].replace(/-/g, '')}_${String(newOfferNumber).padStart(3, '0')}`;\nconst dossierId = `DOSSIER_${leadId}`;\n\nconst leadIdRegex = /^LEAD_\\d{6}$/;\nif (!leadIdRegex.test(leadId)) {\n  throw new Error(`❌ Ungültige Lead_ID generiert: ${leadId}. Format muss LEAD_XXXXXX sein!`);\n}\n\nconst offerIdRegex = /^OFFER_\\d{2}_\\d{4}$/;\nif (!offerIdRegex.test(offerId)) {\n  throw new Error(`❌ Ungültige Offer_ID generiert: ${offerId}. Format muss OFFER_YY_XXXX sein!`);\n}\n\nconst counterUpdate = {\n  lead: {\n    ID_Type: 'LEAD_ID',\n    Last_Number: leadId,\n    Next: parseInt(leadId.replace('LEAD_', '')) + 1\n  },\n  offer: {\n    ID_Type: 'OFFER_ID',\n    Last_Number: offerId,\n    Next: `OFFER_${year}_${String(newOfferNumber + 1).padStart(4, '0')}`\n  }\n};\n\nreturn {\n  json: {\n    Lead_ID: leadId,\n    Offer_ID: offerId,\n    Tracking_ID: trackingId,\n    Dossier_ID: dossierId,\n    Lead_ID_Quelle: leadIdQuelle,\n    Lead_ID_Generiert_Am: new Date().toISOString(),\n    Counter_Alt: counterData ? counterData.Last_Number : null,\n    Counter_Neu: leadId,\n    Counter_Update: counterUpdate,\n    ...webhookData,\n    ID_Generierung: {\n      timestamp: new Date().toISOString(),\n      lead_id_quelle: leadIdQuelle,\n      lead_id: leadId,\n      offer_id: offerId,\n      tracking_id: trackingId,\n      erfolg: true\n    }\n  }\n};"
+      },
+      "id": "40_generate_ids",
+      "name": "40_Generate_IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// NODE 50: LEAD SCORING & QUALIFIKATION\n// ============================================================================\n\nconst config = $('00_Config').first().json;\nconst SCORING_GEWICHTUNG = config.SCORING_GEWICHTUNG;\nconst LEAD_SCHWELLWERTE = config.LEAD_SCHWELLWERTE;\n\nconst item = $input.first();\nconst input = item.json;\n\nconsole.log(`🎯 Scoring für Lead: ${input.Lead_ID}`);\n\nlet score = 0;\nlet scoreBreakdown = {};\n\nconst jahresverbrauch = parseFloat(input.Energieverbrauch_Jahr_kWh) || 0;\nlet energieScore = 0;\n\nif (jahresverbrauch > 100000) {\n  energieScore = 30;\n  scoreBreakdown.energieintensitaet = \"Sehr hoch (>100k kWh) = 30pts\";\n} else if (jahresverbrauch > 50000) {\n  energieScore = 20;\n  scoreBreakdown.energieintensitaet = \"Hoch (50-100k kWh) = 20pts\";\n} else if (jahresverbrauch > 20000) {\n  energieScore = 15;\n  scoreBreakdown.energieintensitaet = \"Mittel (20-50k kWh) = 15pts\";\n} else if (jahresverbrauch > 5000) {\n  energieScore = 10;\n  scoreBreakdown.energieintensitaet = \"Niedrig (5-20k kWh) = 10pts\";\n} else if (jahresverbrauch > 0) {\n  energieScore = 5;\n  scoreBreakdown.energieintensitaet = \"Sehr niedrig (<5k kWh) = 5pts\";\n} else {\n  energieScore = 0;\n  scoreBreakdown.energieintensitaet = \"Keine Angabe = 0pts\";\n}\n\nscore += energieScore;\n\nconst investmentRange = input.Investitionsrahmen || '<50k';\nlet projektvolumenScore = 0;\n\nif (investmentRange.includes('>200')) {\n  projektvolumenScore = 25;\n  scoreBreakdown.projektvolumen = \">200k EUR = 25pts\";\n} else if (investmentRange.includes('100-200')) {\n  projektvolumenScore = 20;\n  scoreBreakdown.projektvolumen = \"100-200k EUR = 20pts\";\n} else if (investmentRange.includes('50-100')) {\n  projektvolumenScore = 15;\n  scoreBreakdown.projektvolumen = \"50-100k EUR = 15pts\";\n} else {\n  projektvolumenScore = 5;\n  scoreBreakdown.projektvolumen = \"<50k EUR = 5pts\";\n}\n\nscore += projektvolumenScore;\n\nconst wichtigeFelder = [\n  'Energieverbrauch_Jahr_kWh',\n  'Phone',\n  'Adresse',\n  'Anfrage_typ',\n  'Projektziel',\n  'Speicherkapazitaet_kWh',\n  'Wechselrichterleistung_kW'\n];\n\nlet dataCompleteness = 0;\nwichtigeFelder.forEach(feld => {\n  if (input[feld] && input[feld] !== '' && input[feld] !== 'Nicht angegeben' && input[feld] !== 0) {\n    dataCompleteness++;\n  }\n});\n\nconst completenessScore = Math.round((dataCompleteness / wichtigeFelder.length) * 20);\nscore += completenessScore;\nscoreBreakdown.datenvollstaendigkeit = `${dataCompleteness}/${wichtigeFelder.length} Felder = ${completenessScore}pts`;\n\nlet contactQuality = 0;\n\nif (input.Email_Gueltig) {\n  if (input.Email_Typ === 'business') {\n    contactQuality = 10;\n    scoreBreakdown.kontaktqualitaet = \"Business Email = 10pts\";\n  } else if (input.Email_Typ === 'private') {\n    contactQuality = 5;\n    scoreBreakdown.kontaktqualitaet = \"Private Email = 5pts\";\n  }\n}\n\nif (input.Phone && input.Phone !== 'Nicht angegeben' && input.Phone.length > 5) {\n  contactQuality += 5;\n  scoreBreakdown.kontaktqualitaet += \" + Telefon = +5pts\";\n}\n\nscore += Math.min(contactQuality, 15);\n\nlet urgencyScore = 5;\n\nif (input.Dringlichkeit === 'hoch') {\n  urgencyScore = 10;\n  scoreBreakdown.dringlichkeit = \"Dringend = 10pts\";\n} else {\n  scoreBreakdown.dringlichkeit = \"Normal = 5pts\";\n}\n\nscore += urgencyScore;\n\nconst finalScore = Math.round((score / 100) * 10 * 10) / 10;\n\nlet category = 'NURTURE';\n\nif (finalScore >= LEAD_SCHWELLWERTE.HOT) {\n  category = 'HOT';\n} else if (finalScore >= LEAD_SCHWELLWERTE.WARM) {\n  category = 'WARM';\n} else if (finalScore >= LEAD_SCHWELLWERTE.COLD) {\n  category = 'COLD';\n}\n\nconst qualified = finalScore >= LEAD_SCHWELLWERTE.QUALIFIED_MINIMUM;\n\nlet nextAction = '';\nlet vertriebsempfehlung = '';\n\nif (qualified) {\n  if (category === 'HOT') {\n    nextAction = \"Sofortiger Anruf innerhalb 24h\";\n    vertriebsempfehlung = \"Top-Priorität! Persönlicher Kontakt, individuelles Angebot\";\n  } else if (category === 'WARM') {\n    nextAction = \"Kontaktaufnahme innerhalb 3 Werktagen\";\n    vertriebsempfehlung = \"Qualifizierter Lead - Standard-Angebotsprozess\";\n  }\n} else {\n  if (category === 'COLD') {\n    nextAction = \"Nurture-Kampagne (Email-Serie)\";\n    vertriebsempfehlung = \"In Marketing-Automation aufnehmen\";\n  } else {\n    nextAction = \"Newsletter, Low-Touch-Kampagne\";\n    vertriebsempfehlung = \"Langfristige Pflege, kein aktiver Vertrieb\";\n  }\n}\n\nconsole.log(`📊 Lead ${input.Lead_ID}: Score ${finalScore}/10 → ${category} (Qualified: ${qualified})`);\n\nreturn {\n  json: {\n    ...input,\n    Lead_Score: finalScore,\n    Lead_Category: category,\n    Qualified: qualified,\n    Score_Breakdown: scoreBreakdown,\n    Raw_Score: score,\n    Next_Action: nextAction,\n    Vertriebsempfehlung: vertriebsempfehlung,\n    Scoring_Timestamp: new Date().toISOString(),\n    Scoring_Version: config.config_version,\n    Schwellwerte: LEAD_SCHWELLWERTE\n  }\n};"
+      },
+      "id": "50_lead_scoring",
+      "name": "50_Lead_Scoring",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('00_Config').first().json.GOOGLE_SHEETS.spreadsheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('00_Config').first().json.GOOGLE_SHEETS.tabs.MASTER_LOG.name }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead-ID": "={{ $json.Lead_ID }}",
+            "Offer-ID": "={{ $json.Offer_ID }}",
+            "Timestamp_Created": "={{ $json.timestamp }}",
+            "Customer_Type": "={{ $json.Customer_Type }}",
+            "Firmenname": "={{ $json.Firmenname }}",
+            "Email_Primary": "={{ $json.Email }}",
+            "Phone_Primary": "={{ $json.Phone }}",
+            "Website": "={{ $json.Website }}",
+            "Energieverbrauch_Jahr_kWh": "={{ $json.Energieverbrauch_Jahr_kWh }}",
+            "Speicherkapazitaet_kWh": "={{ $json.Speicherkapazitaet_kWh }}",
+            "Wechselrichterleistung_kW": "={{ $json.Wechselrichterleistung_kW }}",
+            "Batterietyp": "={{ $json.Batterietyp }}",
+            "Projektziel": "={{ $json.Projektziel }}",
+            "Lead_Score": "={{ $json.Lead_Score }}",
+            "Lead_Category": "={{ $json.Lead_Category }}",
+            "Qualified": "={{ $json.Qualified ? 'Ja' : 'Nein' }}",
+            "Next_Action": "={{ $json.Next_Action }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "91_write_master_log",
+      "name": "91_Write_Master_Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1200, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"status\": \"success\",\n  \"message\": \"Lead erfolgreich verarbeitet\",\n  \"Lead_ID\": $json.Lead_ID,\n  \"Tracking_ID\": $json.Tracking_ID,\n  \"Qualified\": $json.Qualified,\n  \"Lead_Score\": $json.Lead_Score,\n  \"Lead_Category\": $json.Lead_Category\n} }}",
+        "options": {}
+      },
+      "id": "95_webhook_response",
+      "name": "95_Webhook_Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1400, 300]
+    }
+  ],
+  "connections": {
+    "00_Config": {
+      "main": []
+    },
+    "10_Webhook_Trigger": {
+      "main": [
+        [
+          {
+            "node": "20_Validate_Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20_Validate_Classify": {
+      "main": [
+        [
+          {
+            "node": "30_Read_Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "30_Read_Counter": {
+      "main": [
+        [
+          {
+            "node": "40_Generate_IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "40_Generate_IDs": {
+      "main": [
+        [
+          {
+            "node": "50_Lead_Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "50_Lead_Scoring": {
+      "main": [
+        [
+          {
+            "node": "91_Write_Master_Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "91_Write_Master_Log": {
+      "main": [
+        [
+          {
+            "node": "95_Webhook_Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-21T00:00:00.000Z",
+  "versionId": "1.0.0"
+}
