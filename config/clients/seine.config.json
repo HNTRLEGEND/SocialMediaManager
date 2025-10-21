@@ -1,0 +1,112 @@
+{
+  "company": {
+    "name": "SEINE Batteriesysteme GmbH",
+    "brand": "SEINE",
+    "domain": "seine-batteriesysteme.de",
+    "country": "DE",
+    "language": "de",
+    "currency": "EUR",
+    "crm_customer_id_prefix": "SEINE",
+    "crm_sheet_id": "1A2B3C4D_SEINE_EXAMPLE_ID",
+    "crm_sheet_tab": "Leads_Master",
+    "timezone": "Europe/Berlin",
+    "vat_id": "DE123456789",
+    "contact": {
+      "support_email": "info@seine-batteriesysteme.de",
+      "phone": "+49 123 456 789",
+      "sales_email": "vertrieb@seine-batteriesysteme.de",
+      "technical_support": "technik@seine-batteriesysteme.de"
+    },
+    "google_drive": {
+      "folder_id": "19Af1239XYZ_SEINE_DRIVE",
+      "templates_folder": "1B2C3D_SEINE_TEMPLATES",
+      "exports_folder": "1C3D4E_SEINE_EXPORTS",
+      "archives_folder": "1D4E5F_SEINE_ARCHIVES"
+    }
+  },
+  "workflow": {
+    "lead_id_prefix": "LEAD_SEINE_",
+    "offer_id_prefix": "OFFER_SEINE_",
+    "timezone": "Europe/Berlin",
+    "ai": {
+      "model": "gpt-4o-mini",
+      "temperature": 0.3,
+      "max_tokens": 2000,
+      "fallback_model": "gpt-3.5-turbo",
+      "streaming": false
+    },
+    "api_keys": {
+      "hunter": "{{ $env.HUNTER_API_KEY }}",
+      "linkedin": "{{ $env.LINKEDIN_API_KEY }}",
+      "scraper": "{{ $env.SCRAPER_API_KEY }}",
+      "openai": "{{ $env.OPENAI_API_KEY }}"
+    },
+    "crm_sync": {
+      "enabled": true,
+      "method": "google_sheets",
+      "counter_tab": "Counter",
+      "sync_interval_minutes": 15,
+      "batch_size": 50
+    },
+    "performance": {
+      "scraper_timeout_ms": 8000,
+      "max_items_per_run": 3,
+      "retry_attempts": 3,
+      "backoff_multiplier": 2,
+      "max_concurrent_requests": 5
+    }
+  },
+  "technical": {
+    "battery_systems": {
+      "types": ["LiFePO4", "LTO", "NMC"],
+      "default_type": "LiFePO4",
+      "efficiency": 0.94,
+      "usable_capacity_factor": 0.9,
+      "temperature_limits": {
+        "min": -10,
+        "max": 45
+      },
+      "voltage_range": {
+        "min": 48,
+        "max": 800
+      },
+      "cycle_life": {
+        "LiFePO4": 6000,
+        "NMC": 4000,
+        "LTO": 15000
+      },
+      "safety_certifications": ["CE", "UN38.3", "IEC 62619"],
+      "warranty_years": 10
+    },
+    "inverters": {
+      "default_efficiency": 0.97,
+      "max_ac_output_kw": 50,
+      "mppt_voltage_range": [250, 600],
+      "recommended_brands": ["SMA", "Fronius", "Victron", "Kostal"],
+      "grid_connection_types": ["1-phase", "3-phase"],
+      "protection_class": "IP65"
+    },
+    "pv_systems": {
+      "standard_yield_kwh_per_kwp": 950,
+      "roof_tilt_optimum_deg": 30,
+      "azimuth_optimum_deg": 180,
+      "default_safety_margin": 0.9,
+      "module_types": ["Mono-PERC", "Bifacial", "HJT"],
+      "degradation_per_year": 0.005
+    },
+    "energy_design_rules": {
+      "max_battery_to_pv_ratio": 2.0,
+      "min_autarky_factor": 0.6,
+      "voltage_tolerance": 0.05,
+      "recommended_backup_time_hours": 4,
+      "max_string_length": 20,
+      "min_distance_to_roof_edge_m": 0.5
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-10-21",
+    "updated_by": "Config System",
+    "environment": "production"
+  }
+}

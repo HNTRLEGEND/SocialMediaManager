@@ -1,0 +1,41 @@
+{
+  "name": "universal-config-system",
+  "version": "1.0.0",
+  "description": "Zukunftssicheres Multi-Client Config-System für Batterien, Maschinen und technische Anlagen",
+  "main": "config/loaders/configLoader.js",
+  "types": "config/types/config.types.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node -e \"const { getConfig, validateConfig } = require('./config/loaders/configLoader'); const cfg = getConfig('SEINE'); const val = validateConfig(cfg); console.log(val.valid ? 'Config OK ✓' : val.errors);\"",
+    "validate": "node scripts/validateAllConfigs.js",
+    "lint": "eslint config/**/*.{js,ts}"
+  },
+  "keywords": [
+    "config",
+    "multi-client",
+    "n8n",
+    "automation",
+    "battery-systems",
+    "machines",
+    "typescript"
+  ],
+  "author": "SEINE/HNTR Config System",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HNTRLEGEND/SocialMediaManager"
+  }
+}

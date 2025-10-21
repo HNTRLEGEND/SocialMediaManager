@@ -1,0 +1,99 @@
+{
+  "company": {
+    "name": "HNTR Solutions GmbH",
+    "brand": "HNTR",
+    "domain": "hntr-solutions.com",
+    "country": "DE",
+    "language": "de",
+    "currency": "EUR",
+    "crm_customer_id_prefix": "HNTR",
+    "crm_sheet_id": "1X2Y3Z4A_HNTR_EXAMPLE_ID",
+    "crm_sheet_tab": "Leads_Master",
+    "timezone": "Europe/Berlin",
+    "vat_id": "DE987654321",
+    "contact": {
+      "support_email": "support@hntr-solutions.com",
+      "phone": "+49 987 654 321",
+      "sales_email": "sales@hntr-solutions.com",
+      "technical_support": "technical@hntr-solutions.com"
+    },
+    "google_drive": {
+      "folder_id": "19Bf2345ABC_HNTR_DRIVE",
+      "templates_folder": "1C3D4E_HNTR_TEMPLATES",
+      "exports_folder": "1D4E5F_HNTR_EXPORTS",
+      "archives_folder": "1E5F6G_HNTR_ARCHIVES"
+    }
+  },
+  "workflow": {
+    "lead_id_prefix": "LEAD_HNTR_",
+    "offer_id_prefix": "OFFER_HNTR_",
+    "timezone": "Europe/Berlin",
+    "ai": {
+      "model": "gpt-4o",
+      "temperature": 0.4,
+      "max_tokens": 3000,
+      "fallback_model": "gpt-4o-mini",
+      "streaming": true
+    },
+    "api_keys": {
+      "hunter": "{{ $env.HUNTER_API_KEY }}",
+      "linkedin": "{{ $env.LINKEDIN_API_KEY }}",
+      "scraper": "{{ $env.SCRAPER_API_KEY }}",
+      "openai": "{{ $env.OPENAI_API_KEY }}",
+      "anthropic": "{{ $env.ANTHROPIC_API_KEY }}"
+    },
+    "crm_sync": {
+      "enabled": true,
+      "method": "google_sheets",
+      "counter_tab": "Counter",
+      "sync_interval_minutes": 10,
+      "batch_size": 100
+    },
+    "performance": {
+      "scraper_timeout_ms": 10000,
+      "max_items_per_run": 5,
+      "retry_attempts": 4,
+      "backoff_multiplier": 1.5,
+      "max_concurrent_requests": 10
+    }
+  },
+  "technical": {
+    "machines": {
+      "default_voltage": 400,
+      "default_frequency": 50,
+      "default_air_pressure_bar": 6,
+      "motor_power_range_kw": [0.5, 45],
+      "max_conveyor_speed_m_per_min": 120,
+      "temperature_operating_range": {
+        "min": 5,
+        "max": 40
+      },
+      "ip_protection_min": "IP54",
+      "noise_limit_db": 75,
+      "standard_safety_level": "PL d",
+      "recommended_brands": ["Festo", "SEW", "Siemens", "ABB"],
+      "maintenance_interval_months": 12
+    },
+    "components": {
+      "sensor_types": ["Induktiv", "Optisch", "Ultraschall", "Kapazitiv"],
+      "default_safety_margin_percent": 15,
+      "material_options": ["Edelstahl", "Aluminium", "Kunststoff"],
+      "actuator_types": ["Pneumatisch", "Elektrisch", "Hydraulisch"],
+      "controller_brands": ["Siemens", "Beckhoff", "Allen Bradley"]
+    },
+    "machine_design_rules": {
+      "max_energy_consumption_kw": 25,
+      "target_efficiency_percent": 92,
+      "maintenance_interval_months": 12,
+      "required_certifications": ["CE", "ISO 13849-1", "ISO 12100"],
+      "max_footprint_m2": 50,
+      "min_accessibility_clearance_m": 0.8
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-10-21",
+    "updated_by": "Config System",
+    "environment": "production"
+  }
+}

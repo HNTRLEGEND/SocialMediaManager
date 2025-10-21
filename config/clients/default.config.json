@@ -1,0 +1,92 @@
+{
+  "company": {
+    "name": "Default Company",
+    "brand": "DEFAULT",
+    "domain": "example.com",
+    "country": "DE",
+    "language": "de",
+    "currency": "EUR",
+    "crm_customer_id_prefix": "DEFAULT",
+    "crm_sheet_id": "REPLACE_WITH_YOUR_SHEET_ID",
+    "crm_sheet_tab": "Leads_Master",
+    "timezone": "Europe/Berlin",
+    "contact": {
+      "support_email": "support@example.com",
+      "phone": "+49 000 000 000"
+    },
+    "google_drive": {
+      "folder_id": "REPLACE_WITH_DRIVE_ID",
+      "templates_folder": "REPLACE_WITH_TEMPLATES_ID"
+    }
+  },
+  "workflow": {
+    "lead_id_prefix": "LEAD_",
+    "offer_id_prefix": "OFFER_",
+    "timezone": "Europe/Berlin",
+    "ai": {
+      "model": "gpt-4o-mini",
+      "temperature": 0.3,
+      "max_tokens": 2000,
+      "streaming": false
+    },
+    "api_keys": {
+      "hunter": "{{ $env.HUNTER_API_KEY }}",
+      "linkedin": "{{ $env.LINKEDIN_API_KEY }}",
+      "scraper": "{{ $env.SCRAPER_API_KEY }}",
+      "openai": "{{ $env.OPENAI_API_KEY }}"
+    },
+    "crm_sync": {
+      "enabled": true,
+      "method": "google_sheets",
+      "counter_tab": "Counter",
+      "sync_interval_minutes": 15,
+      "batch_size": 50
+    },
+    "performance": {
+      "scraper_timeout_ms": 8000,
+      "max_items_per_run": 3,
+      "retry_attempts": 3,
+      "backoff_multiplier": 2,
+      "max_concurrent_requests": 5
+    }
+  },
+  "technical": {
+    "battery_systems": {
+      "types": ["LiFePO4"],
+      "default_type": "LiFePO4",
+      "efficiency": 0.94,
+      "usable_capacity_factor": 0.9,
+      "temperature_limits": {
+        "min": -10,
+        "max": 45
+      },
+      "voltage_range": {
+        "min": 48,
+        "max": 800
+      },
+      "cycle_life": {
+        "LiFePO4": 6000
+      }
+    },
+    "machines": {
+      "default_voltage": 400,
+      "default_frequency": 50,
+      "default_air_pressure_bar": 6,
+      "motor_power_range_kw": [0.5, 45],
+      "temperature_operating_range": {
+        "min": 5,
+        "max": 40
+      },
+      "ip_protection_min": "IP54",
+      "noise_limit_db": 75,
+      "standard_safety_level": "PL d",
+      "recommended_brands": ["Siemens", "Festo", "SEW"]
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-10-21",
+    "updated_by": "Config System",
+    "environment": "development"
+  }
+}

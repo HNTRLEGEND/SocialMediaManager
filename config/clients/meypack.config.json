@@ -1,0 +1,109 @@
+{
+  "company": {
+    "name": "MEYPACK Verpackungssysteme GmbH",
+    "brand": "MEYPACK",
+    "domain": "meypack.de",
+    "country": "DE",
+    "language": "de",
+    "currency": "EUR",
+    "crm_customer_id_prefix": "MEYPACK",
+    "crm_sheet_id": "1M2E3Y4P_MEYPACK_EXAMPLE_ID",
+    "crm_sheet_tab": "Leads_Master",
+    "timezone": "Europe/Berlin",
+    "vat_id": "DE555666777",
+    "registration_number": "HRB 12345",
+    "contact": {
+      "support_email": "info@meypack.de",
+      "phone": "+49 555 666 777",
+      "sales_email": "vertrieb@meypack.de",
+      "technical_support": "service@meypack.de"
+    },
+    "google_drive": {
+      "folder_id": "19Cf3456BCD_MEYPACK_DRIVE",
+      "templates_folder": "1D4E5F_MEYPACK_TEMPLATES",
+      "exports_folder": "1E5F6G_MEYPACK_EXPORTS",
+      "archives_folder": "1F6G7H_MEYPACK_ARCHIVES"
+    }
+  },
+  "workflow": {
+    "lead_id_prefix": "LEAD_MP_",
+    "offer_id_prefix": "OFFER_MP_",
+    "timezone": "Europe/Berlin",
+    "ai": {
+      "model": "gpt-4o-mini",
+      "temperature": 0.2,
+      "max_tokens": 1500,
+      "fallback_model": "gpt-3.5-turbo",
+      "streaming": false
+    },
+    "api_keys": {
+      "hunter": "{{ $env.HUNTER_API_KEY }}",
+      "scraper": "{{ $env.SCRAPER_API_KEY }}",
+      "openai": "{{ $env.OPENAI_API_KEY }}"
+    },
+    "crm_sync": {
+      "enabled": true,
+      "method": "google_sheets",
+      "counter_tab": "Counter",
+      "sync_interval_minutes": 20,
+      "batch_size": 30
+    },
+    "performance": {
+      "scraper_timeout_ms": 7000,
+      "max_items_per_run": 2,
+      "retry_attempts": 2,
+      "backoff_multiplier": 2,
+      "max_concurrent_requests": 3
+    }
+  },
+  "technical": {
+    "machines": {
+      "default_voltage": 400,
+      "default_frequency": 50,
+      "default_air_pressure_bar": 6,
+      "motor_power_range_kw": [0.37, 30],
+      "max_conveyor_speed_m_per_min": 100,
+      "temperature_operating_range": {
+        "min": 10,
+        "max": 35
+      },
+      "ip_protection_min": "IP54",
+      "noise_limit_db": 70,
+      "standard_safety_level": "PL d",
+      "recommended_brands": ["Festo", "SEW", "Nord", "Lenze"],
+      "maintenance_interval_months": 6
+    },
+    "components": {
+      "sensor_types": ["Optisch", "Induktiv", "Ultraschall"],
+      "default_safety_margin_percent": 20,
+      "material_options": ["Edelstahl", "Aluminium", "eloxiert"],
+      "actuator_types": ["Pneumatisch", "Servo-elektrisch"],
+      "controller_brands": ["Siemens", "Omron", "Schneider Electric"]
+    },
+    "machine_design_rules": {
+      "max_energy_consumption_kw": 15,
+      "target_efficiency_percent": 90,
+      "maintenance_interval_months": 6,
+      "required_certifications": ["CE", "ISO 13849-1", "DIN EN 415"],
+      "max_footprint_m2": 30,
+      "min_accessibility_clearance_m": 1.0
+    },
+    "packaging_specs": {
+      "max_package_weight_kg": 25,
+      "max_package_dimensions_mm": {
+        "length": 600,
+        "width": 400,
+        "height": 400
+      },
+      "supported_materials": ["Karton", "Wellpappe", "Folienverpackung"],
+      "throughput_packages_per_minute": 60,
+      "quality_control_enabled": true
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-10-21",
+    "updated_by": "Config System",
+    "environment": "production"
+  }
+}
