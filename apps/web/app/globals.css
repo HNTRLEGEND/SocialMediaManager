@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-background text-foreground;
+}
+
+main {
+  @apply flex flex-col min-h-screen;
+}
+
+.glow-border {
+  position: relative;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(0, 216, 255, 0.5), rgba(255, 138, 0, 0.5));
+  opacity: 0.7;
+  filter: blur(12px);
+  z-index: -1;
+}
+
+.section-heading {
+  @apply text-3xl md:text-4xl font-display tracking-tight;
+}
+
+.section-subtitle {
+  @apply text-base md:text-lg text-slate-300 max-w-3xl;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #00d8ff 0%, #ff8a00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.grid-overlay {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.bg-grid {
+  background-image: radial-gradient(circle at center, rgba(0, 216, 255, 0.08), transparent 55%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 400px 400px, 80px 80px, 80px 80px;
+}

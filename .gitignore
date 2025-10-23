@@ -1,0 +1,16 @@
+node_modules
+.pnpm-store
+.next
+out
+build
+dist
+coverage
+.env
+.env.*
+.DS_Store
+tmp
+.idea
+.vscode
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

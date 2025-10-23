@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String    @id @default(cuid())
+  tenantId  String    @unique
+  name      String
+  industry  String?
+  projects  Project[]
+  agents    Agent[]
+  members   OrgUser[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model OrgUser {
+  id            String   @id @default(cuid())
+  userId        String
+  role          OrgRole
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  tenantId     String
+  name         String
+  description  String?
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  agents       Agent[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  type        AgentType
+  guardrails  Json      @default(jsonb('{}'))
+  project     Project?  @relation(fields: [projectId], references: [id])
+  projectId   String?
+  runs        AgentRun[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum AgentType {
+  VOICE
+  CHAT
+  BACKOFFICE
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  definition  Json
+  project     Project? @relation(fields: [projectId], references: [id])
+  projectId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AgentRun {
+  id              String   @id @default(cuid())
+  tenantId        String
+  agent           Agent    @relation(fields: [agentId], references: [id])
+  agentId         String
+  status          RunStatus
+  durationSeconds Int      @default(0)
+  cost            Float    @default(0)
+  metadata        Json     @default(jsonb('{}'))
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+}
+
+enum RunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  tenantId  String
+  label     String
+  hashedKey String
+  scopes    String[]
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  actorId   String?
+  action    String
+  metadata  Json     @default(jsonb('{}'))
+  createdAt DateTime @default(now())
+}
+
+model BillingAccount {
+  id         String   @id @default(cuid())
+  tenantId   String   @unique
+  stripeId   String
+  plan       String
+  seats      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
