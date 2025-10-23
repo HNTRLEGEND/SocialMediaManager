@@ -8,10 +8,10 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const poppins = Poppins({ subsets: ['latin'], weight: ['600', '700'], variable: '--font-poppins' });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://wieslogic.de'),
+  metadataBase: new URL('https://wies.ai'),
   title: {
-    default: 'WIESLOGIC.DE – The Control Hub for AI Automation',
-    template: '%s | WIESLOGIC.DE'
+    default: 'WIES.AI – Intelligente Automatisierung für den Mittelstand',
+    template: '%s | WIES.AI'
   },
   description:
     'WIES.AI automatisiert Prozesse, orchestriert Voice Agents und liefert Echtzeit-Kennzahlen für mittelständische Unternehmen.',
@@ -19,7 +19,6 @@ export const metadata: Metadata = {
     'KI Automatisierung',
     'Voice Agents',
     'WIES.AI',
-    'WIESLOGIC',
     'Prozessautomation',
     'Mittelstand',
     'KI Beratung'
@@ -27,8 +26,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'de_DE',
-    url: 'https://wieslogic.de',
-    siteName: 'WIESLOGIC.DE'
+    url: 'https://wies.ai',
+    siteName: 'WIES.AI'
   }
 };
 

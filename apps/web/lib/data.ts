@@ -2,26 +2,26 @@ export const services = [
   {
     title: 'KI-Potenzialanalyse',
     description:
-      'Wir identifizieren Quick-Wins und Einsparpotenziale in Ihren Prozessen – datenbasiert, transparent und in wenigen Tagen.',
-    metric: '12%+ Effizienz'
-  },
-  {
-    title: 'Beratung & Konzeptentwicklung',
-    description:
-      'Gemeinsam entwerfen wir KI-Betriebskonzepte, Architektur-Blueprints und Business Cases für Ihren Vorstand.',
-    metric: '4 Wochen Blueprint'
+      'Wir identifizieren, welche Prozesse sich lohnen zu automatisieren und liefern eine priorisierte Roadmap inklusive Business Case.',
+    metric: 'Analyse in 14 Tagen'
   },
   {
     title: 'KI-Prozessautomation',
     description:
-      'Von Backoffice-Robotern bis hin zu Self-Service-Workflows – wir automatisieren End-to-End inklusive Governance.',
+      'Von der Idee zum intelligenten Workflow – mit n8n, OpenAI und Ihren Systemen bauen wir belastbare Automationen inklusive Governance.',
     metric: '60% Zeitersparnis'
   },
   {
     title: 'AI Voice Agents',
     description:
-      '24/7 erreichbare, mehrsprachige Agenten auf Basis von ElevenLabs & GPT-5, inklusive Guardrails und CRM-Anbindung.',
-    metric: '97% Kundenzufriedenheit'
+      'Automatisierte Kundenkommunikation mit ElevenLabs-Voices, Realtime-GPT und Guardrails – mehrsprachig, DSGVO-konform und integriert.',
+    metric: '24/7 Verfügbarkeit'
+  },
+  {
+    title: 'Beratung & Strategie',
+    description:
+      'Wir begleiten Sie bei der Einführung, Skalierung und Governance Ihrer KI-Systeme – mit Change-Enablement und Trainings.',
+    metric: 'Executive Enablement'
   }
 ];
 
@@ -42,21 +42,19 @@ export const process = [
 
 export const caseStudies = [
   {
-    title: 'Voice Agent für Service-Center',
-    description:
-      'Reduktion der Warteschleifen um 82% und intelligente Übergabe an Mitarbeiter bei komplexen Anliegen.',
-    industry: 'Telekommunikation'
+    title: 'Angebotsprozess mit KI automatisiert',
+    description: 'Von der Anfrage bis zur Freigabe – Angebote werden automatisch erstellt, geprüft und im ERP verbucht.',
+    industry: 'Maschinenbau'
   },
   {
-    title: 'Backoffice Automation',
-    description: 'Automatisierte Rechnungsprüfung, Mahnwesen und Reporting mit 99,7% Datenqualität.',
-    industry: 'Industrie & Fertigung'
+    title: 'AI Voice Agent für Support-Hotline',
+    description: 'ElevenLabs-Stimmen übernehmen First-Level-Support, authentifizieren Kunden und übergeben bei Bedarf an Mitarbeitende.',
+    industry: 'Versicherung'
   },
   {
-    title: 'Conversational Sales Assist',
-    description:
-      'AI-Kampagnen mit personalisierten Gesprächen steigern Upsell-Quote im Vertrieb um 34%.',
-    industry: 'SaaS & IT'
+    title: 'Workflow-Analyse mit n8n & GPT',
+    description: 'Bestehende Prozesse werden durch GPT analysiert, Engpässe markiert und Automationschancen direkt umgesetzt.',
+    industry: 'Professional Services'
   }
 ];
 

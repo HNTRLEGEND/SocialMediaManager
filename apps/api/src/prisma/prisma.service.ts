@@ -22,14 +22,4 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     });
   }
 
-  withTenant<T>(tenantId: string, callback: () => Promise<T>) {
-    return this.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe(`SET app.current_tenant = '${tenantId}'`);
-      try {
-        return await callback();
-      } finally {
-        await tx.$executeRawUnsafe('RESET app.current_tenant');
-      }
-    });
-  }
 }

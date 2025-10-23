@@ -5,13 +5,13 @@ import { caseStudies } from '../../lib/data';
 
 export function CaseStudiesSection() {
   return (
-    <section id="cases" className="px-4 py-20">
+    <section id="cases" className="px-4 py-24">
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
         <div className="flex flex-col gap-4">
-          <span className="text-sm uppercase tracking-[0.45rem] text-primary">Case Studies</span>
-          <h2 className="section-heading text-white">Von der Idee zum produktiven AI-Agent in unter 90 Tagen</h2>
+          <span className="text-sm uppercase tracking-[0.45rem] text-primary">Beispiele</span>
+          <h2 className="section-heading text-white">So setzen Unternehmen WIES.AI bereits ein</h2>
           <p className="section-subtitle">
-            Jede Referenz zeigt echte Einsparungen in Euro, Zeit und Fehlerquoten – und bildet die Grundlage für Ihre 10x-Strategie.
+            Drei Use-Cases, die zeigen, wie wir komplexe Abläufe automatisieren, Service erlebbar machen und neue Umsatzpotenziale freischalten.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

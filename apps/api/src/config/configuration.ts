@@ -1,20 +1,12 @@
 export default () => ({
   port: parseInt(process.env.PORT ?? '3333', 10),
-  databaseUrl: process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/wieslogic',
-  redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
-  clerk: {
-    secretKey: process.env.CLERK_SECRET_KEY ?? '',
-    webhookSecret: process.env.CLERK_WEBHOOK_SECRET ?? ''
+  databaseUrl: process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/wiesai',
+  auth: {
+    jwtSecret: process.env.JWT_SECRET ?? 'change-me'
   },
-  stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY ?? '',
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? ''
-  },
-  elevenlabs: {
-    apiKey: process.env.ELEVENLABS_API_KEY ?? ''
-  },
-  telemetry: {
-    otlpEndpoint: process.env.OTLP_ENDPOINT ?? '',
-    logLevel: process.env.LOG_LEVEL ?? 'info'
+  integrations: {
+    n8nApiKey: process.env.N8N_API_KEY ?? '',
+    n8nBaseUrl: process.env.N8N_BASE_URL ?? '',
+    elevenlabsApiKey: process.env.ELEVENLABS_API_KEY ?? ''
   }
 });
