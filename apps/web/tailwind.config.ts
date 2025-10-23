@@ -19,15 +19,17 @@ const config: Config = {
     },
     extend: {
       colors: {
-        background: '#0A192F',
-        foreground: '#F4F6F8',
+        background: '#F4F6F8',
+        foreground: '#0A192F',
         accent: {
-          DEFAULT: '#FF8A00'
+          DEFAULT: '#FF8A00',
+          foreground: '#0A192F'
         },
         primary: {
           DEFAULT: '#00D8FF',
           foreground: '#0A192F'
-        }
+        },
+        navy: '#0A192F'
       },
       fontFamily: {
         sans: ['var(--font-inter)', ...fontFamily.sans],

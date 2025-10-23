@@ -3,11 +3,13 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  @apply bg-background text-foreground;
+  @apply bg-background text-foreground font-sans;
+  background-image: radial-gradient(circle at 20% -10%, rgba(0, 216, 255, 0.18), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(255, 138, 0, 0.12), transparent 45%);
 }
 
 main {
@@ -30,11 +32,11 @@ main {
 }
 
 .section-heading {
-  @apply text-3xl md:text-4xl font-display tracking-tight;
+  @apply text-3xl md:text-4xl font-display tracking-tight text-navy;
 }
 
 .section-subtitle {
-  @apply text-base md:text-lg text-slate-300 max-w-3xl;
+  @apply text-base md:text-lg text-slate-600 max-w-3xl;
 }
 
 .gradient-text {

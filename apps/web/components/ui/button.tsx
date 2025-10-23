@@ -8,15 +8,14 @@ import { cn } from '../../lib/utils';
 
 // Definition der visuellen Varianten und Größen via class-variance-authority
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 ring-offset-background',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 ring-offset-background',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-background shadow-glow hover:opacity-90',
-        outline:
-          'border border-primary/40 bg-background/60 text-primary hover:bg-primary/10 backdrop-blur',
-        ghost: 'text-foreground hover:bg-white/5',
-        accent: 'bg-accent text-background shadow-[0_0_20px_rgba(255,138,0,0.45)] hover:bg-[#ff9c26]'
+        default: 'bg-primary text-navy shadow-[0_20px_45px_-18px_rgba(0,216,255,0.55)] hover:bg-[#24ddff]',
+        outline: 'border border-navy/15 bg-white/80 text-navy hover:border-primary hover:text-primary',
+        ghost: 'text-navy hover:bg-primary/10 hover:text-primary',
+        accent: 'bg-accent text-navy shadow-[0_20px_45px_-18px_rgba(255,138,0,0.55)] hover:bg-[#ffa033]'
       },
       size: {
         default: 'h-11 px-6',
