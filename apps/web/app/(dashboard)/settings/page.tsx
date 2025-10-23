@@ -1,3 +1,4 @@
+// SettingsPage: Mockup für zukünftige Konfigurationsbereiche (Team, API, Security).
 import { Button } from '../../../components/ui/button';
 
 export default function SettingsPage() {

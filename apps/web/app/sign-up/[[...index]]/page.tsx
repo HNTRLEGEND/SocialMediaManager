@@ -1,3 +1,4 @@
+// SignUpPage: Clerk-Komponente für die Registrierung.
 import { SignUp } from '@clerk/nextjs';
 
 export default function SignUpPage() {

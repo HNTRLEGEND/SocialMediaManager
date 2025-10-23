@@ -1,22 +1,24 @@
+// DashboardLayout: Rahmenseite für alle internen Routen nach dem Login.
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Button } from '../../components/ui/button';
 
+// Navigationseinträge für das Seitenmenü
 const navItems = [
-  { href: '/dashboard', label: 'Overview' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/agents', label: 'Agents' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/customers', label: 'Kunden' },
   { href: '/workflows', label: 'Workflows' },
-  { href: '/billing', label: 'Billing' },
-  { href: '/admin', label: 'Admin' }
+  { href: '/agents', label: 'Voice Agents' },
+  { href: '/settings', label: 'Einstellungen' },
+  { href: '/support', label: 'Support' }
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-screen grid-cols-[280px_1fr] bg-[#050d1c] text-slate-100">
       <aside className="flex flex-col border-r border-white/5 bg-background/80 px-6 py-8">
-        <Link href="/dashboard" className="text-xl font-display text-white">
-          WIES<span className="text-primary">LOGIC</span>
+        <Link href="/dashboard" className="text-xl font-display text-white uppercase tracking-[0.3rem]">
+          WIES<span className="text-primary">.AI</span>
         </Link>
         <nav className="mt-8 flex flex-col space-y-3 text-sm">
           {navItems.map((item) => (
@@ -45,8 +47,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-col">
         <header className="flex items-center justify-between border-b border-white/5 bg-background/70 px-8 py-6">
           <div>
+            {/* Mandantenkontext und Branding */}
             <div className="text-xs uppercase tracking-[0.3rem] text-primary">Mandant</div>
-            <div className="text-sm font-semibold text-white">Aperture Industries GmbH</div>
+            <div className="text-sm font-semibold text-white">WIES.AI Automation Hub</div>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <span className="rounded-full border border-white/10 px-3 py-1 text-slate-200">LIVE</span>

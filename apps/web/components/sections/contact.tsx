@@ -1,10 +1,80 @@
 'use client';
 
+// ContactSection: Formularkomponente für das Lead-Capture. Enthält State-Management,
+// DSGVO-Hinweise und den API-Call zum Backend. Alle Texte sind bewusst deutschsprachig gehalten.
+
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { FormEvent, useState } from 'react';
 import { Button } from '../ui/button';
 
 export function ContactSection() {
+  const [name, setName] = useState('');
+  // State-Verwaltung für alle Pflichtfelder des Formulars
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
+  const [interest, setInterest] = useState('KI-Potenzialanalyse');
+  const [message, setMessage] = useState('');
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    // Submit-Handler: validiert die Zustimmung zur Datenschutzerklärung
+    // und sendet anschließend den Lead an die API.
+    event.preventDefault();
+    if (!privacyAccepted) {
+      setErrorMessage('Bitte stimmen Sie der Datenschutzerklärung zu.');
+      setStatus('error');
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMessage(null);
+    setStatus('idle');
+
+    try {
+      // POST-Request an die Next.js API-Route, die den Lead im Backend speichert
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          company,
+          interest,
+          notes: message,
+          status: 'lead',
+          source: 'website'
+        })
+      });
+
+      if (!response.ok) {
+        // Fehlerfälle detailliert auslesen, um Nutzer:innen Feedback zu geben
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? 'Lead konnte nicht gespeichert werden.');
+      }
+
+      // Erfolgsfall: Formular zurücksetzen und Status anpassen
+      setStatus('success');
+      setName('');
+      setEmail('');
+      setCompany('');
+      setInterest('KI-Potenzialanalyse');
+      setMessage('');
+      setPrivacyAccepted(false);
+    } catch (error) {
+      // Fehlermeldung anzeigen, falls der Request scheitert
+      setStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Unbekannter Fehler');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <section id="kontakt" className="bg-background/80 px-4 pb-20 pt-24">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 lg:grid-cols-2">
@@ -44,44 +114,97 @@ export function ContactSection() {
           </div>
         </motion.div>
         <motion.form
+          onSubmit={handleSubmit}
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
           className="glow-border rounded-[32px] border border-white/10 bg-white/5 p-8 backdrop-blur-xl"
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-2 text-sm text-slate-200">
-              Vorname
-              <input className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none" placeholder="Max" />
-            </label>
-            <label className="flex flex-col gap-2 text-sm text-slate-200">
-              Nachname
-              <input className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none" placeholder="Mustermann" />
-            </label>
-          </div>
+          <label className="flex flex-col gap-2 text-sm text-slate-200">
+            Name
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none"
+              placeholder="Vor- und Nachname"
+            />
+          </label>
           <label className="mt-4 flex flex-col gap-2 text-sm text-slate-200">
             E-Mail
-            <input type="email" className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none" placeholder="you@company.com" />
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none"
+              placeholder="you@company.com"
+            />
           </label>
           <label className="mt-4 flex flex-col gap-2 text-sm text-slate-200">
             Unternehmen
-            <input className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none" placeholder="WIES.AI" />
+            <input
+              value={company}
+              onChange={(event) => setCompany(event.target.value)}
+              required
+              className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none"
+              placeholder="Ihre Firma"
+            />
           </label>
           <label className="mt-4 flex flex-col gap-2 text-sm text-slate-200">
-            Wie können wir helfen?
-            <textarea rows={4} className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none" placeholder="Beschreiben Sie Prozesse, Use Cases oder Ziele." />
+            Interesse
+            <select
+              value={interest}
+              onChange={(event) => setInterest(event.target.value)}
+              className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none"
+            >
+              {[
+                'KI-Potenzialanalyse',
+                'KI-Prozessautomation',
+                'AI Voice Agents',
+                'Beratung & Strategie'
+              ].map((item) => (
+                <option key={item} value={item} className="bg-background text-slate-900">
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="mt-4 flex flex-col gap-2 text-sm text-slate-200">
+            Beschreiben Sie Ihr Projekt (optional)
+            <textarea
+              rows={4}
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              className="rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-white focus:border-primary focus:outline-none"
+              placeholder="Welche Prozesse sollen automatisiert werden?"
+            />
           </label>
           <div className="mt-6 flex flex-col gap-3">
             <label className="flex items-center gap-3 text-xs text-slate-300">
-              <input type="checkbox" className="h-4 w-4 rounded border-white/20 bg-background/80" /> Ich akzeptiere die{' '}
-              <a href="/impressum" className="text-primary underline">
+              <input
+                type="checkbox"
+                checked={privacyAccepted}
+                onChange={(event) => setPrivacyAccepted(event.target.checked)}
+                className="h-4 w-4 rounded border-white/20 bg-background/80"
+              />{' '}
+              Ich akzeptiere die{' '}
+              <a href="/datenschutz" className="text-primary underline">
                 Datenschutzerklärung
               </a>
             </label>
-            <Button type="submit" size="lg" variant="accent">
-              Senden
+            <Button type="submit" size="lg" variant="accent" disabled={submitting}>
+              {submitting ? 'Wird gesendet…' : 'Anfrage senden'}
             </Button>
+            {status === 'success' ? (
+              <p className="text-sm text-primary">
+                Danke! Wir melden uns mit einer individuellen Einschätzung Ihres Automatisierungspotenzials.
+              </p>
+            ) : null}
+            {status === 'error' && errorMessage ? (
+              <p className="text-sm text-red-400">{errorMessage}</p>
+            ) : null}
           </div>
         </motion.form>
       </div>

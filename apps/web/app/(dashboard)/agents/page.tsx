@@ -1,6 +1,8 @@
+// AgentsPage: Übersicht über konfigurierte Voice Agents.
 import Link from 'next/link';
 import { Button } from '../../../components/ui/button';
 
+// Beispielagenten zur Demonstration der UI
 const agents = [
   {
     id: 'voice-concierge',

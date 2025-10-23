@@ -1,6 +1,8 @@
+// AgentDetailPage: Detailansicht für einzelne Voice Agents.
 import { notFound } from 'next/navigation';
 import { Button } from '../../../../components/ui/button';
 
+// Hardcodierte Beispielkonfigurationen – können später via Backend geladen werden
 const agents = {
   'voice-concierge': {
     name: 'Voice Concierge',

@@ -1,128 +1,60 @@
+/// Prisma Client Generator – erzeugt TypeScript Client für Datenbankzugriff
 generator client {
   provider = "prisma-client-js"
 }
 
+/// PostgreSQL Datenquelle mit URL aus der Umgebung
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Organization {
-  id        String    @id @default(cuid())
-  tenantId  String    @unique
-  name      String
-  industry  String?
-  projects  Project[]
-  agents    Agent[]
-  members   OrgUser[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+/// Kunden- und Lead-Daten inkl. Automations-Kennzahlen
+model Customer {
+  id                String       @id @default(cuid())
+  name              String
+  company           String
+  email             String
+  projectType       String?
+  interest          String?
+  status            String       @default("lead")
+  notes             String?
+  source            String       @default("website")
+  n8nConfig         Json?
+  elevenConfig      Json?
+  callCount         Int          @default(0)
+  voiceMinutes      Int          @default(0)
+  automationCoverage Float       @default(0)
+  csat              Float        @default(4.6)
+  workflowStatus    String       @default("inactive")
+  lastActivity      DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  webhookLogs       WebhookLog[]
 }
 
-model OrgUser {
-  id            String   @id @default(cuid())
-  userId        String
-  role          OrgRole
-  organization  Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+/// Unterstützte Konfigurationstypen
+enum ConfigType {
+  N8N
+  ELEVENLABS
 }
 
-enum OrgRole {
-  OWNER
-  ADMIN
-  MEMBER
-  VIEWER
+/// Konfigurationsspeicher für Integrationen (n8n, ElevenLabs)
+model IntegrationConfig {
+  id        String     @id @default(cuid())
+  type      ConfigType @unique
+  data      Json?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
-model Project {
-  id           String   @id @default(cuid())
-  tenantId     String
-  name         String
-  description  String?
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  organizationId String?
-  agents       Agent[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model Agent {
-  id          String   @id @default(cuid())
-  tenantId    String
-  name        String
-  type        AgentType
-  guardrails  Json      @default(jsonb('{}'))
-  project     Project?  @relation(fields: [projectId], references: [id])
-  projectId   String?
-  runs        AgentRun[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-enum AgentType {
-  VOICE
-  CHAT
-  BACKOFFICE
-}
-
-model Workflow {
-  id          String   @id @default(cuid())
-  tenantId    String
-  name        String
-  description String?
-  definition  Json
-  project     Project? @relation(fields: [projectId], references: [id])
-  projectId   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model AgentRun {
-  id              String   @id @default(cuid())
-  tenantId        String
-  agent           Agent    @relation(fields: [agentId], references: [id])
-  agentId         String
-  status          RunStatus
-  durationSeconds Int      @default(0)
-  cost            Float    @default(0)
-  metadata        Json     @default(jsonb('{}'))
-  startedAt       DateTime @default(now())
-  completedAt     DateTime?
-}
-
-enum RunStatus {
-  QUEUED
-  RUNNING
-  SUCCEEDED
-  FAILED
-}
-
-model ApiKey {
-  id        String   @id @default(cuid())
-  tenantId  String
-  label     String
-  hashedKey String
-  scopes    String[]
-  createdAt DateTime @default(now())
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  tenantId  String
-  actorId   String?
-  action    String
-  metadata  Json     @default(jsonb('{}'))
-  createdAt DateTime @default(now())
-}
-
-model BillingAccount {
-  id         String   @id @default(cuid())
-  tenantId   String   @unique
-  stripeId   String
-  plan       String
-  seats      Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+/// Protokoll der eingehenden Webhooks für Transparenz im Dashboard
+model WebhookLog {
+  id         String    @id @default(cuid())
+  source     String
+  message    String?
+  payload    Json
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+  createdAt  DateTime  @default(now())
 }

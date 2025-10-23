@@ -1,5 +1,7 @@
+// BillingPage: Darstellung der Preispläne und Export-Aktion.
 import { Button } from '../../../components/ui/button';
 
+// Beispielpläne – dienen als Gesprächsgrundlage für Kund:innen
 const plans = [
   {
     name: 'Growth',

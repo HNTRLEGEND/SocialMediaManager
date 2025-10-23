@@ -1,3 +1,4 @@
+// SupportPage: Visualisiert einen beispielhaften Incident-Feed für AI Operations.
 import { Button } from '../../../components/ui/button';
 
 export default function SupportPage() {

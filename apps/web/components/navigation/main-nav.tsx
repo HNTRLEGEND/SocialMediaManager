@@ -1,27 +1,30 @@
 'use client';
 
+// MainNav: Sticky Navigation mit Desktop- und Mobile-Menü.
+
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 
+// Menülinks für die Sections der Landingpage
 const links = [
   { href: '#leistungen', label: 'Leistungen' },
-  { href: '#workflow', label: 'Ablauf' },
-  { href: '#mission', label: 'Mission' },
-  { href: '#cases', label: 'Case Studies' },
+  { href: '#ueber-uns', label: 'Über uns' },
+  { href: '#cases', label: 'Beispiele' },
   { href: '#kontakt', label: 'Kontakt' }
 ];
 
 export function MainNav() {
   const [open, setOpen] = useState(false);
+  // Mobile Navigation wird über useState ein- bzw. ausgeblendet
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-        <Link href="/" className="flex items-center space-x-2 text-xl font-display">
+        <Link href="/" className="flex items-center space-x-2 text-xl font-display uppercase tracking-[0.35rem]">
           <span className="text-primary">WIES</span>
-          <span className="text-white">LOGIC</span>
+          <span className="text-white">AI</span>
         </Link>
         <nav className="hidden items-center space-x-8 md:flex">
           {links.map((link) => (
@@ -35,7 +38,7 @@ export function MainNav() {
             <Link href="/sign-in">Login</Link>
           </Button>
           <Button variant="accent" asChild>
-            <Link href="#kontakt">Kostenlose Potenzialanalyse</Link>
+            <Link href="#kontakt">Potenzialanalyse starten</Link>
           </Button>
         </div>
         <button
@@ -70,7 +73,7 @@ export function MainNav() {
               <Link href="/sign-in">Login</Link>
             </Button>
             <Button variant="accent" asChild>
-              <Link href="#kontakt">Kostenlose Potenzialanalyse</Link>
+              <Link href="#kontakt">Potenzialanalyse starten</Link>
             </Button>
           </div>
         </div>
