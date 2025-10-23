@@ -18,7 +18,7 @@ ElevenLabs-Workflows zu speichern.
 9. [Weiterentwicklung](#weiterentwicklung)
 
 ## Projektüberblick
-- **Landingpage**: High-End Dark Theme mit Neon-Akzenten, Framer-Motion-Animationen und DSGVO-konformem Lead-Formular.
+- **Landingpage**: Light-Mode-Experience mit Neon-Akzenten, Glasmorphismus, Framer-Motion und DSGVO-konformem Lead-Formular.
 - **Dashboard**: Authentifizierter Bereich (Clerk) mit Kundenverwaltung, Kennzahlen, Konfigurations-Editoren und Aktivitätsprotokoll.
 - **Backend**: NestJS + Prisma + PostgreSQL mit Modulen für Kunden, Konfigurationen, Kennzahlen und Webhooks.
 
@@ -86,7 +86,9 @@ ElevenLabs-Workflows zu speichern.
      NEXT_PUBLIC_API_BASE_URL="http://localhost:3333/api"
      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="dein-clerk-publishable-key"
      CLERK_SECRET_KEY="dein-clerk-secret-key"
+     NEXT_PUBLIC_CONTACT_ENDPOINT="https://formsubmit.co/ajax/hello@wies.ai" # optional: eigener Provider
      ```
+   - Setze `NEXT_PUBLIC_CONTACT_ENDPOINT` auf den Webhook oder Form-Service deiner Wahl (z. B. Formspree, Resend, Brevo). Lässt du den Wert leer, nutzt die Landingpage den oben genannten FormSubmit-Fallback.
    - Passe die Werte für produktive Deployments entsprechend an.
 
 4. **Docker-Services starten (PostgreSQL & Redis)**

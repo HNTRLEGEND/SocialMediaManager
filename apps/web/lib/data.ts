@@ -4,27 +4,27 @@
 export const services = [
   {
     title: 'KI-Potenzialanalyse',
-    description:
-      'Wir identifizieren, welche Prozesse sich lohnen zu automatisieren und liefern eine priorisierte Roadmap inklusive Business Case.',
-    metric: 'Analyse in 14 Tagen'
+    description: 'Wir identifizieren Ihre besten Automatisierungsmöglichkeiten, bewerten Business-Impact und priorisieren Use Cases.',
+    metric: 'Analyse in 14 Tagen',
+    icon: 'sparkle'
+  },
+  {
+    title: 'Beratung & Strategieentwicklung',
+    description: 'Gemeinsam entwickeln wir Ihre KI-Roadmap – praxisnah, wirtschaftlich und abgestimmt auf Teams & Stakeholder.',
+    metric: 'Roadmap 30/60/90',
+    icon: 'compass'
   },
   {
     title: 'KI-Prozessautomation',
-    description:
-      'Von der Idee zum intelligenten Workflow – mit n8n, OpenAI und Ihren Systemen bauen wir belastbare Automationen inklusive Governance.',
-    metric: '60% Zeitersparnis'
+    description: 'Wir automatisieren wiederkehrende Aufgaben mit Workflows, Agenten und Guardrails für sichere Abläufe.',
+    metric: '60% Zeitersparnis',
+    icon: 'workflow'
   },
   {
     title: 'AI Voice Agents',
-    description:
-      'Automatisierte Kundenkommunikation mit ElevenLabs-Voices, Realtime-GPT und Guardrails – mehrsprachig, DSGVO-konform und integriert.',
-    metric: '24/7 Verfügbarkeit'
-  },
-  {
-    title: 'Beratung & Strategie',
-    description:
-      'Wir begleiten Sie bei der Einführung, Skalierung und Governance Ihrer KI-Systeme – mit Change-Enablement und Trainings.',
-    metric: 'Executive Enablement'
+    description: 'Automatisierte Kommunikation – natürlich klingend, mehrsprachig und 24/7 einsatzbereit für Service & Vertrieb.',
+    metric: '24/7 Verfügbarkeit',
+    icon: 'headset'
   }
 ];
 
@@ -32,34 +32,34 @@ export const services = [
 export const process = [
   {
     title: 'Analyse',
-    description: 'Discovery-Workshops, Daten-Screening und Priorisierung Ihrer Automations-Chancen.'
+    description: 'Wir prüfen Prozesse, Daten und Systeme auf Automationspotenzial und definieren klare Ziele.'
   },
   {
-    title: 'Implementierung',
-    description: 'Wir liefern produktionsreife Agents, Workflows und Integrationen mit Ihren Kernsystemen.'
+    title: 'Konzept',
+    description: 'Wir entwickeln eine individuelle KI-Strategie inklusive Roadmap, KPIs und Governance.'
   },
   {
-    title: 'Optimierung',
-    description: 'Kontinuierliches Monitoring, A/B-Tests und KPI-Reviews zur Skalierung Ihrer Ergebnisse.'
+    title: 'Umsetzung',
+    description: 'Wir implementieren Workflows, Voice Agents & Enablement – messbar, sicher und skalierbar.'
   }
 ];
 
 // Referenzbeispiele mit Branchenbezug
 export const caseStudies = [
   {
-    title: 'Angebotsprozess mit KI automatisiert',
-    description: 'Von der Anfrage bis zur Freigabe – Angebote werden automatisch erstellt, geprüft und im ERP verbucht.',
-    industry: 'Maschinenbau'
+    title: 'Support automatisiert mit KI Voice Agent',
+    description: 'Ein AI Voice Agent reduziert Wartezeiten um 70 % und liefert konsistente Service-Erlebnisse – rund um die Uhr.',
+    industry: 'Kundenservice'
   },
   {
-    title: 'AI Voice Agent für Support-Hotline',
-    description: 'ElevenLabs-Stimmen übernehmen First-Level-Support, authentifizieren Kunden und übergeben bei Bedarf an Mitarbeitende.',
-    industry: 'Versicherung'
+    title: 'Angebotserstellung mit GPT beschleunigt',
+    description: 'Sales-Teams erhalten vorbefüllte Angebotsdokumente in Minuten – inklusive Compliance-Check und CRM-Update.',
+    industry: 'Vertrieb'
   },
   {
-    title: 'Workflow-Analyse mit n8n & GPT',
-    description: 'Bestehende Prozesse werden durch GPT analysiert, Engpässe markiert und Automationschancen direkt umgesetzt.',
-    industry: 'Professional Services'
+    title: 'Backoffice-Workflows automatisiert',
+    description: 'Rechnungsprüfung, Datenerfassung und Dokumentenrouting laufen jetzt autonom – mit Audit-Trail und Eskalationen.',
+    industry: 'Finanzen'
   }
 ];
 

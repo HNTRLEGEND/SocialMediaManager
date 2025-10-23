@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ClerkProvider>
       <html lang="de" suppressHydrationWarning>
         <body className={`${inter.variable} ${poppins.variable} bg-background text-foreground min-h-screen antialiased`}>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             {children}
           </ThemeProvider>
         </body>
