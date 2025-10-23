@@ -1,8 +1,12 @@
 'use client';
 
+// CustomerManager: Ermöglicht im Dashboard das Anlegen und Bearbeiten von Kund:innen.
+// Alle Texte, Statusmeldungen und Fehlermeldungen sind deutsch lokalisiert.
+
 import { FormEvent, useState } from 'react';
 import { Button } from '../ui/button';
 
+// Vereinfachte Kundentypen für das Frontend-Handling
 interface Customer {
   id: string;
   name: string;
@@ -14,6 +18,7 @@ interface Customer {
 }
 
 export function CustomerManager({ initialCustomers }: { initialCustomers: Customer[] }) {
+  // State-Hooks für Kundenliste, Formulare und Rückmeldungen
   const [customers, setCustomers] = useState(initialCustomers);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +38,7 @@ export function CustomerManager({ initialCustomers }: { initialCustomers: Custom
   });
 
   const refresh = async () => {
+    // Kundenliste nach Änderungen erneut laden
     const response = await fetch('/api/customers', { cache: 'no-store' });
     if (!response.ok) {
       throw new Error('Kunden konnten nicht aktualisiert werden.');
@@ -42,11 +48,13 @@ export function CustomerManager({ initialCustomers }: { initialCustomers: Custom
   };
 
   const resetNotifications = () => {
+    // Hilfsfunktion um Statusanzeigen zurückzusetzen
     setError(null);
     setSuccess(null);
   };
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
+    // Anlageformular absenden und Lead im Backend erzeugen
     event.preventDefault();
     resetNotifications();
     setLoading(true);
@@ -59,6 +67,7 @@ export function CustomerManager({ initialCustomers }: { initialCustomers: Custom
       });
 
       if (!response.ok) {
+        // Fehlermeldung des Backends anzeigen
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Kunde konnte nicht angelegt werden.');
       }
@@ -74,6 +83,7 @@ export function CustomerManager({ initialCustomers }: { initialCustomers: Custom
   };
 
   const startEdit = (customer: Customer) => {
+    // Ausgewählten Kunden in den Bearbeitungsmodus versetzen
     setEditingId(customer.id);
     setEditForm({
       status: customer.status,
@@ -84,6 +94,7 @@ export function CustomerManager({ initialCustomers }: { initialCustomers: Custom
   };
 
   const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
+    // Update-Formular absenden
     event.preventDefault();
     if (!editingId) return;
 
@@ -98,6 +109,7 @@ export function CustomerManager({ initialCustomers }: { initialCustomers: Custom
       });
 
       if (!response.ok) {
+        // Fehlertexte weitergeben
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Kunde konnte nicht aktualisiert werden.');
       }

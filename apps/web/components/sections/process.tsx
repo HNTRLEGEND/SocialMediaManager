@@ -1,5 +1,7 @@
 'use client';
 
+// ProcessSection: Beschreibt den Projektablauf in drei Schritten, um Klarheit zu schaffen.
+
 import { motion } from 'framer-motion';
 import { process } from '../../lib/data';
 import { Card } from '../ui/card';
@@ -17,6 +19,7 @@ export function ProcessSection() {
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {process.map((step, index) => (
+            // Jeder Prozessschritt erhält eine Nummer und wird animiert eingeblendet
             <motion.div
               key={step.title}
               initial={{ opacity: 0, y: 20 }}

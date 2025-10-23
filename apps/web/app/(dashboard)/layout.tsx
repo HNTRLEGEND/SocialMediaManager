@@ -1,7 +1,9 @@
+// DashboardLayout: Rahmenseite für alle internen Routen nach dem Login.
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Button } from '../../components/ui/button';
 
+// Navigationseinträge für das Seitenmenü
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/customers', label: 'Kunden' },
@@ -45,8 +47,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-col">
         <header className="flex items-center justify-between border-b border-white/5 bg-background/70 px-8 py-6">
           <div>
-          <div className="text-xs uppercase tracking-[0.3rem] text-primary">Mandant</div>
-          <div className="text-sm font-semibold text-white">WIES.AI Automation Hub</div>
+            {/* Mandantenkontext und Branding */}
+            <div className="text-xs uppercase tracking-[0.3rem] text-primary">Mandant</div>
+            <div className="text-sm font-semibold text-white">WIES.AI Automation Hub</div>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <span className="rounded-full border border-white/10 px-3 py-1 text-slate-200">LIVE</span>

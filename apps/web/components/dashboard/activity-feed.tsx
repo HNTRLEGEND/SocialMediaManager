@@ -1,3 +1,5 @@
+// ActivityFeed: Zeigt Webhook- und Workflow-Ereignisse für Transparenz.
+
 interface ActivityItem {
   id: string;
   source: string;
@@ -11,6 +13,7 @@ interface ActivityItem {
 }
 
 function formatTime(value: string) {
+  // Zeitstempel in deutsches Datumsformat umwandeln
   return new Intl.DateTimeFormat('de-DE', {
     hour: '2-digit',
     minute: '2-digit',

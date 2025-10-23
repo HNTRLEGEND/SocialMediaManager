@@ -1,3 +1,4 @@
+// HomePage: Zusammensetzung der Landingpage-Sektionen.
 import { MainNav } from '../components/navigation/main-nav';
 import { HeroSection } from '../components/sections/hero';
 import { ServicesSection } from '../components/sections/services';

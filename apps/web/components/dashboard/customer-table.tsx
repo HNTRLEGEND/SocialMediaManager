@@ -1,3 +1,5 @@
+// CustomerTable: Zeigt Kundendaten in Tabellenform für schnelle Übersicht.
+
 interface Customer {
   id: string;
   name: string;
@@ -24,6 +26,7 @@ const formatter = new Intl.DateTimeFormat('de-DE', {
 });
 
 function formatDate(value?: string | null) {
+  // Datum sicher formatieren; ungültige Werte werden abgefangen
   if (!value) return '–';
   try {
     return formatter.format(new Date(value));

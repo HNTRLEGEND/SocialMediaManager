@@ -1,3 +1,4 @@
+// DashboardPage: kombiniert Kennzahlen, Kundenliste, Aktivitäten und Config-Formulare.
 import { backendFetch } from '../../../lib/backend';
 import { ActivityFeed } from '../../../components/dashboard/activity-feed';
 import { CustomerTable } from '../../../components/dashboard/customer-table';
@@ -49,9 +50,11 @@ interface IntegrationConfigResponse {
   data: Record<string, unknown>;
 }
 
+// Force-Dynamic, damit auf Server Side Requests nicht gecacht werden
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
+  // Daten parallel vom Backend laden
   const [customers, metrics, activity, n8nConfig, elevenConfig] = await Promise.all([
     backendFetch<Customer[]>('/customers', { cache: 'no-store' }),
     backendFetch<MetricsSummary>('/metrics/overview', { cache: 'no-store' }),
@@ -63,6 +66,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-10">
       <div>
+        {/* Kopfbereich mit kurzer Einordnung */}
         <h1 className="text-3xl font-display text-white">Organisations-Dashboard</h1>
         <p className="mt-2 text-sm text-slate-300">
           Echtzeit-Kennzahlen, Lead-Status und Integrations-Configs für Ihre KI-Automation.

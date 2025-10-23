@@ -1,5 +1,8 @@
 'use client';
 
+// MissionSection: Erzählt die Markenstory von WIES.AI, kombiniert Werte mit einem
+// Foto des Gründers und nutzt Motion-Effekte, um Vertrauen aufzubauen.
+
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
@@ -16,6 +19,7 @@ export function MissionSection() {
           </p>
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
             {[
+              // Vier Kernargumente für Glaubwürdigkeit und Kompetenz
               { label: 'ElevenLabs Partner', value: 'Voice Agents ready' },
               { label: 'Security & Compliance', value: 'EU-Cloud, DSGVO, RLS' },
               { label: 'Automation Library', value: '30+ Workflows & Playbooks' },
@@ -29,6 +33,7 @@ export function MissionSection() {
           </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="relative">
+          {/* Bildbereich mit Glas-Look für Storytelling */}
           <div className="absolute -left-10 -top-10 hidden h-24 w-24 rounded-full bg-primary/30 blur-2xl md:block" />
           <div className="glow-border rounded-[32px] border border-white/10 bg-white/5 p-6">
             <div className="overflow-hidden rounded-3xl border border-white/10">

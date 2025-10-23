@@ -1,3 +1,4 @@
+// WebhooksService: protokolliert Automationsereignisse und aktualisiert Kundenmetriken.
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -11,6 +12,7 @@ export class WebhooksService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async updateCustomerFromWebhook(customerId: string, payload: AutomationWebhookDto) {
+    // Kundendatensatz anhand der Webhook-Informationen aktualisieren
     const data: Prisma.CustomerUpdateInput = {
       lastActivity: new Date()
     };
@@ -42,6 +44,7 @@ export class WebhooksService {
     }
 
     try {
+      // Prisma Update; falls Kunde fehlt, aussagekräftigen Fehler werfen
       await this.prisma.customer.update({ where: { id: customerId }, data });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
@@ -52,6 +55,7 @@ export class WebhooksService {
   }
 
   async handleAutomation(source: WebhookSource, payload: AutomationWebhookDto) {
+    // Log-Payload vorbereiten
     const metadata = payload.metadata as Record<string, unknown> | undefined;
 
     const logPayload: Record<string, unknown> = {
@@ -74,6 +78,7 @@ export class WebhooksService {
         ? `Workflow Status: ${payload.workflowStatus}`
         : undefined;
 
+    // Ereignis persistent speichern
     const log = await this.prisma.webhookLog.create({
       data: {
         source,
@@ -84,6 +89,7 @@ export class WebhooksService {
     });
 
     if (payload.customerId) {
+      // Verknüpften Kundendatensatz aktualisieren
       await this.updateCustomerFromWebhook(payload.customerId, payload);
     }
 

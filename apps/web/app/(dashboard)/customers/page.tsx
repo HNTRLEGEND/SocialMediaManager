@@ -1,3 +1,4 @@
+// CustomersPage: fokussiert auf Lead- und Kundenpflege innerhalb des Dashboards.
 import { backendFetch } from '../../../lib/backend';
 import { CustomerManager } from '../../../components/dashboard/customer-manager';
 
@@ -11,9 +12,11 @@ interface Customer {
   interest?: string | null;
 }
 
+// Force-Dynamic, damit neue Leads sofort angezeigt werden
 export const dynamic = 'force-dynamic';
 
 export default async function CustomersPage() {
+  // Kundendaten serverseitig abrufen
   const customers = await backendFetch<Customer[]>('/customers', { cache: 'no-store' });
 
   return (

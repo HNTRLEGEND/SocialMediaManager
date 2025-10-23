@@ -1,5 +1,9 @@
 'use client';
 
+// HeroSection: Diese Komponente bildet den prominenten Einstieg der Landingpage
+// und vermittelt in Verbindung mit Video-Hintergrund, Animationen und Call-to-Action
+// den Kernnutzen von WIES.AI. Alle Texte und Buttons sind auf Conversion optimiert.
+
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '../ui/button';
@@ -21,6 +25,7 @@ export function HeroSection() {
       </video>
       <div className="mx-auto flex max-w-6xl flex-col gap-12 text-left">
         <motion.div
+          // Hinweis-Badge als Social Proof, der über Motion weich eingeblendet wird
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.6 }}
@@ -29,6 +34,7 @@ export function HeroSection() {
           <span>Intelligente Automatisierung für den Mittelstand</span>
         </motion.div>
         <motion.h1
+          // Haupt-Headline mit Gradient-Akzent für KI-Schlüsselwort
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
@@ -37,6 +43,7 @@ export function HeroSection() {
           Wir automatisieren Ihre Geschäftsprozesse mit <span className="gradient-text">Künstlicher Intelligenz</span>.
         </motion.h1>
         <motion.p
+          // Kurze Nutzenargumentation, die die wichtigsten Leistungen adressiert
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
@@ -46,6 +53,7 @@ export function HeroSection() {
           mit n8n, OpenAI und ElevenLabs, die sofort messbaren Impact liefern.
         </motion.p>
         <motion.div
+          // Primäre und sekundäre Call-to-Action Buttons – mobil untereinander, Desktop nebeneinander
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
@@ -59,6 +67,7 @@ export function HeroSection() {
           </Button>
         </motion.div>
         <motion.div
+          // Zusatznutzen-Kacheln: verdeutlichen Funktionsumfang und Sicherheitsversprechen
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.7 }}

@@ -1,3 +1,4 @@
+// CustomersService: Datenzugriffsschicht für Kund:innen inklusive Default-Konfigurationen.
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -10,6 +11,7 @@ export class CustomersService {
   constructor(private readonly prisma: PrismaService) {}
 
   private defaultN8nConfig(): Record<string, unknown> {
+    // Standardwerte, falls kein n8n Setup vorhanden ist
     return {
       webhookUrl: '',
       parameters: {},
@@ -20,6 +22,7 @@ export class CustomersService {
   }
 
   private defaultElevenConfig(): Record<string, unknown> {
+    // Grundkonfiguration für ElevenLabs Agenten
     return {
       voiceId: '',
       stability: 0.5,
@@ -33,10 +36,12 @@ export class CustomersService {
     defaults: Record<string, unknown>,
     incoming?: Record<string, unknown> | null
   ): PrismaClient.InputJsonValue {
+    // Vereinigt vorhandene Werte mit Defaults, ohne Felder zu verlieren
     return { ...defaults, ...(incoming ?? {}) };
   }
 
   async create(dto: CreateCustomerDto): Promise<Customer> {
+    // Beim Anlegen werden Default-Konfigurationen ergänzt
     const data: PrismaClient.CustomerCreateInput = {
       name: dto.name,
       company: dto.company,
@@ -72,6 +77,7 @@ export class CustomersService {
 
   async update(id: string, dto: UpdateCustomerDto): Promise<Customer> {
     try {
+      // Nur übergebene Felder aktualisieren, Rest unverändert lassen
       const data: PrismaClient.CustomerUpdateInput = {
         ...dto,
         projectType: dto.projectType ?? undefined,
@@ -87,14 +93,17 @@ export class CustomersService {
       };
 
       if (dto.n8nConfig) {
+        // Neue n8n Konfiguration mit Defaults zusammenführen
         data.n8nConfig = this.mergeConfig(this.defaultN8nConfig(), dto.n8nConfig);
       }
 
       if (dto.elevenConfig) {
+        // Analog für ElevenLabs Konfiguration
         data.elevenConfig = this.mergeConfig(this.defaultElevenConfig(), dto.elevenConfig);
       }
 
       if (dto.callCount || dto.voiceMinutes || dto.workflowStatus) {
+        // Bei Aktivität den Zeitstempel setzen
         data.lastActivity = new Date();
       }
 

@@ -1,3 +1,4 @@
+// RootLayout: Basiskonfiguration für Fonts, Theme und Clerk Provider.
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from 'next-themes';

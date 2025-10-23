@@ -1,12 +1,15 @@
+/// Prisma Client Generator – erzeugt TypeScript Client für Datenbankzugriff
 generator client {
   provider = "prisma-client-js"
 }
 
+/// PostgreSQL Datenquelle mit URL aus der Umgebung
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+/// Kunden- und Lead-Daten inkl. Automations-Kennzahlen
 model Customer {
   id                String       @id @default(cuid())
   name              String
@@ -30,11 +33,13 @@ model Customer {
   webhookLogs       WebhookLog[]
 }
 
+/// Unterstützte Konfigurationstypen
 enum ConfigType {
   N8N
   ELEVENLABS
 }
 
+/// Konfigurationsspeicher für Integrationen (n8n, ElevenLabs)
 model IntegrationConfig {
   id        String     @id @default(cuid())
   type      ConfigType @unique
@@ -43,6 +48,7 @@ model IntegrationConfig {
   updatedAt DateTime   @updatedAt
 }
 
+/// Protokoll der eingehenden Webhooks für Transparenz im Dashboard
 model WebhookLog {
   id         String    @id @default(cuid())
   source     String

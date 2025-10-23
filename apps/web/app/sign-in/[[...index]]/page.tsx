@@ -1,3 +1,4 @@
+// SignInPage: nutzt Clerk UI-Komponente für den Login.
 import { SignIn } from '@clerk/nextjs';
 
 export default function SignInPage() {

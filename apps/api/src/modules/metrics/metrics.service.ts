@@ -1,3 +1,4 @@
+// MetricsService: berechnet Kennzahlen und formatiert Aktivitätslogs für das Dashboard.
 import { Injectable } from '@nestjs/common';
 import { Prisma, WebhookLog } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -19,6 +20,7 @@ export class MetricsService {
   constructor(private readonly prisma: PrismaService) {}
 
   private asRecord(value: Prisma.JsonValue | null | undefined): Record<string, unknown> {
+    // Hilfsfunktion um JSON Felder in ein Objekt zu transformieren
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       return {};
     }
@@ -26,6 +28,7 @@ export class MetricsService {
   }
 
   private buildMessage(log: WebhookLog & { payload: Prisma.JsonValue }): string {
+    // Erstellt menschenlesbare Aktivitätsnachrichten aus dem Payload
     if (log.message) {
       return log.message;
     }

@@ -1,5 +1,8 @@
 'use client';
 
+// PlatformSection: Veranschaulicht den Produktumfang der SaaS-Plattform.
+// Kombiniert KPI-Kacheln mit Workflow-Vorschau und Feature-Liste.
+
 import { motion } from 'framer-motion';
 import { dashboardKpis, workflowNodes } from '../../lib/data';
 import { Button } from '../ui/button';
@@ -34,6 +37,7 @@ export function PlatformSection() {
             </div>
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
               {dashboardKpis.map((kpi) => (
+                // KPI-Bausteine mit Beschreibung und Trendangabe
                 <div key={kpi.label} className="rounded-2xl border border-white/5 bg-background/70 p-5">
                   <div className="text-xs uppercase tracking-[0.4rem] text-primary/60">{kpi.label}</div>
                   <div className="mt-3 text-3xl font-semibold text-white">{kpi.value}</div>
@@ -57,6 +61,7 @@ export function PlatformSection() {
             </p>
             <div className="mt-6 space-y-4">
               {workflowNodes.map((node) => (
+                // Visualisierung einzelner Workflow-Knoten als Textkarten
                 <div key={node.id} className="rounded-2xl border border-white/10 bg-background/70 p-4">
                   <div className="text-sm font-semibold text-white">{node.title}</div>
                   <div className="text-xs text-slate-300">{node.description}</div>

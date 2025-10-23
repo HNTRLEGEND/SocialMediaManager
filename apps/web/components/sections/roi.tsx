@@ -1,9 +1,13 @@
 'use client';
 
+// RoiSection: Interaktiver Rechner zur Visualisierung des finanziellen Nutzens.
+// Besucher:innen können vier Kennzahlen anpassen und erhalten sofort die Einsparung.
+
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../ui/button';
 
+// Ausgangswerte für den Rechner (realistische Default-Annahmen)
 const baseline = {
   volume: 1200,
   avgHandleTime: 6,
@@ -14,6 +18,8 @@ const baseline = {
 export function RoiSection() {
   const [inputs, setInputs] = useState(baseline);
 
+  // Berechnung der Kennzahlen erfolgt memoisiert, damit bei jeder Slider-Änderung
+  // nur die relevanten Werte neu ermittelt werden.
   const result = useMemo(() => {
     const hours = (inputs.volume * inputs.avgHandleTime) / 60;
     const automatedHours = hours * inputs.automationRate;
@@ -42,6 +48,7 @@ export function RoiSection() {
             { label: 'Kosten je Stunde (€)', key: 'costPerHour', min: 20, max: 120, step: 5 },
             { label: 'Automationsrate', key: 'automationRate', min: 0.1, max: 0.95, step: 0.05 }].map((field) => (
               <label key={field.key} className="flex flex-col gap-3 text-sm text-slate-200">
+                {/* Slider zum Einstellen der Geschäftskennzahl */}
                 {field.label}
                 <input
                   type="range"

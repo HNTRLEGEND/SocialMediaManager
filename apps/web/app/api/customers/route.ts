@@ -1,7 +1,9 @@
+// API-Route: holt Kundenliste und erstellt neue Kund:innen.
 import { NextRequest, NextResponse } from 'next/server';
 import { getBackendBaseUrl } from '../../../lib/backend';
 
 export async function GET() {
+  // Kundenliste vom Backend abrufen
   const response = await fetch(`${getBackendBaseUrl()}/customers`, {
     headers: { Accept: 'application/json' },
     cache: 'no-store'
@@ -10,6 +12,7 @@ export async function GET() {
   const data = await response.json().catch(() => []);
 
   if (!response.ok) {
+    // Backend-Fehler durchreichen (z. B. Validierung)
     return NextResponse.json(data ?? { message: 'Kunden konnten nicht geladen werden.' }, { status: response.status });
   }
 
@@ -17,6 +20,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Eingehenden Body lesen
   const payload = await request.json();
   const response = await fetch(`${getBackendBaseUrl()}/customers`, {
     method: 'POST',
@@ -30,6 +34,7 @@ export async function POST(request: NextRequest) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    // Fehlerantwort zurück an den Client
     return NextResponse.json(data ?? { message: 'Kunde konnte nicht erstellt werden.' }, { status: response.status });
   }
 

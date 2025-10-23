@@ -1,3 +1,4 @@
+// AppModule: zentrale Verkabelung aller NestJS-Module für das Backend.
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';

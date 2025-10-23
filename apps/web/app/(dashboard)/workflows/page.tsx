@@ -1,5 +1,7 @@
+// WorkflowsPage: Übersicht über automatisierte n8n-Pipelines.
 import { Button } from '../../../components/ui/button';
 
+// Mock-Daten für Workflows – dienen als visuelle Platzhalter
 const workflows = [
   {
     name: 'Ticket Sync',

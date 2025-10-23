@@ -1,10 +1,13 @@
 'use client';
 
+// MainNav: Sticky Navigation mit Desktop- und Mobile-Menü.
+
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 
+// Menülinks für die Sections der Landingpage
 const links = [
   { href: '#leistungen', label: 'Leistungen' },
   { href: '#ueber-uns', label: 'Über uns' },
@@ -14,6 +17,7 @@ const links = [
 
 export function MainNav() {
   const [open, setOpen] = useState(false);
+  // Mobile Navigation wird über useState ein- bzw. ausgeblendet
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-xl">

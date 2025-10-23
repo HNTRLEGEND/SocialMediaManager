@@ -1,5 +1,8 @@
 'use client';
 
+// CaseStudiesSection: Präsentiert exemplarische Kundenprojekte als Inspiration
+// und baut Glaubwürdigkeit für neue Leads auf.
+
 import { motion } from 'framer-motion';
 import { caseStudies } from '../../lib/data';
 
@@ -16,6 +19,7 @@ export function CaseStudiesSection() {
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {caseStudies.map((item, index) => (
+            // Motion sorgt für gestaffelte Einblendung der Referenzen
             <motion.div
               key={item.title}
               initial={{ opacity: 0, y: 30 }}

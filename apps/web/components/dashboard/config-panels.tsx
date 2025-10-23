@@ -1,5 +1,7 @@
 'use client';
 
+// ConfigPanels: Stellt Formularpanels für n8n- und ElevenLabs-Konfigurationen bereit.
+
 import { FormEvent, useState } from 'react';
 import { Button } from '../ui/button';
 
@@ -11,6 +13,7 @@ type ConfigPanelProps = {
 };
 
 function toInput<T>(value: unknown, fallback: T): T {
+  // Hilfsfunktion, um unknown Werte sicher in FormState zu übernehmen
   if (value === undefined || value === null) {
     return fallback;
   }
@@ -33,6 +36,7 @@ function ConfigForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [formState, setFormState] = useState(() => {
+    // Initiale Formularwerte aus der bestehenden Konfiguration ableiten
     if (type === 'n8n') {
       return {
         baseUrl: toInput(initialData.baseUrl, ''),
@@ -54,10 +58,12 @@ function ConfigForm({
   });
 
   const handleChange = (field: string, value: string) => {
+    // Generischer Setter für Texteingaben
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    // Speichern der Konfiguration via Next.js API Route
     event.preventDefault();
     setSubmitting(true);
     setStatus('idle');

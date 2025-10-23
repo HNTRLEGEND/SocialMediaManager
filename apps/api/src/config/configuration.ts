@@ -1,3 +1,4 @@
+// Konfigurations-Factory: stellt Standardwerte für Ports, Datenbank und Integrationen bereit.
 export default () => ({
   port: parseInt(process.env.PORT ?? '3333', 10),
   databaseUrl: process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/wiesai',

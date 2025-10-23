@@ -1,5 +1,7 @@
+// AdminPage: Zeigt mandantenübergreifende Kennzahlen für das interne Team.
 import { Button } from '../../../components/ui/button';
 
+// Beispielhafte Mandantenliste inkl. Feature Flags
 const tenants = [
   { name: 'Aperture Industries', usage: '4.982 calls', incidents: 1, featureFlags: ['beta_voice_router'] },
   { name: 'Wayne Logistics', usage: '2.318 calls', incidents: 0, featureFlags: ['lead_scoring'] },

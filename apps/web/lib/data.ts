@@ -1,3 +1,6 @@
+// Zentral definierte Inhaltsblöcke für Landingpage und Dashboard.
+
+// Leistungen mit Titel, Beschreibung und KPI-Label
 export const services = [
   {
     title: 'KI-Potenzialanalyse',
@@ -25,6 +28,7 @@ export const services = [
   }
 ];
 
+// Projektphasen, die in der ProcessSection dargestellt werden
 export const process = [
   {
     title: 'Analyse',
@@ -40,6 +44,7 @@ export const process = [
   }
 ];
 
+// Referenzbeispiele mit Branchenbezug
 export const caseStudies = [
   {
     title: 'Angebotsprozess mit KI automatisiert',
@@ -58,6 +63,7 @@ export const caseStudies = [
   }
 ];
 
+// Beispielhafte Kennzahlen für das Dashboard-Mockup
 export const dashboardKpis = [
   {
     label: 'Aktive Agents',
@@ -85,6 +91,7 @@ export const dashboardKpis = [
   }
 ];
 
+// Knoten, die den Workflow-Builder illustrieren
 export const workflowNodes = [
   {
     id: 'start',

@@ -1,8 +1,11 @@
 'use client';
 
+// InsightsSection: Teasert Fachartikel und Roadmap-Updates an, um Expertise zu zeigen.
+
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
+// Dummy-Daten für drei exemplarische Artikel – können später durch CMS ersetzt werden.
 const posts = [
   {
     title: 'AI Voice Agents: Leitfaden für Mittelstand 2026',
@@ -34,6 +37,7 @@ export function InsightsSection() {
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {posts.map((post, index) => (
+            // Animierte Karten mit Kategorie, Titel und CTA zum Insights-Bereich
             <motion.article
               key={post.title}
               initial={{ opacity: 0, y: 30 }}

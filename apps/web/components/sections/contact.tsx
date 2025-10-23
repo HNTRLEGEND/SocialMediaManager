@@ -1,5 +1,8 @@
 'use client';
 
+// ContactSection: Formularkomponente für das Lead-Capture. Enthält State-Management,
+// DSGVO-Hinweise und den API-Call zum Backend. Alle Texte sind bewusst deutschsprachig gehalten.
+
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
@@ -7,6 +10,7 @@ import { Button } from '../ui/button';
 
 export function ContactSection() {
   const [name, setName] = useState('');
+  // State-Verwaltung für alle Pflichtfelder des Formulars
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
   const [interest, setInterest] = useState('KI-Potenzialanalyse');
@@ -17,6 +21,8 @@ export function ContactSection() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    // Submit-Handler: validiert die Zustimmung zur Datenschutzerklärung
+    // und sendet anschließend den Lead an die API.
     event.preventDefault();
     if (!privacyAccepted) {
       setErrorMessage('Bitte stimmen Sie der Datenschutzerklärung zu.');
@@ -29,6 +35,7 @@ export function ContactSection() {
     setStatus('idle');
 
     try {
+      // POST-Request an die Next.js API-Route, die den Lead im Backend speichert
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
@@ -46,10 +53,12 @@ export function ContactSection() {
       });
 
       if (!response.ok) {
+        // Fehlerfälle detailliert auslesen, um Nutzer:innen Feedback zu geben
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Lead konnte nicht gespeichert werden.');
       }
 
+      // Erfolgsfall: Formular zurücksetzen und Status anpassen
       setStatus('success');
       setName('');
       setEmail('');
@@ -58,6 +67,7 @@ export function ContactSection() {
       setMessage('');
       setPrivacyAccepted(false);
     } catch (error) {
+      // Fehlermeldung anzeigen, falls der Request scheitert
       setStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Unbekannter Fehler');
     } finally {

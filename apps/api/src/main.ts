@@ -1,3 +1,4 @@
+// main.ts: Bootstrap der NestJS-Anwendung inklusive Sicherheits- und Validierungsmiddleware.
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -28,6 +29,7 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
+  // Fehler beim Start protokollieren und Prozess beenden
   const logger = new Logger('Bootstrap');
   logger.error(error);
   process.exit(1);

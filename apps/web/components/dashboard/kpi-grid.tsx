@@ -1,3 +1,5 @@
+// KpiGrid: Visualisiert zentrale Kennzahlen im Dashboard.
+
 interface MetricsSummary {
   customers: number;
   totalCalls: number;
