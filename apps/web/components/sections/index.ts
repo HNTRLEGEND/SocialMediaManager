@@ -1,0 +1,9 @@
+export { HeroSection } from './hero';
+export { ServicesSection } from './services';
+export { ProcessSection } from './process';
+export { MissionSection } from './mission';
+export { CaseStudiesSection } from './case-studies';
+export { PlatformSection } from './platform';
+export { RoiSection } from './roi';
+export { InsightsSection } from './insights';
+export { ContactSection } from './contact';
