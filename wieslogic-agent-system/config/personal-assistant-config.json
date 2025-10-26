@@ -1,0 +1,504 @@
+{
+  "personal_assistant": {
+    "name": "AI Personal Assistant",
+    "version": "2025.10.2",
+    "description": "Intelligenter persönlicher Assistent für E-Mail, Kalender, Aufgaben und mehr",
+    "capabilities": [
+      "email_management",
+      "calendar_management",
+      "task_management",
+      "auto_response",
+      "meeting_scheduling",
+      "document_organization",
+      "contact_management",
+      "smart_notifications"
+    ]
+  },
+
+  "email_management": {
+    "enabled": true,
+    "settings": {
+      "auto_classify": true,
+      "auto_respond_enabled": true,
+      "auto_respond_confidence_threshold": 0.85,
+      "save_drafts_below_threshold": true,
+      "auto_archive_categories": ["newsletter", "promotions", "marketing"],
+      "priority_labeling": true,
+      "attachment_processing": true,
+      "thread_tracking": true
+    },
+    "classification": {
+      "categories": {
+        "meeting_request": {
+          "priority": "high",
+          "default_action": "schedule_meeting",
+          "auto_response": true,
+          "response_type": "propose_times"
+        },
+        "question": {
+          "priority": "high",
+          "default_action": "respond",
+          "auto_response": true,
+          "response_type": "answer_with_rag"
+        },
+        "urgent": {
+          "priority": "urgent",
+          "default_action": "respond_immediately",
+          "auto_response": false,
+          "notify_immediately": true
+        },
+        "task": {
+          "priority": "normal",
+          "default_action": "create_task",
+          "auto_response": true,
+          "response_type": "acknowledge_and_timeline"
+        },
+        "info": {
+          "priority": "low",
+          "default_action": "archive",
+          "auto_response": false
+        },
+        "sales": {
+          "priority": "normal",
+          "default_action": "forward_to_sales_agent",
+          "auto_response": true,
+          "response_type": "acknowledge"
+        },
+        "support": {
+          "priority": "normal",
+          "default_action": "create_ticket",
+          "auto_response": true,
+          "response_type": "ticket_confirmation"
+        },
+        "complaint": {
+          "priority": "high",
+          "default_action": "escalate",
+          "auto_response": true,
+          "notify_immediately": true,
+          "response_type": "empathy_and_escalation"
+        }
+      }
+    },
+    "auto_response": {
+      "enabled": true,
+      "working_hours_only": true,
+      "delay_seconds": {
+        "urgent": 0,
+        "high": 60,
+        "normal": 300,
+        "low": 3600
+      },
+      "tone_presets": {
+        "professional_friendly": {
+          "greeting": "Vielen Dank für Ihre E-Mail.",
+          "closing": "Mit freundlichen Grüßen",
+          "style": "Professional but warm, helpful, solution-oriented"
+        },
+        "formal": {
+          "greeting": "Sehr geehrte/r",
+          "closing": "Hochachtungsvoll",
+          "style": "Very formal, traditional business correspondence"
+        },
+        "casual": {
+          "greeting": "Hallo",
+          "closing": "Viele Grüße",
+          "style": "Friendly, approachable, conversational"
+        },
+        "brief": {
+          "greeting": "Hallo",
+          "closing": "Grüße",
+          "style": "Short, to the point, efficient"
+        }
+      }
+    },
+    "out_of_office": {
+      "enabled": false,
+      "start_date": null,
+      "end_date": null,
+      "custom_message": "",
+      "backup_contact": "",
+      "auto_create_follow_ups": true,
+      "forward_urgent_to": null
+    },
+    "priority_senders": [
+      {
+        "email": "boss@company.com",
+        "priority_boost": "urgent",
+        "always_notify": true,
+        "auto_forward": false
+      }
+    ],
+    "blocked_senders": [],
+    "auto_forward_rules": []
+  },
+
+  "calendar_management": {
+    "enabled": true,
+    "settings": {
+      "auto_schedule_meetings": true,
+      "conflict_detection": true,
+      "buffer_between_meetings": 15,
+      "max_meetings_per_day": 8,
+      "allow_back_to_back": false,
+      "auto_decline_conflicts": false,
+      "send_reminders": true
+    },
+    "availability": {
+      "timezone": "Europe/Berlin",
+      "working_hours": {
+        "monday": { "start": "09:00", "end": "17:00" },
+        "tuesday": { "start": "09:00", "end": "17:00" },
+        "wednesday": { "start": "09:00", "end": "17:00" },
+        "thursday": { "start": "09:00", "end": "17:00" },
+        "friday": { "start": "09:00", "end": "17:00" },
+        "saturday": null,
+        "sunday": null
+      },
+      "lunch_break": {
+        "enabled": true,
+        "start": "12:00",
+        "end": "13:00"
+      },
+      "focus_blocks": [
+        {
+          "name": "Deep Work Morning",
+          "day": "monday",
+          "start": "09:00",
+          "end": "11:00",
+          "allow_meetings": false
+        }
+      ]
+    },
+    "meeting_preferences": {
+      "default_duration": 30,
+      "preferred_durations": [15, 30, 60, 90],
+      "preferred_days": ["tuesday", "wednesday", "thursday"],
+      "preferred_times": ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
+      "avoid_times": ["12:00-13:00"],
+      "max_attendees": 10,
+      "always_create_video_link": true,
+      "default_video_platform": "google_meet"
+    },
+    "reminders": {
+      "enabled": true,
+      "advance_times": [
+        { "method": "email", "minutes": 1440 },
+        { "method": "notification", "minutes": 15 }
+      ],
+      "include_agenda": true,
+      "include_materials": true
+    },
+    "recurring_meetings": {
+      "auto_accept": false,
+      "notify_on_changes": true
+    }
+  },
+
+  "task_management": {
+    "enabled": true,
+    "settings": {
+      "auto_extract_from_emails": true,
+      "auto_extract_from_meetings": true,
+      "auto_create_follow_ups": true,
+      "daily_digest": true,
+      "priority_calculation": "automatic"
+    },
+    "categorization": {
+      "categories": [
+        "meeting_prep",
+        "follow_up",
+        "research",
+        "admin",
+        "communication",
+        "creative",
+        "review",
+        "urgent"
+      ],
+      "auto_categorize": true
+    },
+    "deadlines": {
+      "auto_extract": true,
+      "reminder_days_before": [7, 3, 1],
+      "escalate_overdue": true
+    },
+    "time_estimation": {
+      "enabled": true,
+      "method": "ml_based",
+      "allow_manual_override": true
+    },
+    "dependencies": {
+      "track": true,
+      "auto_detect": true,
+      "notify_on_blocking": true
+    },
+    "daily_digest": {
+      "enabled": true,
+      "time": "08:00",
+      "include_summary": true,
+      "include_recommendations": true,
+      "max_tasks_to_show": 20
+    }
+  },
+
+  "document_management": {
+    "enabled": true,
+    "settings": {
+      "auto_save_attachments": true,
+      "auto_organize": true,
+      "ocr_enabled": false,
+      "duplicate_detection": true
+    },
+    "organization": {
+      "folder_structure": "by_category_and_date",
+      "naming_convention": "YYYY-MM-DD_Category_Filename",
+      "archive_after_days": 365
+    },
+    "categories": {
+      "contracts": { "folder": "Contracts", "retention_years": 10 },
+      "invoices": { "folder": "Financial/Invoices", "retention_years": 7 },
+      "proposals": { "folder": "Sales/Proposals", "retention_years": 3 },
+      "presentations": { "folder": "Presentations", "retention_years": 2 },
+      "reports": { "folder": "Reports", "retention_years": 3 },
+      "misc": { "folder": "General", "retention_years": 1 }
+    }
+  },
+
+  "contact_management": {
+    "enabled": true,
+    "settings": {
+      "auto_create_contacts": true,
+      "auto_enrich": true,
+      "track_interactions": true,
+      "relationship_scoring": true
+    },
+    "enrichment": {
+      "enabled": true,
+      "sources": ["hunter_io", "clearbit", "linkedin"],
+      "update_frequency": "monthly"
+    },
+    "relationship_tracking": {
+      "enabled": true,
+      "score_calculation": "automatic",
+      "nurture_campaigns": {
+        "enabled": true,
+        "trigger_at_score": 30,
+        "types": ["weak_relationship", "no_recent_contact", "high_value_dormant"]
+      }
+    },
+    "interaction_tracking": {
+      "track_emails": true,
+      "track_meetings": true,
+      "track_calls": true,
+      "sentiment_analysis": true
+    }
+  },
+
+  "notifications": {
+    "enabled": true,
+    "channels": {
+      "email": {
+        "enabled": true,
+        "for_priorities": ["urgent", "high"]
+      },
+      "slack": {
+        "enabled": false,
+        "webhook_url": "",
+        "for_priorities": ["urgent"]
+      },
+      "teams": {
+        "enabled": false,
+        "webhook_url": "",
+        "for_priorities": ["urgent"]
+      },
+      "sms": {
+        "enabled": false,
+        "phone_number": "",
+        "for_priorities": ["urgent"]
+      }
+    },
+    "aggregation": {
+      "enabled": true,
+      "interval_minutes": 60,
+      "max_notifications_per_interval": 5
+    },
+    "quiet_hours": {
+      "enabled": true,
+      "start": "20:00",
+      "end": "08:00",
+      "allow_urgent": true
+    }
+  },
+
+  "ai_settings": {
+    "openai": {
+      "model": "gpt-4-turbo",
+      "temperature": 0.3,
+      "max_tokens": 2000,
+      "language": "auto_detect"
+    },
+    "rag": {
+      "enabled": true,
+      "vector_store_id": "",
+      "similarity_threshold": 0.75,
+      "max_results": 5
+    },
+    "learning": {
+      "enabled": true,
+      "learn_from_corrections": true,
+      "learn_from_preferences": true,
+      "adapt_response_style": true
+    }
+  },
+
+  "integrations": {
+    "google_workspace": {
+      "enabled": true,
+      "gmail": true,
+      "calendar": true,
+      "drive": true,
+      "docs": false,
+      "sheets": true
+    },
+    "crm": {
+      "enabled": false,
+      "type": null,
+      "sync_frequency": "realtime"
+    },
+    "project_management": {
+      "enabled": false,
+      "type": null
+    },
+    "communication": {
+      "slack": false,
+      "teams": false,
+      "zoom": false
+    }
+  },
+
+  "security": {
+    "data_retention": {
+      "emails": 365,
+      "calendar": 730,
+      "tasks": 365,
+      "contacts": "indefinite",
+      "documents": 365
+    },
+    "privacy": {
+      "anonymize_data": false,
+      "encrypt_sensitive": true,
+      "log_access": true
+    },
+    "access_control": {
+      "require_2fa": false,
+      "ip_whitelist": [],
+      "allowed_domains": []
+    }
+  },
+
+  "performance": {
+    "batch_processing": {
+      "enabled": true,
+      "batch_size": 10,
+      "interval_seconds": 300
+    },
+    "caching": {
+      "enabled": true,
+      "ttl_seconds": 3600
+    },
+    "rate_limiting": {
+      "emails_per_hour": 100,
+      "api_calls_per_minute": 60
+    }
+  },
+
+  "monitoring": {
+    "enabled": true,
+    "metrics": [
+      "emails_processed",
+      "auto_responses_sent",
+      "meetings_scheduled",
+      "tasks_created",
+      "response_time",
+      "accuracy_score",
+      "user_satisfaction"
+    ],
+    "alerts": {
+      "error_rate_threshold": 0.05,
+      "response_time_threshold_seconds": 10,
+      "queue_size_threshold": 50
+    },
+    "reporting": {
+      "daily_summary": true,
+      "weekly_analytics": true,
+      "monthly_review": true
+    }
+  },
+
+  "workflows": {
+    "email_to_task": {
+      "enabled": true,
+      "trigger": "email_classification",
+      "conditions": ["category == 'task'"],
+      "actions": ["extract_tasks", "create_tasks", "send_confirmation"]
+    },
+    "email_to_meeting": {
+      "enabled": true,
+      "trigger": "email_classification",
+      "conditions": ["category == 'meeting_request'"],
+      "actions": ["find_slots", "propose_times", "create_event_on_confirmation"]
+    },
+    "daily_digest": {
+      "enabled": true,
+      "trigger": "schedule",
+      "schedule": "0 8 * * *",
+      "actions": ["compile_tasks", "compile_meetings", "send_digest"]
+    },
+    "relationship_nurture": {
+      "enabled": true,
+      "trigger": "schedule",
+      "schedule": "0 9 * * 1",
+      "actions": ["check_weak_relationships", "suggest_reach_outs"]
+    },
+    "ooo_auto_reply": {
+      "enabled": true,
+      "trigger": "email_received",
+      "conditions": ["ooo_enabled", "within_ooo_period"],
+      "actions": ["send_ooo_response", "create_follow_up"]
+    }
+  },
+
+  "templates": {
+    "email_responses": {
+      "meeting_confirmation": {
+        "de": "Vielen Dank für Ihre Anfrage. Ich habe folgende Termine für Sie gefunden:\n\n{slots}\n\nBitte wählen Sie einen passenden Termin.",
+        "en": "Thank you for your request. I found the following available times:\n\n{slots}\n\nPlease select a suitable time."
+      },
+      "task_acknowledgment": {
+        "de": "Vielen Dank für Ihre Nachricht. Ich habe folgende Aufgaben notiert:\n\n{tasks}\n\nIch melde mich bis {deadline} bei Ihnen.",
+        "en": "Thank you for your message. I noted the following tasks:\n\n{tasks}\n\nI will get back to you by {deadline}."
+      },
+      "question_answer": {
+        "de": "Vielen Dank für Ihre Frage. {answer}\n\nSollten Sie weitere Fragen haben, melden Sie sich gerne.",
+        "en": "Thank you for your question. {answer}\n\nIf you have any further questions, please let me know."
+      },
+      "ooo": {
+        "de": "Vielen Dank für Ihre E-Mail. Ich bin vom {start} bis {end} nicht im Büro. In dringenden Fällen: {backup_contact}",
+        "en": "Thank you for your email. I am out of office from {start} to {end}. For urgent matters: {backup_contact}"
+      }
+    },
+    "notifications": {
+      "urgent_email": {
+        "title": "🚨 Dringende E-Mail erhalten",
+        "body": "Von: {from}\nBetreff: {subject}"
+      },
+      "meeting_reminder": {
+        "title": "📅 Meeting in {minutes} Minuten",
+        "body": "{title}\nMit: {attendees}"
+      },
+      "overdue_task": {
+        "title": "⚠️ Überfällige Aufgabe",
+        "body": "{task_title}\nFällig seit: {days} Tagen"
+      }
+    }
+  }
+}
