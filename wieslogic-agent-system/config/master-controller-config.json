@@ -1,0 +1,274 @@
+{
+  "system": {
+    "name": "WiesLogic Master Controller",
+    "version": "2025.10.2",
+    "description": "Central orchestration system for all WiesLogic agents",
+    "platform": "n8n",
+    "multi_tenant": true
+  },
+  "customers": {
+    "template": {
+      "customer_id": "CUSTOMER_ID",
+      "customer_name": "Customer Name",
+      "sheet_id": "GOOGLE_SHEET_ID",
+      "active_agents": [],
+      "product_types": [],
+      "calculation_modules": [],
+      "webhooks": {},
+      "branding": {},
+      "notification_channels": []
+    },
+    "active_customers": [
+      {
+        "customer_id": "ROBOPAC_AETNA_001",
+        "customer_name": "Robopac/AETNA Group",
+        "sheet_id": "YOUR_ROBOPAC_SHEET_ID",
+        "active_agents": [
+          "lead_agent",
+          "technical_agent",
+          "sales_agent"
+        ],
+        "product_types": [
+          "pallet_wrappers",
+          "palletizers",
+          "depalletizers",
+          "lgvs",
+          "case_packers",
+          "shrink_wrappers",
+          "tray_shrink_wrappers",
+          "bag_sealers",
+          "case_packing_machines",
+          "cobots"
+        ],
+        "calculation_modules": [
+          "speed_based_calculations",
+          "throughput_analysis",
+          "formation_calculator",
+          "input_output_matcher"
+        ],
+        "webhooks": {
+          "lead_entry": "/robopac/lead",
+          "technical_handover": "/robopac/technical",
+          "sales_handover": "/robopac/sales"
+        },
+        "branding": {
+          "company_name": "Robopac/AETNA Group",
+          "email_signature": "Robopac Sales Team",
+          "logo_url": ""
+        },
+        "notification_channels": {
+          "email": "support@robopac.com",
+          "slack": "",
+          "teams": ""
+        }
+      }
+    ]
+  },
+  "agent_registry": {
+    "lead_agent": {
+      "name": "Lead Agent",
+      "workflow_id": "AI_LEAD_AGENT",
+      "required": true,
+      "description": "Initial qualification and opportunity assessment",
+      "dependencies": [],
+      "next_agent": "technical_agent"
+    },
+    "technical_agent": {
+      "name": "Technical Agent",
+      "workflow_id": "AI_TECHNICAL_AGENT",
+      "required": false,
+      "description": "Technical feasibility and solution matching",
+      "dependencies": ["lead_agent"],
+      "next_agent": "sales_agent"
+    },
+    "sales_agent": {
+      "name": "Sales Agent",
+      "workflow_id": "AI_SALES_AGENT",
+      "required": false,
+      "description": "Opportunity development and closure",
+      "dependencies": ["technical_agent"],
+      "next_agent": null
+    },
+    "service_agent": {
+      "name": "Service Agent",
+      "workflow_id": "AI_SERVICE_AGENT",
+      "required": false,
+      "description": "Post-sale service and support",
+      "dependencies": ["sales_agent"],
+      "next_agent": null
+    }
+  },
+  "sheet_mapping": {
+    "standard_sheets": {
+      "inquiries": "01_📋Inquiries_Log",
+      "quotations": "02💰Quotation_Options",
+      "customer_profile": "03🔍Customer_Profile",
+      "reports": "04📑Reports",
+      "service_log": "05📑Service_Log",
+      "product_portfolio": "06📦Product_Portfolio",
+      "mechanical_specs": "07⚙️Mechanical_Specs",
+      "electrical_specs": "08🔌Electrical_Specs",
+      "packaging_specs": "09🎞️Packaging_Process_Specs",
+      "marketing_log": "10📑Marketing_Activity_Log",
+      "chart_data": "12_📈Chart_Data",
+      "master_log": "13📑Master_Log",
+      "performance_log": "14🔍Performance_Log",
+      "health_log": "15🔍System_Health_Log",
+      "evaluation_log": "16_Evaluation_Log",
+      "client_config": "17🔍Client_Config",
+      "lead_intelligence": "19🔍_Lead_Intelligence_Log"
+    },
+    "customer_specific": {
+      "ROBOPAC_AETNA_001": {
+        "inquiries": "01_📋Inquiries_Log",
+        "quotations": "02💰Quotation_Options",
+        "customer_profile": "03🔍Customer_Profile",
+        "reports": "04📑Reports",
+        "service_log": "05📑Service_Log",
+        "product_portfolio": "06📦Product_Portfolio",
+        "mechanical_specs": "07⚙️Mechanical_Specs",
+        "electrical_specs": "08🔌Electrical_Specs",
+        "packaging_specs": "09🎞️Packaging_Process_Specs",
+        "marketing_log": "10📑Marketing_Activity_Log",
+        "chart_data": "12_📈Chart_Data",
+        "master_log": "13📑Master_Log",
+        "performance_log": "14🔍Performance_Log",
+        "health_log": "15🔍System_Health_Log",
+        "evaluation_log": "16_Evaluation_Log",
+        "client_config": "17🔍Client_Config",
+        "lead_intelligence": "19🔍_Lead_Intelligence_Log"
+      }
+    }
+  },
+  "routing_logic": {
+    "agent_flow": {
+      "standard": [
+        "lead_agent",
+        "technical_agent",
+        "sales_agent"
+      ],
+      "fallback_routes": {
+        "technical_agent_disabled": {
+          "from": "lead_agent",
+          "to": "sales_agent",
+          "condition": "technical_agent not in active_agents",
+          "data_enrichment": "basic_product_matching"
+        },
+        "sales_agent_disabled": {
+          "from": "technical_agent",
+          "to": "manual_review",
+          "condition": "sales_agent not in active_agents",
+          "notification": true
+        }
+      }
+    },
+    "error_handling": {
+      "agent_timeout": {
+        "threshold_seconds": 300,
+        "action": "retry_once_then_notify"
+      },
+      "agent_failure": {
+        "action": "log_and_route_to_next",
+        "notify_admin": true
+      },
+      "data_validation_failure": {
+        "action": "return_to_previous_agent",
+        "max_retries": 2
+      }
+    }
+  },
+  "calculation_engine": {
+    "modules": {
+      "pallet_wrappers": {
+        "type": "speed_based",
+        "inputs": ["pallets_per_hour", "film_usage", "turntable_speed"],
+        "outputs": ["throughput", "efficiency", "cost_per_pallet"]
+      },
+      "palletizers": {
+        "type": "formation_based",
+        "inputs": ["products_per_minute", "pallet_pattern", "layer_count"],
+        "outputs": ["pallets_per_hour", "cycle_time", "efficiency"]
+      },
+      "depalletizers": {
+        "type": "formation_based",
+        "inputs": ["pallets_per_hour", "product_types", "gripper_cycles"],
+        "outputs": ["products_per_minute", "cycle_time", "efficiency"]
+      },
+      "lgvs": {
+        "type": "throughput_based",
+        "inputs": ["travel_speed", "loading_time", "route_distance"],
+        "outputs": ["trips_per_hour", "capacity_utilization", "total_throughput"]
+      },
+      "case_packers": {
+        "type": "speed_based",
+        "inputs": ["products_per_minute", "cases_per_minute", "product_configuration"],
+        "outputs": ["throughput", "efficiency", "downtime_prediction"]
+      },
+      "shrink_wrappers": {
+        "type": "speed_based",
+        "inputs": ["packs_per_minute", "film_type", "tunnel_speed"],
+        "outputs": ["throughput", "film_usage", "energy_consumption"]
+      },
+      "tray_shrink_wrappers": {
+        "type": "speed_based",
+        "inputs": ["trays_per_minute", "tray_format", "film_overlap"],
+        "outputs": ["throughput", "film_usage", "production_efficiency"]
+      },
+      "bag_sealers": {
+        "type": "speed_based",
+        "inputs": ["bags_per_minute", "seal_type", "bag_size"],
+        "outputs": ["throughput", "seal_quality_score", "maintenance_prediction"]
+      },
+      "case_packing_machines": {
+        "type": "formation_based",
+        "inputs": ["products_per_minute", "case_format", "packing_pattern"],
+        "outputs": ["cases_per_hour", "efficiency", "changeover_time"]
+      },
+      "cobots": {
+        "type": "cycle_based",
+        "inputs": ["pick_place_cycles", "payload", "reach_distance"],
+        "outputs": ["throughput", "utilization", "safety_compliance"]
+      }
+    }
+  },
+  "health_monitoring": {
+    "check_interval_seconds": 300,
+    "metrics": {
+      "agent_response_time": {
+        "threshold_warning": 5,
+        "threshold_critical": 10,
+        "unit": "seconds"
+      },
+      "error_rate": {
+        "threshold_warning": 0.05,
+        "threshold_critical": 0.10,
+        "unit": "percentage"
+      },
+      "data_quality_score": {
+        "threshold_warning": 0.85,
+        "threshold_critical": 0.70,
+        "unit": "score"
+      }
+    },
+    "auto_recovery": {
+      "enabled": true,
+      "max_retry_attempts": 3,
+      "backoff_strategy": "exponential"
+    }
+  },
+  "security": {
+    "webhook_authentication": "bearer_token",
+    "api_rate_limiting": {
+      "requests_per_minute": 100,
+      "burst_allowance": 20
+    },
+    "data_encryption": {
+      "at_rest": true,
+      "in_transit": true
+    },
+    "access_control": {
+      "customer_data_isolation": true,
+      "role_based_access": true
+    }
+  }
+}

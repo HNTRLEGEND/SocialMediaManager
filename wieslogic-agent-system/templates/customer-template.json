@@ -1,0 +1,363 @@
+{
+  "template_version": "2025.10.2",
+  "template_name": "WiesLogic Multi-Customer Configuration Template",
+  "description": "Template for deploying WiesLogic Agent System to new customers",
+
+  "customer_configuration": {
+    "basic_info": {
+      "customer_id": "UNIQUE_CUSTOMER_ID",
+      "customer_name": "Customer Company Name",
+      "industry": "Manufacturing/Packaging/Logistics",
+      "implementation_date": "2025-MM-DD",
+      "contact_email": "support@customer.com",
+      "timezone": "Europe/Berlin",
+      "language": "de"
+    },
+
+    "google_integration": {
+      "sheet_id": "GOOGLE_SHEET_ID_HERE",
+      "drive_folder_id": "OPTIONAL_DRIVE_FOLDER_ID",
+      "service_account_email": "SERVICE_ACCOUNT@project.iam.gserviceaccount.com",
+      "sheet_structure": {
+        "inquiries": "01_📋Inquiries_Log",
+        "quotations": "02💰Quotation_Options",
+        "customer_profile": "03🔍Customer_Profile",
+        "reports": "04📑Reports",
+        "service_log": "05📑Service_Log",
+        "product_portfolio": "06📦Product_Portfolio",
+        "mechanical_specs": "07⚙️Mechanical_Specs",
+        "electrical_specs": "08🔌Electrical_Specs",
+        "packaging_specs": "09🎞️Packaging_Process_Specs",
+        "marketing_log": "10📑Marketing_Activity_Log",
+        "chart_data": "12_📈Chart_Data",
+        "master_log": "13📑Master_Log",
+        "performance_log": "14🔍Performance_Log",
+        "health_log": "15🔍System_Health_Log",
+        "evaluation_log": "16_Evaluation_Log",
+        "client_config": "17🔍Client_Config",
+        "lead_intelligence": "19🔍_Lead_Intelligence_Log"
+      }
+    },
+
+    "agent_activation": {
+      "purchased_agents": [
+        {
+          "agent_name": "lead_agent",
+          "enabled": true,
+          "license_type": "full",
+          "activation_date": "2025-MM-DD"
+        },
+        {
+          "agent_name": "technical_agent",
+          "enabled": true,
+          "license_type": "full",
+          "activation_date": "2025-MM-DD"
+        },
+        {
+          "agent_name": "sales_agent",
+          "enabled": true,
+          "license_type": "full",
+          "activation_date": "2025-MM-DD"
+        },
+        {
+          "agent_name": "service_agent",
+          "enabled": false,
+          "license_type": "none",
+          "activation_date": null
+        }
+      ],
+      "fallback_configuration": {
+        "skip_technical_if_disabled": {
+          "enabled": true,
+          "route_to": "sales_agent",
+          "enrich_data_with": "basic_product_matching"
+        },
+        "skip_sales_if_disabled": {
+          "enabled": true,
+          "route_to": "manual_review_queue",
+          "notify_admin": true
+        }
+      }
+    },
+
+    "product_catalog": {
+      "product_categories": [
+        {
+          "category": "pallet_wrappers",
+          "enabled": true,
+          "models": [
+            "Helix Heavy Duty",
+            "Helix Standard",
+            "Robot S6",
+            "Compacta"
+          ],
+          "calculation_module": "PalletWrapperCalculator"
+        },
+        {
+          "category": "palletizers",
+          "enabled": true,
+          "models": [
+            "Artis High Speed",
+            "Artis Standard",
+            "Artic Compact",
+            "Artic Entry"
+          ],
+          "calculation_module": "PalletizerCalculator"
+        },
+        {
+          "category": "depalletizers",
+          "enabled": true,
+          "models": [
+            "Artis Depal High Speed",
+            "Artis Depal Standard",
+            "Artis Depal Compact"
+          ],
+          "calculation_module": "DepalletizerCalculator"
+        },
+        {
+          "category": "lgvs",
+          "enabled": true,
+          "models": [
+            "Agilus Heavy Duty",
+            "Agilus Standard",
+            "Agilus Compact"
+          ],
+          "calculation_module": "LGVCalculator"
+        },
+        {
+          "category": "case_packers",
+          "enabled": true,
+          "models": [
+            "WrapMax High Speed",
+            "WrapMax Standard",
+            "WrapMax Compact"
+          ],
+          "calculation_module": "CasePackerCalculator"
+        },
+        {
+          "category": "shrink_wrappers",
+          "enabled": true,
+          "models": [
+            "Shrink Tunnel Pro Max",
+            "Shrink Tunnel Pro",
+            "Shrink Tunnel Compact"
+          ],
+          "calculation_module": "ShrinkWrapperCalculator"
+        },
+        {
+          "category": "tray_shrink_wrappers",
+          "enabled": true,
+          "models": [
+            "Tray Wrapper Pro",
+            "Tray Wrapper Standard",
+            "Tray Wrapper Compact"
+          ],
+          "calculation_module": "TrayShrinkWrapperCalculator"
+        },
+        {
+          "category": "bag_sealers",
+          "enabled": true,
+          "models": [
+            "UltraSeal Pro",
+            "BagSealer Industrial",
+            "BagSealer Standard"
+          ],
+          "calculation_module": "BagSealerCalculator"
+        },
+        {
+          "category": "case_packing_machines",
+          "enabled": true,
+          "models": [
+            "PackMaster Ultra",
+            "PackMaster Pro",
+            "PackMaster Standard"
+          ],
+          "calculation_module": "CasePackingMachineCalculator"
+        },
+        {
+          "category": "cobots",
+          "enabled": true,
+          "models": [
+            "Cobot CR-15",
+            "Cobot CR-10",
+            "Cobot CR-5",
+            "Cobot CR-3"
+          ],
+          "calculation_module": "CobotCalculator"
+        }
+      ]
+    },
+
+    "workflow_configuration": {
+      "webhook_endpoints": {
+        "lead_entry": "/webhooks/{customer_id}/lead",
+        "technical_handover": "/webhooks/{customer_id}/technical",
+        "sales_handover": "/webhooks/{customer_id}/sales",
+        "service_request": "/webhooks/{customer_id}/service"
+      },
+      "authentication": {
+        "type": "bearer_token",
+        "token": "GENERATE_UNIQUE_TOKEN_HERE",
+        "rotate_every_days": 90
+      },
+      "rate_limiting": {
+        "requests_per_minute": 100,
+        "burst_allowance": 20
+      }
+    },
+
+    "ai_configuration": {
+      "openai": {
+        "model": "gpt-4-turbo",
+        "temperature": 0.2,
+        "max_tokens": 2000,
+        "api_key_ref": "OPENAI_API_KEY_{CUSTOMER_ID}"
+      },
+      "rag_configuration": {
+        "enabled": true,
+        "vector_store_id": "CUSTOMER_VECTOR_STORE_ID",
+        "embedding_model": "text-embedding-3-large",
+        "similarity_threshold": 0.75
+      }
+    },
+
+    "branding": {
+      "company_name": "Customer Company Name",
+      "email_settings": {
+        "from_name": "Customer Sales Team",
+        "from_email": "sales@customer.com",
+        "reply_to": "support@customer.com",
+        "signature": "Best regards,\n{agent_name}\n{company_name}"
+      },
+      "email_templates": {
+        "lead_confirmation": "template_lead_confirmation_{customer_id}",
+        "technical_analysis": "template_technical_analysis_{customer_id}",
+        "quotation": "template_quotation_{customer_id}",
+        "follow_up": "template_follow_up_{customer_id}"
+      },
+      "logo_url": "https://customer.com/logo.png",
+      "brand_colors": {
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
+      }
+    },
+
+    "notification_settings": {
+      "channels": {
+        "email": {
+          "enabled": true,
+          "addresses": ["admin@customer.com", "sales@customer.com"]
+        },
+        "slack": {
+          "enabled": false,
+          "webhook_url": ""
+        },
+        "teams": {
+          "enabled": false,
+          "webhook_url": ""
+        }
+      },
+      "alert_rules": {
+        "critical_error": ["email", "slack"],
+        "agent_timeout": ["email"],
+        "high_value_opportunity": ["email", "slack"],
+        "daily_summary": ["email"]
+      }
+    },
+
+    "business_rules": {
+      "qualification_thresholds": {
+        "minimum_budget_eur": 10000,
+        "minimum_bant_score": 60,
+        "auto_qualify_threshold": 85
+      },
+      "opportunity_scoring": {
+        "weights": {
+          "technical_fit": 0.30,
+          "budget_alignment": 0.25,
+          "strategic_value": 0.20,
+          "timeline": 0.15,
+          "competitive_position": 0.10
+        }
+      },
+      "approval_workflows": {
+        "require_approval_above_eur": 100000,
+        "discount_approval_threshold": 0.15,
+        "custom_solution_approval": true
+      }
+    },
+
+    "data_retention": {
+      "inquiries_retention_days": 365,
+      "opportunities_retention_days": 730,
+      "logs_retention_days": 90,
+      "reports_retention_days": 365
+    },
+
+    "integrations": {
+      "crm": {
+        "type": "none",
+        "enabled": false,
+        "sync_frequency": "realtime"
+      },
+      "erp": {
+        "type": "none",
+        "enabled": false,
+        "sync_frequency": "daily"
+      },
+      "enrichment_services": {
+        "hunter_io": {
+          "enabled": true,
+          "api_key_ref": "HUNTER_API_KEY"
+        },
+        "clearbit": {
+          "enabled": false,
+          "api_key_ref": ""
+        }
+      }
+    },
+
+    "monitoring": {
+      "health_check_interval_seconds": 300,
+      "performance_metrics": {
+        "track_response_times": true,
+        "track_error_rates": true,
+        "track_conversion_rates": true
+      },
+      "dashboards": {
+        "system_health": true,
+        "business_metrics": true,
+        "agent_performance": true
+      }
+    }
+  },
+
+  "deployment_checklist": [
+    "✓ Google Sheet created with correct structure",
+    "✓ Service account configured with sheet access",
+    "✓ Webhook endpoints configured in n8n",
+    "✓ Authentication tokens generated",
+    "✓ AI API keys configured",
+    "✓ Vector store created and populated",
+    "✓ Email templates customized",
+    "✓ Product catalog populated",
+    "✓ Calculation modules tested",
+    "✓ Agent workflows imported to n8n",
+    "✓ Master controller configured",
+    "✓ Health monitoring activated",
+    "✓ Notification channels tested",
+    "✓ End-to-end testing completed",
+    "✓ Customer training completed",
+    "✓ Documentation delivered"
+  ],
+
+  "support": {
+    "technical_support": "support@wies.ai",
+    "documentation_url": "https://docs.wies.ai/wieslogic-agents",
+    "escalation_contact": "escalation@wies.ai",
+    "sla": {
+      "response_time_hours": 4,
+      "resolution_time_hours": 24
+    }
+  }
+}
