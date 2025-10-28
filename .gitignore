@@ -14,3 +14,20 @@ tmp
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+
+# Deployment and secrets
+deployment/hetzner/.env
+deployment/hetzner/data/
+deployment/hetzner/letsencrypt/
+wieslogic-agent-system/backend/.env
+
+# Local secret text files (ignore)
+Google API Key WiesLogic.txt
+PrimaIO API Key WieLogic.txt
+n8n API Key WiesLogic.txt
+n8n Master-Controller HTTP-Nodes.txt
+temp_numbered.txt
+wieslogic-agent-system/terminal befehle.txt
+
+# Local assistant state
+.claude/

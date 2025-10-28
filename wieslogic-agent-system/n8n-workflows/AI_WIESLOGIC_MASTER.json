@@ -1,0 +1,317 @@
+﻿{
+  "name": "AI_WIESLOGIC_MASTER",
+  "nodes": [
+    {
+      "parameters": { "path": "wieslogic-master", "responseMode": "responseNode", "httpMethod": "POST" },
+      "id": "00_webhook_master",
+      "name": "00_webhook_master",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [ 300, 200 ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const body = $json || {};\nconst errors = [];\nif (!body.customer_id && body.customerId) body.customer_id = body.customerId;\nif (!body.action && body.intent) body.action = body.intent;\nif (!body.data) body.data = {};\nif (!body.customer_id) errors.push('Missing customer_id');\nif (!body.action) errors.push('Missing action');\nreturn [{ json: { customer_id: body.customer_id, action: body.action, data: body.data, source: body.source || 'webhook', timestamp: new Date().toISOString(), invalid: errors.length>0, errors } }];"
+      },
+      "id": "05_normalize_input",
+      "name": "05_normalize_input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 580, 200 ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{$json.invalid}}", "operation": "isFalse" }
+          ]
+        }
+      },
+      "id": "07_is_valid",
+      "name": "07_is_valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 720, 200 ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ JSON.stringify({ status: 'error', errors: $json.errors }) }}",
+        "responseCode": 400
+      },
+      "id": "08_bad_request",
+      "name": "08_bad_request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 720, 360 ]
+    },
+    {
+      "parameters": {
+        "authentication":"none",
+        "requestMethod": "GET",
+        "url": "={{$json.base_url ? $json.base_url : $vars.BACKEND_BASE_URL}}/api/wieslogic/config/{{$json.customer_id}}",
+        
+        "headerParametersUi": {
+          "parameter": [ { "name": "Authorization", "value": "=Bearer {{$vars.BACKEND_TOKEN}}" } ]
+        }
+      },
+      "id": "10_load_config",
+      "name": "10_load_config",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [ 900, 120 ]
+    },
+    {
+      "parameters": {
+        "authentication":"none",
+        "requestMethod": "GET",
+        "url": "={{$json.base_url ? $json.base_url : $vars.BACKEND_BASE_URL}}/api/wieslogic/config/{{$json.customer_id}}/sheets",
+        
+        "headerParametersUi": {
+          "parameter": [ { "name": "Authorization", "value": "=Bearer {{$vars.BACKEND_TOKEN}}" } ]
+        }
+      },
+      "id": "15_load_sheets",
+      "name": "15_load_sheets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [ 900, 280 ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "// Pure input based decide (no external model)\\nfunction mapIntentToAction(v){\\n  const s=(v||'').toLowerCase();\\n  if(s.includes('lead')) return 'trigger_lead_agent';\\n  if(s.includes('technical')) return 'trigger_technical_agent';\\n  if(s.includes('sales')) return 'trigger_sales_agent';\\n  if(s.includes('service')) return 'trigger_service_agent';\\n  if(s.includes('health')) return 'health_check';\\n  return s || 'health_check';\\n}\\nconst a=$json.action||mapIntentToAction($json.intent);\\nreturn [{json:{...$json, action:a}}];"
+      },
+      "id": "20_decide_input",
+      "name": "20_decide_input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 1180, 200 ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "// Build runtime object and toggles\nconst cfg = items[0].$node[\\\"10_load_config\\\"]?.json || {};\nconst sheets = items[0].$node[\\\"15_load_sheets\\\"]?.json || {};\nconst action = $json.action || 'health_check';\nconst agentEnabled = {\n  lead: !!cfg.leadAgentEnabled,\n  technical: !!cfg.techAgentEnabled,\n  sales: !!cfg.salesAgentEnabled,\n  service: !!cfg.serviceAgentEnabled\n};\nreturn [{ json: { customer_id: $json.customer_id, action, data: $json.data, timestamp: $json.timestamp, config: cfg, sheets, agentEnabled } }];"
+      },
+      "id": "25_build_context",
+      "name": "25_build_context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 1460, 200 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "string": [ { "value1": "={{$json.action}}", "operation": "equal", "value2": "trigger_lead_agent" } ] }
+      },
+      "id": "30_is_lead",
+      "name": "30_is_lead",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1740, 100 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "string": [ { "value1": "={{$json.action}}", "operation": "equal", "value2": "trigger_technical_agent" } ] }
+      },
+      "id": "30_is_technical",
+      "name": "30_is_technical",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1740, 160 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "string": [ { "value1": "={{$json.action}}", "operation": "equal", "value2": "trigger_sales_agent" } ] }
+      },
+      "id": "30_is_sales",
+      "name": "30_is_sales",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1740, 220 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "string": [ { "value1": "={{$json.action}}", "operation": "equal", "value2": "trigger_service_agent" } ] }
+      },
+      "id": "30_is_service",
+      "name": "30_is_service",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1740, 280 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "boolean": [ { "value1": "={{$json.agentEnabled.lead}}", "operation": "isTrue" } ] }
+      },
+      "id": "31_if_lead_enabled",
+      "name": "31_if_lead_enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1980, 60 ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "={{$env.LEAD_WEBHOOK_URL}}",
+        "jsonParameters": true,
+        
+        "headerParametersUi": { "parameter": [ { "name": "Content-Type", "value": "application/json" } ] },
+        "bodyParametersJson": "={\n  \"customer_id\": \"{{$json.customer_id}}\",\n  \"sheet_id\": \"{{$json.config.googleSheetId}}\",\n  \"sheet_mappings\": {{$json.sheets}},\n  \"config\": { \"min_budget\": {{$json.config.minBudgetEur}}, \"min_bant_score\": {{$json.config.minBantScore}}, \"auto_qualify\": {{$json.config.autoQualifyScore}} },\n  \"data\": {{$json.data}},\n  \"handover\": { \"source\": \"master_controller\", \"timestamp\": \"{{$json.timestamp}}\", \"version\": \"2025.10.2\" }\n}"
+      },
+      "id": "40_trigger_lead",
+      "name": "40_trigger_lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [ 2200, 60 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "boolean": [ { "value1": "={{$json.agentEnabled.technical}}", "operation": "isTrue" } ] }
+      },
+      "id": "32_if_technical_enabled",
+      "name": "32_if_technical_enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1980, 140 ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "={{$env.TECH_WEBHOOK_URL}}",
+        "jsonParameters": true,
+        
+        "headerParametersUi": { "parameter": [ { "name": "Content-Type", "value": "application/json" } ] },
+        "bodyParametersJson": "={\n  \"customer_id\": \"{{$json.customer_id}}\",\n  \"sheet_id\": \"{{$json.config.googleSheetId}}\",\n  \"sheet_mappings\": {{$json.sheets}},\n  \"config\": {{$json.config}},\n  \"data\": {{$json.data}},\n  \"handover\": { \"source\": \"master_controller\", \"timestamp\": \"{{$json.timestamp}}\" }\n}"
+      },
+      "id": "41_trigger_technical",
+      "name": "41_trigger_technical",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [ 2200, 140 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "boolean": [ { "value1": "={{$json.agentEnabled.sales}}", "operation": "isTrue" } ] }
+      },
+      "id": "33_if_sales_enabled",
+      "name": "33_if_sales_enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1980, 220 ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "={{$env.SALES_WEBHOOK_URL}}",
+        "jsonParameters": true,
+        
+        "headerParametersUi": { "parameter": [ { "name": "Content-Type", "value": "application/json" } ] },
+        "bodyParametersJson": "={\n  \"customer_id\": \"{{$json.customer_id}}\",\n  \"sheet_id\": \"{{$json.config.googleSheetId}}\",\n  \"sheet_mappings\": {{$json.sheets}},\n  \"config\": {{$json.config}},\n  \"data\": {{$json.data}},\n  \"handover\": { \"source\": \"master_controller\", \"timestamp\": \"{{$json.timestamp}}\" }\n}"
+      },
+      "id": "42_trigger_sales",
+      "name": "42_trigger_sales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [ 2200, 220 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "boolean": [ { "value1": "={{$json.agentEnabled.service}}", "operation": "isTrue" } ] }
+      },
+      "id": "34_if_service_enabled",
+      "name": "34_if_service_enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1980, 300 ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "={{$env.SERVICE_WEBHOOK_URL}}",
+        "jsonParameters": true,
+        
+        "headerParametersUi": { "parameter": [ { "name": "Content-Type", "value": "application/json" } ] },
+        "bodyParametersJson": "={\n  \"customer_id\": \"{{$json.customer_id}}\",\n  \"sheet_id\": \"{{$json.config.googleSheetId}}\",\n  \"sheet_mappings\": {{$json.sheets}},\n  \"config\": {{$json.config}},\n  \"data\": {{$json.data}},\n  \"handover\": { \"source\": \"master_controller\", \"timestamp\": \"{{$json.timestamp}}\" }\n}"
+      },
+      "id": "43_trigger_service",
+      "name": "43_trigger_service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [ 2200, 300 ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ JSON.stringify({ status: 'ok', action: 'health_check', customer_id: $json.customer_id, timestamp: $json.timestamp }) }}",
+        "responseCode": 200
+      },
+      "id": "50_health_response",
+      "name": "50_health_response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 1980, 380 ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ JSON.stringify({ status: 'manual_review', action: $node['25_build_context'].json.action, customer_id: $node['05_normalize_input'].json.customer_id, reason: 'Agent disabled or undecided' }) }}",
+        "responseCode": 202
+      },
+      "id": "60_manual_review",
+      "name": "60_manual_review",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 2400, 180 ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ JSON.stringify({ status: 'accepted', action: $node['25_build_context'].json.action, customer_id: $node['05_normalize_input'].json.customer_id, downstream_result: $json }) }}",
+        "responseCode": 200
+      },
+      "id": "90_respond",
+      "name": "90_respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 2440, 60 ]
+    }
+  ],
+  "connections": {
+    "00_webhook_master": { "main": [ [ { "node": "05_normalize_input", "type": "main", "index": 0 } ] ] },
+    "05_normalize_input": { "main": [ [ { "node": "07_is_valid", "type": "main", "index": 0 } ] ] },
+    "07_is_valid": { "main": [ [ { "node": "10_load_config", "type": "main", "index": 0 } ], [ { "node": "08_bad_request", "type": "main", "index": 0 } ] ] },
+    "10_load_config": { "main": [ [ { "node": "15_load_sheets", "type": "main", "index": 0 } ] ] },
+    "15_load_sheets": { "main": [ [ { "node": "20_decide_input", "type": "main", "index": 0 } ] ] },
+    "20_decide_input": { "main": [ [ { "node": "25_build_context", "type": "main", "index": 0 } ] ] },
+    "25_build_context": { "main": [ [ { "node": "30_is_lead", "type": "main", "index": 0 } ] ] },
+    "30_is_lead": { "main": [ [ { "node": "31_if_lead_enabled", "type": "main", "index": 0 } ], [ { "node": "30_is_technical", "type": "main", "index": 0 } ] ] },
+    "30_is_technical": { "main": [ [ { "node": "32_if_technical_enabled", "type": "main", "index": 0 } ], [ { "node": "30_is_sales", "type": "main", "index": 0 } ] ] },
+    "30_is_sales": { "main": [ [ { "node": "33_if_sales_enabled", "type": "main", "index": 0 } ], [ { "node": "30_is_service", "type": "main", "index": 0 } ] ] },
+    "30_is_service": { "main": [ [ { "node": "34_if_service_enabled", "type": "main", "index": 0 } ], [ { "node": "50_health_response", "type": "main", "index": 0 } ] ] },
+    "31_if_lead_enabled": { "main": [ [ { "node": "40_trigger_lead", "type": "main", "index": 0 } ], [ { "node": "60_manual_review", "type": "main", "index": 0 } ] ] },
+    "32_if_technical_enabled": { "main": [ [ { "node": "41_trigger_technical", "type": "main", "index": 0 } ], [ { "node": "60_manual_review", "type": "main", "index": 0 } ] ] },
+    "33_if_sales_enabled": { "main": [ [ { "node": "42_trigger_sales", "type": "main", "index": 0 } ], [ { "node": "60_manual_review", "type": "main", "index": 0 } ] ] },
+    "34_if_service_enabled": { "main": [ [ { "node": "43_trigger_service", "type": "main", "index": 0 } ], [ { "node": "60_manual_review", "type": "main", "index": 0 } ] ] },
+    "40_trigger_lead": { "main": [ [ { "node": "90_respond", "type": "main", "index": 0 } ] ] },
+    "41_trigger_technical": { "main": [ [ { "node": "90_respond", "type": "main", "index": 0 } ] ] },
+    "42_trigger_sales": { "main": [ [ { "node": "90_respond", "type": "main", "index": 0 } ] ] },
+    "43_trigger_service": { "main": [ [ { "node": "90_respond", "type": "main", "index": 0 } ] ] },
+    "50_health_response": { "main": [ [ { "node": "90_respond", "type": "main", "index": 0 } ] ] }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Europe/Berlin",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true
+  },
+  "staticData": {},
+  "pinData": {}
+}
+
+
+
+
+
+
+

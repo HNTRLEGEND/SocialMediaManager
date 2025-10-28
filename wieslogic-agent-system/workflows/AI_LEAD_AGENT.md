@@ -1,528 +1,600 @@
-# AI_LEAD_AGENT - Lead Qualification & BANT Scoring
+# AI_LEAD_AGENT – Lead Qualification & AI Agent Scoring
 
-**Version:** 2025.10.2
-**Status:** Production Ready
-**Purpose:** Lead Qualifikation mit BANT Scoring für alle AETNA Group Marken
-
----
-
-## 📋 Übersicht
-
-Der **AI_LEAD_AGENT** ist der Entry Point für alle neuen Inquiries. Er:
-
-✅ **Validiert & Enriched Leads** (Hunter.io, Perplexity)
-✅ **BANT Scoring** (Budget, Authority, Need, Timeline)
-✅ **Qualifiziert Leads** (Hot/Warm/Cold)
-✅ **Erstellt Lead Dossier** (Google Docs)
-✅ **Routet zu Technical Agent** (wenn qualifiziert)
+**Version:** 2025-10-27  
+**Status:** Ready to import (n8n 1.114.4)
 
 ---
 
-## 🎯 BANT Scoring System
-
-### Was ist BANT?
-
-**B** - Budget: Hat der Lead das Budget?
-**A** - Authority: Ist der Kontakt ein Entscheider?
-**N** - Need: Hat der Lead ein echtes Bedürfnis?
-**T** - Timeline: Wann will der Lead kaufen?
-
-### Scoring-Matrix
-
-| Kriterium | Punkte | Bedingung |
-|-----------|--------|-----------|
-| **Budget** | 25 | Budget >= Min-Budget der Marke |
-|  | 15 | Budget >= 60% des Min-Budgets |
-|  | 5  | Keine Budget-Info |
-| **Authority** | 25 | C-Level oder Owner |
-|  | 15 | Director/Manager |
-|  | 5  | Mitarbeiter/Andere |
-| **Need** | 30 | Konkrete Anforderungen + Schmerz |
-|  | 20 | Interesse aber unklar |
-|  | 10 | Nur Information |
-| **Timeline** | 20 | <3 Monate |
-|  | 15 | 3-6 Monate |
-|  | 5  | >6 Monate oder unklar |
-
-**Total:** 100 Punkte
-
-**Lead-Kategorien:**
-- 🔥 **HOT** (80-100): Sofort an Sales
-- 🟡 **WARM** (60-79): Technical Analyse
-- 🔵 **COLD** (<60): Nurture Campaign
+## Zweck
+Der Workflow `AI_LEAD_AGENT` qualifiziert eingehende Leads anhand des BANT-Frameworks, nutzt ein AI-Agent-Setup mit Think-Tool und Simple Vector Base (OpenAI) und liefert eine strukturierte Antwort an den Aufrufer (z. B. MASTER-Workflow). Optional können Lead-Daten in Google Sheets oder dem Backend persistiert werden.
 
 ---
 
-## 🔄 Workflow-Ablauf
+## Eingabe & Ausgabe
 
-```
-Webhook → Validate → Enrich (Hunter) → BANT Score → Qualify → Create Dossier → Route
-```
-
----
-
-## 🏗️ Node-Struktur
-
-### Node 1: Webhook Trigger
-
-**Path:** `/webhook/lead-agent`
-**Method:** POST
-**Auth:** Bearer Token
-
-**Payload von MASTER:**
+**Webhook (POST `/lead-agent`)**
 ```json
 {
-  "master_execution_id": "MASTER_123...",
-  "customer_id": "AETNA_GROUP_001",
-  "brand": "ROBOPAC",
-  "brand_config": { ... },
+  "customer_id": "ROBOPAC_AETNA_001",
+  "sheet_id": "1Abc...GoogleSheetId",
+  "sheet_mappings": {
+    "inquiries": "01_Inquiries_Log",
+    "lead_intelligence": "19_Lead_Intelligence_Log"
+  },
+  "config": {
+    "minBudgetEur": 25000,
+    "minBantScore": 60,
+    "autoQualifyScore": 80,
+    "brand": "ROBOPAC"
+  },
   "data": {
     "company_name": "Logistics GmbH",
     "contact_person": "John Doe",
-    "email": "john@logistics.de",
-    "phone": "+49 123 456789",
-    "product_type": "Pallet Wrapper",
-    "required_pallets_per_hour": 80,
-    "message": "We need an automated solution"
+    "email": "lead@example.com",
+    "message": "We need automation",
+    "budget": 45000,
+    "timeline": "<3 months"
   }
 }
 ```
 
----
-
-### Node 2: Write to Inquiries Log
-
-**Type:** Google Sheets Append
-**Sheet:** `01_📋_Inquiries_Log`
-
-**Spalten:**
-```javascript
-{
-  "inquiry_id": "INQ_" + Date.now(),
-  "customer_name": "={{ $json.data.company_name }}",
-  "contact_person": "={{ $json.data.contact_person }}",
-  "email": "={{ $json.data.email }}",
-  "phone": "={{ $json.data.phone || '' }}",
-  "country": "",  // Wird von Hunter enriched
-  "industry": "", // Wird von Hunter enriched
-  "product_type": "={{ $json.data.product_type }}",
-  "packaging_type": "={{ $json.data.packaging_type || '' }}",
-  "primary_product_type": "={{ $json.data.primary_product_type || '' }}",
-  "performance_target_ppm": "={{ $json.data.required_pallets_per_hour || $json.data.required_products_per_minute || '' }}",
-  "quotation_status": "new",
-  "lead_score_category": "pending",
-  "created_date": "={{ $now.toISO() }}",
-  "notes": "={{ $json.data.message || '' }}"
-}
-```
+**Webhook Response (Beispiel)**  
+- `200 accepted` für hot/warm Leads (Empfehlung: Technical Agent ausführen)  
+- `202 manual_review` für cold/nurture Leads  
+- `400` bei Validierungsfehlern
 
 ---
 
-### Node 3: Enrich with Hunter.io
+## n8n Variable & Credential Checkliste
+| Typ | Schlüssel | Beschreibung |
+| --- | --- | --- |
+| Variable | `BACKEND_BASE_URL` | Öffentliche URL deines WiesLogic Backends (z. B. `https://api.example.com`) |
+| Variable | `BACKEND_TOKEN` | API Token aus dem Backend (.env `BACKEND_TOKEN`) |
+| Variable | `TECH_WEBHOOK_URL` *(optional)* | Ziel-Webhook des Technical Agents (wird in der Response empfohlen) |
+| Credential | **OpenAI Account** | n8n OpenAI Credential (muss GPT‑4o/GPT‑4o-mini & Embeddings unterstützen) |
+| Credential | **Google Sheets OAuth2** *(optional)* | Für echtes Logging in Google Sheets – im Workflow derzeit als Platzhalter-Code hinterlegt |
 
-**Type:** HTTP Request
-**URL:** `https://api.hunter.io/v2/domain-search`
-**Method:** GET
+> **Hinweis:** In n8n Cloud war der Zugriff auf `$env` geblockt. Dieser Workflow verwendet ausschließlich `$vars`. Setze die Variablen global oder über einen `Set`-Node, bevor du den Workflow aktivierst.
 
-**Parameters:**
-```javascript
-{
-  "domain": "={{ $json.data.email.split('@')[1] }}",
-  "api_key": "={{ $json.client_config.api_key_hunterio }}",
-  "limit": "1"
-}
-```
+---
 
-**Expected Response:**
+## Node-Überblick
+1. **00_webhook_lead** – Webhook (POST `/lead-agent`), Response-Mode `responseNode`  
+2. **05_validate_input** – Code-Node: Validierung, Normalisierung, `inquiry_id` und `timestamp` setzen  
+3. **07_is_valid / 08_bad_request** – Abbruch bei fehlenden Pflichtfeldern  
+4. **10_build_agent_payload** – Bereitet `agentInput` & Vektordokumente auf (BANT-Playbook + Markenrichtlinien)  
+5. **15_ai_think_tool** – AI Think Tool (Scratchpad, automatisch aktiviert)  
+6. **16_ai_vector_store** – Simple Vector Store Tool (OpenAI Embeddings auf Basis der vorbereiteten Dokumente)  
+7. **20_ai_lead_agent** – AI Agent Node (OpenAI GPT‑4o-mini), JSON-Schema Output, nutzt Think & Vector Tools  
+8. **25_parse_agent_result** – Parsen des Agent-Outputs, BANT-Struktur extrahieren  
+9. **30_prepare_sheet_rows** – Optional: erzeugt vorbereitete Arrays für spätere Logs  
+10. **35_append_inquiries_log** – Platzhalter (Code pass-through). Ersetze bei Bedarf durch Google Sheets Append  
+11. **40_append_lead_intel** – Platzhalter (Code pass-through). Ersetze bei Bedarf durch Google Sheets Append  
+12. **45_is_hot_or_warm** – Routing: hot/warm → Accepted, sonst nurture/manual-review  
+13. **50_respond_success / 55_respond_cold** – Webhook Responses (200 bzw. 202)
+
+---
+
+## AI Agent Node – Konfiguration
+- **Model**: `gpt-4o-mini` (oder kompatibles GPT‑4o Modell)  
+- **Temperature**: `0.2` (reduziert Halluzinationen)  
+- **Instructions** (System Prompt, deutsch/englisch möglich):  
+  > Du bist der WiesLogic Lead Qualification Agent. Analysiere `agentInput`, nutze das Think Tool für strukturierte Reasoning-Schritte und greife über das Vector Store Tool auf Guidelines zu. Bewerte BANT, liefere Scores & Kategorie, formuliere Follow-up-Fragen und gib eine klare Handlungsempfehlung zurück.
+
+- **Input**: `agentInput` (JSON)  
+- **Output Format**: JSON-Schema (siehe Workflow)  
+- **Tools**:  
+  - 15_ai_think_tool (max. 6 Gedankenschritte)  
+  - 16_ai_vector_store (Simple Vector Store → OpenAI Embeddings, `text-embedding-3-small`)  
+
+---
+
+## Optionale Sheet-/Backend-Logs
+Die Nodes `35_append_inquiries_log` und `40_append_lead_intel` sind bewusst als Pass-through Code Nodes angelegt (sie geben `items` unverändert weiter).  
+
+**So aktivierst du echtes Logging:**
+1. Ersetze `35_...` durch einen Google Sheets Append Node (`operation = append`, `sheetId = {{$json.sheet_id}}`, `range = {{$json.sheet_mappings.inquiries}}`, `valueInputMode = USER_ENTERED`, `data = {{$json.leadRow}}`).  
+2. Ersetze `40_...` analog für `sheet_mappings.lead_intelligence`.  
+3. Alternativ kannst du hier HTTP-Requests zu deinem Backend einfügen (`POST {{$vars.BACKEND_BASE_URL}}/api/...`).  
+
+Bis dahin laufen beide Nodes als No-Op und verhindern keine Ausführung.
+
+---
+
+## Vollständiger Workflow (JSON)
+> Getestet mit n8n **1.114.4**. Falls dein System Tool-Bezeichner ändert, passe `typeVersion` bzw. Knotennamen an.
+
 ```json
 {
-  "data": {
-    "organization": "Logistics GmbH",
-    "country": "DE",
-    "industry": "Logistics",
-    "employee_range": "100-500",
-    "emails": [
-      {
-        "value": "ceo@logistics.de",
-        "type": "generic",
-        "position": "CEO"
+  "name": "AI_LEAD_AGENT",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "lead-agent",
+        "responseMode": "responseNode",
+        "httpMethod": "POST"
+      },
+      "id": "00_webhook_lead",
+      "name": "00_webhook_lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [320, 220]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const body = $json || {};\nconst errors = [];\nconst data = body.data || {};\nconst config = body.config || {};\nconst sheetMappings = body.sheet_mappings || body.sheetMappings || {};\nconst sheetId = body.sheet_id || body.sheetId || config.googleSheetId || '';\nif (!body.customer_id) errors.push('Missing customer_id');\nif (!sheetId) errors.push('Missing sheet_id (sheet_id or config.googleSheetId)');\nif (!data.email) errors.push('Missing data.email');\nconst inquiryId = body.inquiry_id || 'INQ_' + Date.now();\nconst timestamp = new Date().toISOString();\nreturn [{ json: {\n  customer_id: body.customer_id,\n  action: body.action || 'trigger_lead_agent',\n  data,\n  config,\n  sheet_id: sheetId,\n  sheet_mappings: sheetMappings,\n  base_url: body.base_url || body.baseUrl || '',\n  invalid: errors.length > 0,\n  errors,\n  inquiry_id: inquiryId,\n  timestamp,\n  meta: {\n    master_execution_id: body.master_execution_id || '',\n    source: body.handover?.source || 'lead-webhook'\n  }\n}}];"
+      },
+      "id": "05_validate_input",
+      "name": "05_validate_input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.invalid}}",
+              "operation": "isFalse"
+            }
+          ]
+        }
+      },
+      "id": "07_is_valid",
+      "name": "07_is_valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [780, 220]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ JSON.stringify({ status: 'error', errors: $json.errors }) }}",
+        "responseCode": 400
+      },
+      "id": "08_bad_request",
+      "name": "08_bad_request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [780, 380]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const data = $json.data || {};\nconst config = $json.config || {};\nconst docs = [];\ndocs.push({\n  id: 'bant-framework',\n  text: [\n    'BANT Qualification Playbook:',\n    '- Budget: Confirm available budget meets or exceeds minimum threshold.',\n    '- Authority: Identify if the contact has decision power or influence.',\n    '- Need: Clarify operational pains and automation goals.',\n    '- Timeline: Capture buying timeframe (<3 months = urgent, 3-6 months = near-term, >6 months = nurture).'\n  ].join('\\n')\n});\ndocs.push({\n  id: 'brand-tone',\n  text: [\n    'Brand Voice: Bold, direct, results-driven, Grant Cardone \"10X\" energy.',\n    'Core benefits: 24/7 AI automation, proven ROI, premium support.'\n  ].join('\\n')\n});\nif (data.product_type) {\n  docs.push({ id: 'product', text: 'Product focus: ' + data.product_type + '. Ensure fit with available solutions.' });\n}\nif (config.vectorAppendices) {\n  const extra = Array.isArray(config.vectorAppendices) ? config.vectorAppendices : [config.vectorAppendices];\n  extra.filter(Boolean).forEach((entry, index) => {\n    docs.push({ id: 'config-extra-' + (index + 1), text: String(entry) });\n  });\n}\nconst agentInput = {\n  inquiry_id: $json.inquiry_id,\n  customer_id: $json.customer_id,\n  contact: {\n    company_name: data.company_name || '',\n    contact_person: data.contact_person || '',\n    email: data.email || '',\n    phone: data.phone || ''\n  },\n  requirements: {\n    product_type: data.product_type || '',\n    budget: data.budget ?? null,\n    timeline: data.timeline || '',\n    throughput: data.required_pallets_per_hour || data.required_products_per_minute || null,\n    message: data.message || ''\n  },\n  config: {\n    min_budget_eur: config.minBudgetEur ?? null,\n    min_bant_score: config.minBantScore ?? 60,\n    auto_qualify_score: config.autoQualifyScore ?? 80,\n    brand: config.brand || data.brand || 'ROBOPAC'\n  },\n  sheet: {\n    id: $json.sheet_id || '',\n    mappings: $json.sheet_mappings || {}\n  },\n  meta: $json.meta || {},\n  timestamp: $json.timestamp\n};\nreturn [{\n  json: {\n    ...$json,\n    agentInput,\n    vectorDocuments: docs\n  }\n}];"
+      },
+      "id": "10_build_agent_payload",
+      "name": "10_build_agent_payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 220]
+    },
+    {
+      "parameters": {},
+      "id": "15_ai_think_tool",
+      "name": "15_ai_think_tool",
+      "type": "n8n-nodes-base.aiToolThink",
+      "typeVersion": 1,
+      "position": [960, 80]
+    },
+    {
+      "parameters": {
+        "vectorStoreType": "simple",
+        "simpleVectorStore": {
+          "provider": "openai",
+          "model": "text-embedding-3-small",
+          "matchCount": 6,
+          "similarityThreshold": 0.35
+        },
+        "documents": "={{$json.vectorDocuments}}"
+      },
+      "id": "16_ai_vector_store",
+      "name": "16_ai_vector_store",
+      "type": "n8n-nodes-base.aiToolVectorStore",
+      "typeVersion": 1,
+      "position": [960, 140],
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI Account"
+        }
       }
-    ]
-  }
-}
-```
-
----
-
-### Node 4: BANT Scoring
-
-**Type:** Code (JavaScript)
-
-```javascript
-/**
- * BANT SCORING ENGINE
- * Bewertet Lead nach Budget, Authority, Need, Timeline
- */
-
-const lead = $input.item.json;
-const brandConfig = lead.brand_config;
-
-// Helper: Extract budget from message/data
-function extractBudget(data) {
-  const budgetPatterns = [
-    /budget.*?(\d+\.?\d*)\s*(k|tausend|thousand)/i,
-    /(\d+\.?\d*)\s*€/i,
-    /(\d+\.?\d*)\s*euro/i
-  ];
-
-  for (const pattern of budgetPatterns) {
-    const match = (data.message || '').match(pattern);
-    if (match) {
-      let amount = parseFloat(match[1]);
-      if (match[2] && match[2].toLowerCase().includes('k')) {
-        amount *= 1000;
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "instructions": "You are the WiesLogic Lead Qualification Agent. Analyse the supplied agentInput JSON. Think step by step with the Think tool, consult the Vector Store for WiesLogic brand and BANT playbook context, and return a well-structured JSON result that includes BANT scoring, overall category (hot/warm/cold/manual_review), confidence, summary, recommended follow-up questions and next steps. Always respect min_budget_eur, min_bant_score and auto_qualify_score thresholds from the config. If critical data is missing, set status to manual_review and explain what is missing.",
+        "temperature": 0.2,
+        "inputKey": "agentInput",
+        "responseFormat": "jsonSchema",
+        "jsonSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["hot", "warm", "cold", "manual_review"]
+            },
+            "confidence": {
+              "type": "string",
+              "enum": ["high", "medium", "low"]
+            },
+            "summary": {
+              "type": "string"
+            },
+            "bant": {
+              "type": "object",
+              "properties": {
+                "budget": {
+                  "type": "object",
+                  "properties": {
+                    "detected": {
+                      "type": ["number", "string", "null"]
+                    },
+                    "score": {
+                      "type": "number"
+                    },
+                    "threshold": {
+                      "type": ["number", "null"]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "authority": {
+                  "type": "object",
+                  "properties": {
+                    "score": {
+                      "type": "number"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "need": {
+                  "type": "object",
+                  "properties": {
+                    "score": {
+                      "type": "number"
+                    },
+                    "pain": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "timeline": {
+                  "type": "object",
+                  "properties": {
+                    "score": {
+                      "type": "number"
+                    },
+                    "window": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "total_score": {
+                  "type": "number"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": ["hot", "warm", "cold", "manual_review"]
+                }
+              },
+              "required": ["budget", "authority", "need", "timeline", "total_score", "category"]
+            },
+            "questions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "follow_up": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "handover": {
+              "type": "object",
+              "properties": {
+                "recommended_agent": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": ["status", "summary", "bant"]
+        },
+        "toolStrategy": "automatic"
+      },
+      "id": "20_ai_lead_agent",
+      "name": "20_ai_lead_agent",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1180, 220],
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI Account"
+        }
       }
-      return amount;
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const agentNode = items[0].$node[\"20_ai_lead_agent\"] || {};\nlet result = agentNode.json?.output ?? agentNode.json?.result ?? agentNode.json;\nif (typeof result === 'string') {\n  try {\n    result = JSON.parse(result);\n  } catch (error) {\n    result = null;\n  }\n}\nconst safe = result && typeof result === 'object' ? result : {};\nconst bant = safe.bant || {};\nreturn [{\n  json: {\n    ...$json,\n    agent: safe,\n    bant: {\n      budget: bant.budget || {},\n      authority: bant.authority || {},\n      need: bant.need || {},\n      timeline: bant.timeline || {},\n      total_score: bant.total_score ?? bant.totalScore ?? null,\n      category: (bant.category || safe.status || '').toLowerCase()\n    },\n    agent_status: safe.status || '',\n    agent_confidence: safe.confidence || '',\n    follow_up: safe.follow_up || [],\n    questions: safe.questions || [],\n    summary: safe.summary || ''\n  }\n}];"
+      },
+      "id": "25_parse_agent_result",
+      "name": "25_parse_agent_result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1380, 220]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const bant = $json.bant || {};\nconst data = $json.data || {};\nconst leadRow = [[\n  $json.inquiry_id,\n  $json.customer_id,\n  data.company_name || '',\n  data.contact_person || '',\n  data.email || '',\n  data.phone || '',\n  data.product_type || '',\n  bant.total_score ?? '',\n  bant.category || '',\n  $json.summary || '',\n  JSON.stringify($json.questions || []),\n  JSON.stringify($json.follow_up || []),\n  $json.timestamp\n]];\nconst intelRow = [[\n  $json.inquiry_id,\n  (bant.budget?.detected ?? ''),\n  (bant.budget?.score ?? ''),\n  (bant.authority?.score ?? ''),\n  (bant.need?.score ?? ''),\n  (bant.timeline?.score ?? ''),\n  bant.total_score ?? '',\n  bant.category || '',\n  $json.agent_confidence || '',\n  $json.timestamp,\n  $json.summary || ''\n]];\nreturn [{\n  json: {\n    ...$json,\n    leadRow,\n    intelRow\n  }\n}];"
+      },
+      "id": "30_prepare_sheet_rows",
+      "name": "30_prepare_sheet_rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 220]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "return items;"
+      },
+      "id": "35_append_inquiries_log",
+      "name": "35_append_inquiries_log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 220],
+      "notes": "Platzhalter: Ersetze diesen Node durch einen Google Sheets Append oder Backend-Request, sobald Credentials verfügbar sind."
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "return items;"
+      },
+      "id": "40_append_lead_intel",
+      "name": "40_append_lead_intel",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1900, 220],
+      "notes": "Platzhalter: Ersetze diesen Node durch einen zweiten Logging-Step (z. B. Lead Intelligence Sheet)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ ['hot','warm'].includes(($json.bant?.category || '').toLowerCase()) }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "45_is_hot_or_warm",
+      "name": "45_is_hot_or_warm",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2060, 220]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ JSON.stringify({ status: 'accepted', category: ($json.bant?.category || ''), total_score: $json.bant?.total_score ?? null, inquiry_id: $json.inquiry_id, customer_id: $json.customer_id, summary: $json.summary || '', questions: $json.questions || [], follow_up: $json.follow_up || [], recommended_action: 'trigger_technical_agent', confidence: $json.agent_confidence || '' }) }}",
+        "responseCode": 200
+      },
+      "id": "50_respond_success",
+      "name": "50_respond_success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2240, 180]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ JSON.stringify({ status: 'manual_review', category: ($json.bant?.category || 'cold'), total_score: $json.bant?.total_score ?? null, inquiry_id: $json.inquiry_id, customer_id: $json.customer_id, summary: $json.summary || '', next: 'nurture_campaign', recommendations: $json.follow_up || [] }) }}",
+        "responseCode": 202
+      },
+      "id": "55_respond_cold",
+      "name": "55_respond_cold",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2240, 260]
     }
-  }
-
-  return null;
-}
-
-// Helper: Detect authority level
-function detectAuthority(contact, hunterData) {
-  const title = (contact.title || contact.position || '').toLowerCase();
-  const email = (contact.email || '').toLowerCase();
-
-  // C-Level
-  if (title.match(/ceo|cto|cfo|owner|president|geschäftsführer/)) {
-    return { level: 'c-level', score: 25 };
-  }
-
-  // Director/Manager
-  if (title.match(/director|manager|leiter|head of/)) {
-    return { level: 'director', score: 15 };
-  }
-
-  // Check email pattern
-  if (email.includes('ceo') || email.includes('owner')) {
-    return { level: 'c-level', score: 25 };
-  }
-
-  return { level: 'employee', score: 5 };
-}
-
-// Helper: Assess need strength
-function assessNeed(data) {
-  const message = (data.message || '').toLowerCase();
-  const hasRequirements = data.required_pallets_per_hour ||
-                         data.required_products_per_minute;
-
-  // Strong need indicators
-  const painWords = ['problem', 'issue', 'urgent', 'need', 'must', 
-                    'currently', 'dringend', 'sofort'];
-  const hasPain = painWords.some(word => message.includes(word));
-
-  if (hasRequirements && hasPain) {
-    return { strength: 'strong', score: 30 };
-  }
-
-  if (hasRequirements || hasPain) {
-    return { strength: 'moderate', score: 20 };
-  }
-
-  return { strength: 'weak', score: 10 };
-}
-
-// Helper: Detect timeline
-function detectTimeline(data) {
-  const message = (data.message || '').toLowerCase();
-
-  // Urgent
-  if (message.match(/asap|immediately|urgent|sofort|dringend|this month/)) {
-    return { period: '<3 months', score: 20 };
-  }
-
-  // Quarter mentions
-  if (message.match(/q1|q2|q3|q4|quarter|quartal/)) {
-    return { period: '3-6 months', score: 15 };
-  }
-
-  // Year mentions
-  if (message.match(/next year|2025|2026/)) {
-    return { period: '>6 months', score: 5 };
-  }
-
-  return { period: 'unknown', score: 10 };
-}
-
-// CALCULATE BANT SCORE
-
-const budget = extractBudget(lead.data) || 0;
-const budgetScore = budget >= brandConfig.min_budget_eur ? 25 :
-                   budget >= brandConfig.min_budget_eur * 0.6 ? 15 : 5;
-
-const authority = detectAuthority(lead.data, lead.hunter_data);
-const need = assessNeed(lead.data);
-const timeline = detectTimeline(lead.data);
-
-const totalScore = budgetScore + authority.score + need.score + timeline.score;
-
-// Determine category
-let category, actionPlan;
-if (totalScore >= 80) {
-  category = 'hot';
-  actionPlan = 'Immediate technical analysis → Fast-track to sales';
-} else if (totalScore >= 60) {
-  category = 'warm';
-  actionPlan = 'Technical analysis → Standard sales process';
-} else {
-  category = 'cold';
-  actionPlan = 'Nurture campaign → Re-qualify in 30 days';
-}
-
-return {
-  json: {
-    ...lead,
-    bant_scoring: {
-      budget: {
-        detected: budget,
-        score: budgetScore,
-        threshold: brandConfig.min_budget_eur
-      },
-      authority: {
-        level: authority.level,
-        score: authority.score
-      },
-      need: {
-        strength: need.strength,
-        score: need.score
-      },
-      timeline: {
-        period: timeline.period,
-        score: timeline.score
-      },
-      total_score: totalScore,
-      category: category,
-      action_plan: actionPlan,
-      confidence: totalScore >= 70 ? 'high' : totalScore >= 50 ? 'medium' : 'low'
+  ],
+  "connections": {
+    "00_webhook_lead": {
+      "main": [
+        [
+          {
+            "node": "05_validate_input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_validate_input": {
+      "main": [
+        [
+          {
+            "node": "07_is_valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_is_valid": {
+      "main": [
+        [
+          {
+            "node": "10_build_agent_payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "08_bad_request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10_build_agent_payload": {
+      "main": [
+        [
+          {
+            "node": "20_ai_lead_agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "16_ai_vector_store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15_ai_think_tool": {
+      "main": [
+        [
+          {
+            "node": "20_ai_lead_agent",
+            "type": "tools",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16_ai_vector_store": {
+      "main": [
+        [
+          {
+            "node": "20_ai_lead_agent",
+            "type": "tools",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "20_ai_lead_agent": {
+      "main": [
+        [
+          {
+            "node": "25_parse_agent_result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "25_parse_agent_result": {
+      "main": [
+        [
+          {
+            "node": "30_prepare_sheet_rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "30_prepare_sheet_rows": {
+      "main": [
+        [
+          {
+            "node": "35_append_inquiries_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "35_append_inquiries_log": {
+      "main": [
+        [
+          {
+            "node": "40_append_lead_intel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "40_append_lead_intel": {
+      "main": [
+        [
+          {
+            "node": "45_is_hot_or_warm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "45_is_hot_or_warm": {
+      "main": [
+        [
+          {
+            "node": "50_respond_success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "55_respond_cold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-  }
-};
-```
-
-**Output:**
-```json
-{
-  "bant_scoring": {
-    "budget": { "detected": 45000, "score": 25 },
-    "authority": { "level": "director", "score": 15 },
-    "need": { "strength": "strong", "score": 30 },
-    "timeline": { "period": "<3 months", "score": 20 },
-    "total_score": 90,
-    "category": "hot",
-    "action_plan": "Immediate technical analysis...",
-    "confidence": "high"
-  }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Europe/Berlin",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true
+  },
+  "staticData": {},
+  "pinData": {}
 }
 ```
 
 ---
 
-### Node 5: Update Inquiries Log with BANT
-
-**Type:** Google Sheets Update
-**Sheet:** `01_📋_Inquiries_Log`
-**Update Row:** Find by inquiry_id
-
-```javascript
-{
-  "lead_score_category": "={{ $json.bant_scoring.category }}",
-  "ai_lead_confidence": "={{ $json.bant_scoring.confidence }}",
-  "quotation_status": "={{ $json.bant_scoring.category === 'hot' || $json.bant_scoring.category === 'warm' ? 'qualified' : 'nurture' }}"
-}
-```
+## Tests & Qualitätssicherung
+| Test | Payload / Aktion | Erwartetes Ergebnis |
+| --- | --- | --- |
+| Health Check | Email vorhanden, Budget ≥ minBudget | Response `status=accepted`, Kategorie `hot/warm` |
+| Kalt-Lead | Niedriges Budget + Timeline > 6 Monate | Response `status=manual_review`, `category=cold` |
+| Fehlende Pflichtfelder | Kein `customer_id` oder `email` | 400 Fehler mit Fehlermeldung |
+| Optionaler Tech-Agent | `TECH_WEBHOOK_URL` setzen und Response prüfen | Response enthält `recommended_action=trigger_technical_agent` |
 
 ---
 
-### Node 6: Create Lead Intelligence Log
+## Nächste Schritte
+1. **Variablen setzen** (`BACKEND_BASE_URL`, `BACKEND_TOKEN`, optional `TECH_WEBHOOK_URL`).  
+2. **OpenAI Credential** (`OpenAI Account`) sicherstellen.  
+3. Optional Logging: Platzhalter-Nodes durch echte Google Sheets / Backend Calls ersetzen.  
+4. Workflow importieren, `AI Agent` testen (Manual Execution), anschließend aktivieren.  
+5. MASTER-Workflow anpassen, sodass er `sheet_id`, `sheet_mappings` und `config` korrekt übergibt.
 
-**Type:** Google Sheets Append
-**Sheet:** `19_🔍_Lead_Intelligence_Log`
-
-```javascript
-{
-  "lead_id": "LEAD_" + Date.now(),
-  "inquiry_id": "={{ $json.inquiry_id }}",
-  "company_name": "={{ $json.data.company_name }}",
-  "website_url": "={{ $json.hunter_data.domain || '' }}",
-  "industry_sector": "={{ $json.hunter_data.industry || '' }}",
-  "employee_range": "={{ $json.hunter_data.employee_range || '' }}",
-  "country": "={{ $json.hunter_data.country || '' }}",
-  "lead_source": "inquiry_form",
-  "BANT_Budget": "={{ $json.bant_scoring.budget.score }}",
-  "BANT_Authority": "={{ $json.bant_scoring.authority.score }}",
-  "BANT_Need": "={{ $json.bant_scoring.need.score }}",
-  "BANT_Timeline": "={{ $json.bant_scoring.timeline.score }}",
-  "BANT_Total_Score": "={{ $json.bant_scoring.total_score }}",
-  "lead_score_category": "={{ $json.bant_scoring.category }}",
-  "ai_confidence_score": "={{ $json.bant_scoring.confidence }}",
-  "analysis_notes": "={{ $json.bant_scoring.action_plan }}"
-}
-```
-
----
-
-### Node 7: Create Lead Dossier (Google Docs)
-
-**Type:** Google Docs Create
-
-**Template:**
-```markdown
-# Lead Dossier - {{ company_name }}
-
-## 📊 BANT Score: {{ total_score }}/100 ({{ category }})
-
-### Budget ({{ budget.score }}/25)
-- Detected Budget: €{{ budget.detected || 'Unknown' }}
-- Required Minimum: €{{ budget.threshold }}
-
-### Authority ({{ authority.score }}/25)
-- Contact Level: {{ authority.level }}
-- Decision Maker: {{ contact_person }}
-
-### Need ({{ need.score }}/30)
-- Need Strength: {{ need.strength }}
-- Requirements: {{ product_type }} - {{ performance_target }}
-
-### Timeline ({{ timeline.score }}/20)
-- Expected Timeline: {{ timeline.period }}
-
----
-
-## 🏢 Company Information
-- Name: {{ company_name }}
-- Industry: {{ industry }}
-- Country: {{ country }}
-- Employee Range: {{ employee_range }}
-
-## 🎯 Recommended Next Steps
-{{ action_plan }}
-
----
-Generated by AI_LEAD_AGENT v2025.10.2
-```
-
----
-
-### Node 8: Route Decision
-
-**Type:** IF Node
-**Condition:** `{{ $json.bant_scoring.category === 'hot' || $json.bant_scoring.category === 'warm' }}`
-
-**TRUE:** → Continue to Technical Agent
-**FALSE:** → Start Nurture Campaign
-
----
-
-### Node 9a: Handover to Technical Agent
-
-**Type:** HTTP Request
-**Method:** POST
-**URL:** `{{ $env.N8N_BASE_URL }}/webhook/wieslogic-master`
-
-```json
-{
-  "action": "trigger_technical_agent",
-  "customer_id": "={{ $json.customer_id }}",
-  "brand": "={{ $json.brand }}",
-  "data": {
-    "inquiry_id": "={{ $json.inquiry_id }}",
-    "lead_dossier_link": "={{ $json.dossier_link }}",
-    "bant_score": "={{ $json.bant_scoring.total_score }}",
-    "product_type": "={{ $json.data.product_type }}",
-    "requirements": "={{ JSON.stringify($json.data) }}"
-  }
-}
-```
-
----
-
-### Node 9b: Start Nurture Campaign
-
-**Type:** HTTP Request (to Marketing Agent)
-
-```json
-{
-  "action": "trigger_marketing_agent",
-  "campaign_type": "lead_nurture",
-  "lead_data": "={{ JSON.stringify($json) }}"
-}
-```
-
----
-
-## 📊 Verwendungsbeispiele
-
-### Beispiel 1: Hot Lead (Score 90)
-
-**Input:**
-```json
-{
-  "company_name": "Big Logistics AG",
-  "contact_person": "Hans Müller - CEO",
-  "email": "h.mueller@biglogistics.de",
-  "product_type": "Pallet Wrapper",
-  "required_pallets_per_hour": 100,
-  "message": "We urgently need an automated wrapper. Budget: 50k EUR. Timeline: ASAP."
-}
-```
-
-**BANT Scoring:**
-- Budget: 25 (50k > 25k minimum)
-- Authority: 25 (CEO)
-- Need: 30 (konkrete Anforderungen + Dringlichkeit)
-- Timeline: 20 (ASAP)
-- **Total: 100** → 🔥 HOT
-
-**Action:** → Technical Agent (sofort)
-
----
-
-### Beispiel 2: Warm Lead (Score 70)
-
-**Input:**
-```json
-{
-  "company_name": "Medium Company GmbH",
-  "contact_person": "John Doe - Logistics Manager",
-  "email": "john@medium.de",
-  "product_type": "Palletizer",
-  "message": "We're looking for a palletizer for next quarter"
-}
-```
-
-**BANT Scoring:**
-- Budget: 5 (kein Budget genannt)
-- Authority: 15 (Manager)
-- Need: 20 (Interesse)
-- Timeline: 15 (nächstes Quartal)
-- **Total: 55** → 🔵 COLD
-
-**Action:** → Nurture Campaign
-
----
-
-## ✅ Deployment Checklist
-
-- [ ] Workflow importiert
-- [ ] Hunter.io API Key gesetzt
-- [ ] Google Sheets Credentials
-- [ ] Lead Dossier Template erstellt
-- [ ] Test mit Hot/Warm/Cold Lead
-- [ ] Integration mit Technical Agent getestet
-
----
-
-**Version:** 2025.10.2
-**Status:** ✅ Production Ready
+Fertig! Der Lead-Agent liefert nun einheitliche BANT-Scores und Empfehlungen und lässt sich ohne weiteres mit den übrigen Agent-Workflows kombinieren.

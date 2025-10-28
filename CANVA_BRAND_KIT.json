@@ -1,0 +1,552 @@
+{
+  "brandName": "Tenify.AI",
+  "tagline": "AI Automation That 10X's Your Business",
+  "description": "Enterprise-grade AI workflows for SMEs - Done-For-You automation service",
+  "website": "https://tenify.ai",
+  "email": "hello@tenify.ai",
+  "version": "1.0",
+  "lastUpdated": "2025-10-28",
+  "brandGuidance": {
+    "missionStatement": "Tenify.AI empowers mid-market businesses to automate their critical processes with enterprise-grade AI, delivering measurable ROI and freeing teams to focus on strategic growth.",
+    "keyValues": [
+      "Innovative - Cutting-edge AI solutions",
+      "Professional - Enterprise reliability",
+      "Fast - 3-5 day implementation",
+      "ROI-Focused - Measurable, real results",
+      "Customer-Centric - Done-for-you service",
+      "Secure - GDPR-compliant, German-hosted"
+    ],
+    "targetAudience": "Mid-market B2B companies (100-500 employees), Medical practices, Hair salons, Law firms, Tax advisors, Service providers"
+  },
+  "colors": {
+    "primary": {
+      "name": "Electric Blue",
+      "hex": "#00F0FF",
+      "rgb": "0, 240, 255",
+      "cmyk": "100, 6, 0, 0",
+      "usage": "Primary CTAs, highlights, focus states"
+    },
+    "secondary": {
+      "name": "Neon Pink",
+      "hex": "#FF0080",
+      "rgb": "255, 0, 128",
+      "cmyk": "0, 100, 50, 0",
+      "usage": "Secondary CTAs, energy, urgency"
+    },
+    "accent1": {
+      "name": "Purple",
+      "hex": "#A855F7",
+      "rgb": "168, 85, 247",
+      "cmyk": "32, 66, 0, 3",
+      "usage": "FAQ sections, alternative accents"
+    },
+    "accent2": {
+      "name": "Gold",
+      "hex": "#FFD700",
+      "rgb": "255, 215, 0",
+      "cmyk": "0, 16, 100, 0",
+      "usage": "Service/support highlights"
+    },
+    "accent3": {
+      "name": "Green",
+      "hex": "#22C55E",
+      "rgb": "34, 197, 94",
+      "cmyk": "85, 0, 52, 23",
+      "usage": "Savings, success, positive metrics"
+    },
+    "background": {
+      "dark": {
+        "name": "Primary-950",
+        "hex": "#030712",
+        "rgb": "3, 7, 18",
+        "cmyk": "90, 70, 20, 85",
+        "usage": "Main background, hero sections"
+      },
+      "darkSecondary": {
+        "name": "Primary-900",
+        "hex": "#0F1622",
+        "rgb": "15, 22, 34",
+        "cmyk": "80, 60, 20, 75",
+        "usage": "Card backgrounds, overlays"
+      },
+      "darkTertiary": {
+        "name": "Primary-800",
+        "hex": "#1A2332",
+        "rgb": "26, 35, 50",
+        "cmyk": "70, 50, 20, 60",
+        "usage": "Hover states, borders"
+      }
+    },
+    "text": {
+      "primary": {
+        "name": "White",
+        "hex": "#FFFFFF",
+        "rgb": "255, 255, 255",
+        "usage": "Headlines, high contrast text"
+      },
+      "secondary": {
+        "name": "Gray-300",
+        "hex": "#D1D5DB",
+        "rgb": "209, 213, 219",
+        "usage": "Body text, main content"
+      },
+      "tertiary": {
+        "name": "Gray-400",
+        "hex": "#9CA3AF",
+        "rgb": "156, 163, 175",
+        "usage": "Secondary text, labels, captions"
+      }
+    },
+    "palette": [
+      "#00F0FF",
+      "#FF0080",
+      "#A855F7",
+      "#FFD700",
+      "#22C55E",
+      "#030712",
+      "#0F1622",
+      "#FFFFFF",
+      "#D1D5DB"
+    ]
+  },
+  "fonts": {
+    "display": {
+      "name": "Cal Sans",
+      "weight": "bold",
+      "style": "normal",
+      "usage": "Headlines (H1, H2, H3), major titles",
+      "alternates": ["Montserrat Bold", "Poppins Bold", "Inter Bold"],
+      "googleFontUrl": "https://fonts.google.com/specimen/Montserrat"
+    },
+    "body": {
+      "name": "Inter",
+      "weights": [400, 600],
+      "style": "normal",
+      "usage": "Body text, UI elements, labels",
+      "googleFontUrl": "https://fonts.google.com/specimen/Inter"
+    },
+    "fallback": "Arial, sans-serif"
+  },
+  "typographyScale": {
+    "h1": {
+      "size": "72px",
+      "sizeSmall": "48px",
+      "lineHeight": "1.1",
+      "weight": "bold",
+      "font": "Cal Sans",
+      "example": "Ready-Made AI Workflows for SMEs"
+    },
+    "h2": {
+      "size": "48px",
+      "sizeSmall": "32px",
+      "lineHeight": "1.2",
+      "weight": "bold",
+      "font": "Cal Sans",
+      "example": "Section Headlines"
+    },
+    "h3": {
+      "size": "32px",
+      "sizeSmall": "24px",
+      "lineHeight": "1.3",
+      "weight": "bold",
+      "font": "Cal Sans",
+      "example": "Feature Titles"
+    },
+    "bodyLarge": {
+      "size": "20px",
+      "lineHeight": "1.6",
+      "weight": "regular",
+      "font": "Inter",
+      "example": "Large subheadlines"
+    },
+    "body": {
+      "size": "16px",
+      "lineHeight": "1.6",
+      "weight": "regular",
+      "font": "Inter",
+      "example": "Main body text"
+    },
+    "bodySmall": {
+      "size": "14px",
+      "lineHeight": "1.5",
+      "weight": "regular",
+      "font": "Inter",
+      "example": "Secondary text"
+    },
+    "label": {
+      "size": "12px",
+      "lineHeight": "1.4",
+      "weight": "semibold",
+      "tracking": "0.5px",
+      "font": "Inter",
+      "textTransform": "uppercase",
+      "example": "Form labels, buttons"
+    }
+  },
+  "components": {
+    "button": {
+      "primary": {
+        "background": "linear-gradient(to right, #00F0FF, #FF0080)",
+        "text": "#030712",
+        "textColor": "White",
+        "padding": "16px 32px",
+        "borderRadius": "999px",
+        "fontWeight": "bold",
+        "fontSize": "18px",
+        "shadow": "0 0 40px rgba(0,240,255,0.4)",
+        "shadowHover": "0 0 60px rgba(0,240,255,0.6)",
+        "hoverScale": "1.05"
+      },
+      "secondary": {
+        "background": "transparent",
+        "border": "2px solid currentColor",
+        "padding": "12px 24px",
+        "borderRadius": "12px",
+        "hoverBackground": "10% opacity"
+      }
+    },
+    "card": {
+      "background": "rgba(15, 22, 34, 0.5)",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "borderRadius": "24px",
+      "padding": "32px",
+      "backdropBlur": "10px",
+      "shadowHover": "0 0 40px rgba(0,240,255,0.1)"
+    },
+    "modal": {
+      "background": "#0F1622",
+      "backdropBlur": "20px",
+      "borderRadius": "32px",
+      "padding": "48px",
+      "maxWidth": "800px",
+      "overlayOpacity": "0.5"
+    }
+  },
+  "imagery": {
+    "style": "Professional, modern, dark backgrounds with electric accents",
+    "colorTreatment": "Saturated colors, slightly darkened for contrast",
+    "imageTypes": [
+      "Dashboard screenshots",
+      "Minimal geometric icons",
+      "Tech-focused illustrations",
+      "Real customer testimonial photos"
+    ],
+    "dos": [
+      "Use professional, high-quality images",
+      "Maintain consistent color tone",
+      "Show real workflows",
+      "Include diverse representations",
+      "Keep backgrounds minimal"
+    ],
+    "donts": [
+      "Generic stock photos",
+      "Oversaturated colors",
+      "Crowded compositions",
+      "Low resolution",
+      "Unrelated imagery"
+    ]
+  },
+  "animation": {
+    "principles": [
+      "Purpose-driven",
+      "Subtle and elegant",
+      "Fast (300-600ms)",
+      "Smooth easing"
+    ],
+    "common": {
+      "pageLoad": {
+        "type": "Fade in + Slide up",
+        "duration": "600ms",
+        "easing": "[0.25, 0.1, 0.25, 1]"
+      },
+      "buttonHover": {
+        "type": "Scale 1.05",
+        "duration": "200ms"
+      },
+      "buttonActive": {
+        "type": "Scale 0.95",
+        "duration": "100ms"
+      },
+      "cardHover": {
+        "type": "Border brightens, shadow intensifies",
+        "duration": "500ms"
+      },
+      "modalEnter": {
+        "type": "Scale 0.9 to 1 + Fade in",
+        "duration": "300ms"
+      }
+    }
+  },
+  "voiceTone": {
+    "characteristics": [
+      "Professional yet approachable",
+      "Direct and result-focused",
+      "Confident and authoritative",
+      "Grand Cardone inspired (numbers first, urgency)"
+    ],
+    "guidelines": {
+      "numbers": "Bold, big numbers (€71,000/year, 10X leads)",
+      "language": "Action-oriented, no fluff",
+      "urgency": "Limited time offers, scarcity messaging",
+      "testimonials": "Specific, measurable results",
+      "tone": "Friendly but business-focused"
+    },
+    "examples": {
+      "cta": "Book Free Potential Analysis",
+      "hero": "AI Automation That 10X's Your Business",
+      "feature": "Never miss a call again. 24/7 AI agent.",
+      "urgency": "🔥 Only 3 setup slots left this week!"
+    }
+  },
+  "logoGuidelines": {
+    "primary": {
+      "name": "Tenify.AI Wordmark",
+      "color": "Electric Blue or White",
+      "minimumSize": "120px width",
+      "clearSpace": "20px minimum around",
+      "background": "Works on dark backgrounds"
+    },
+    "usage": {
+      "do": [
+        "Use on Electric Blue or Neon backgrounds (white)",
+        "Use on Primary-950 (electric blue or white)",
+        "Centered in hero",
+        "Top of navigation",
+        "Footer"
+      ],
+      "dont": [
+        "Rotate or skew",
+        "Change colors",
+        "Add effects or shadows",
+        "Use smaller than 120px",
+        "Use on light backgrounds without adjustment"
+      ]
+    }
+  },
+  "spacing": {
+    "scale": {
+      "xs": "2px",
+      "sm": "4px",
+      "base": "8px",
+      "lg": "12px",
+      "xl": "16px",
+      "2xl": "24px",
+      "3xl": "32px",
+      "4xl": "48px",
+      "5xl": "64px"
+    },
+    "sectionSpacing": "80px vertical padding (desktop), 48px (mobile)",
+    "containerMaxWidth": "1280px"
+  },
+  "borderRadius": {
+    "sm": "4px",
+    "base": "8px",
+    "lg": "12px",
+    "xl": "16px",
+    "2xl": "20px",
+    "3xl": "24px",
+    "full": "999px (buttons)"
+  },
+  "shadows": {
+    "light": "0 2px 4px rgba(0, 0, 0, 0.1)",
+    "medium": "0 4px 12px rgba(0, 0, 0, 0.2)",
+    "dark": "0 10px 40px rgba(0, 0, 0, 0.4)",
+    "glow": "0 0 40px rgba(0, 240, 255, 0.4)"
+  },
+  "socialMedia": {
+    "platforms": {
+      "linkedIn": {
+        "imageSize": "1200x628px",
+        "copyStyle": "Professional, result-focused",
+        "colors": ["Electric Blue", "White", "Dark background"],
+        "contentTypes": [
+          "Case studies",
+          "ROI tips",
+          "Company updates",
+          "Industry insights"
+        ]
+      },
+      "twitter": {
+        "imageSize": "1024x512px",
+        "copyStyle": "Concise, energetic",
+        "characters": "280 max",
+        "hashtags": ["#AIAutomation", "#SME", "#Workflow", "#Tenify"]
+      },
+      "instagram": {
+        "imageSize": "1080x1080px",
+        "copyStyle": "Friendly, visual",
+        "contentTypes": [
+          "Day in the life",
+          "Customer spotlights",
+          "Tips and tricks",
+          "Behind the scenes"
+        ]
+      },
+      "email": {
+        "headerHeight": "200px",
+        "footerHeight": "100px",
+        "previewTextLength": "85 characters",
+        "fontStack": ["Inter", "Arial", "sans-serif"]
+      }
+    }
+  },
+  "downloadableAssets": {
+    "logos": [
+      "Logo - Full Color.svg",
+      "Logo - White.svg",
+      "Logo - Dark.svg",
+      "Favicon - 32px.png",
+      "Favicon - 180px.png"
+    ],
+    "colorSwatches": [
+      "Tenify Color Palette.ase (Adobe)",
+      "Tenify Colors.json",
+      "Tenify Colors.png"
+    ],
+    "templates": [
+      "Canva Social Media Template",
+      "Canva Email Template",
+      "Canva Presentation Template",
+      "Figma Design System"
+    ]
+  },
+  "accessibilityGuidelines": {
+    "wcagCompliance": "AA level",
+    "contrastRatios": {
+      "normalText": "4.5:1 minimum",
+      "largeText": "3:1 minimum",
+      "uiComponents": "3:1 minimum"
+    },
+    "textReadability": {
+      "minimumFontSize": "14px",
+      "lineHeight": "1.5x+",
+      "letterSpacing": "0.12em minimum",
+      "maxCharactersPerLine": "75"
+    },
+    "colorBlindness": "Don't use color as only indicator",
+    "motion": "Respect prefers-reduced-motion preference"
+  },
+  "workflows": {
+    "voiceAgent": {
+      "color": "Electric Blue",
+      "icon": "Phone",
+      "headline": "AI Voice Agent",
+      "subheadline": "24/7 Phone Automation",
+      "problem": "You lose 20-30 calls daily = €71,000 lost/year",
+      "solution": "AI answers EVERY call, 24/7, automatic booking & lead qualifying",
+      "roi": {
+        "before": "30 missed calls/day",
+        "after": "100% call capture guaranteed",
+        "savings": "€71,000/year",
+        "timeSavings": "20h/week"
+      }
+    },
+    "salesAgent": {
+      "color": "Neon Pink",
+      "icon": "TrendingUp",
+      "headline": "Sales Agent Workflow",
+      "subheadline": "Automated Sales Process",
+      "problem": "Sales team spends 60% on admin, deals get lost",
+      "solution": "Automate lead scoring, follow-ups, proposals, pipeline",
+      "roi": {
+        "before": "45 days to close",
+        "after": "28 days (38% faster)",
+        "savings": "€48,000/year",
+        "timeSavings": "25h/week"
+      }
+    },
+    "serviceAgent": {
+      "color": "Gold",
+      "icon": "Headphones",
+      "headline": "Service Agent Workflow",
+      "subheadline": "Intelligent Customer Support",
+      "problem": "Support overwhelmed, 80% tickets could be automated",
+      "solution": "AI answers 85% of tickets automatically",
+      "roi": {
+        "before": "€5,000 support costs/month",
+        "after": "€2,000 (60% reduction)",
+        "savings": "€36,000/year",
+        "timeSavings": "30h/week"
+      }
+    },
+    "technicalAgent": {
+      "color": "Purple",
+      "icon": "Bot",
+      "headline": "Technical Agent Workflow",
+      "subheadline": "Technical Ticket Management",
+      "problem": "Tickets misrouted, hours spent on triage",
+      "solution": "Auto-categorize, prioritize, route correctly",
+      "roi": {
+        "before": "4h avg processing time",
+        "after": "45min (81% faster)",
+        "savings": "€42,000/year",
+        "timeSavings": "35h/week"
+      }
+    },
+    "leadGenerator": {
+      "color": "Electric Blue",
+      "icon": "Target",
+      "headline": "Lead Generator Workflow",
+      "subheadline": "Automatic Lead Generation",
+      "problem": "Manual lead gen = 50 leads/week max",
+      "solution": "AI finds, qualifies, contacts 500+ leads/week",
+      "roi": {
+        "before": "50 qualified leads/week",
+        "after": "500+ leads (10X more)",
+        "savings": "€85,000/year",
+        "timeSavings": "40h/week"
+      }
+    },
+    "leadManager": {
+      "color": "Neon Pink",
+      "icon": "Users",
+      "headline": "Lead Manager Workflow",
+      "subheadline": "Intelligent Lead Management",
+      "problem": "Leads lost, forgotten, contacted too late",
+      "solution": "AI organizes, prioritizes, automates nurturing",
+      "roi": {
+        "before": "15% lead-to-customer rate",
+        "after": "35% (+133% more conversions)",
+        "savings": "€95,000/year",
+        "timeSavings": "30h/week"
+      }
+    }
+  },
+  "contentGuidelines": {
+    "headlines": {
+      "style": "Bold, benefit-driven, number-focused",
+      "length": "5-10 words",
+      "examples": [
+        "Save €71,000 Yearly with AI Voice Agent",
+        "10X Your Lead Pipeline in 48 Hours",
+        "60% Support Cost Reduction Guaranteed"
+      ]
+    },
+    "bodyText": {
+      "style": "Clear, conversational, problem-solution",
+      "length": "50-75 characters per line",
+      "structure": "Problem → Solution → Benefit"
+    },
+    "cta": {
+      "style": "Action-oriented, first person, urgency",
+      "length": "2-5 words",
+      "examples": [
+        "Book Free Consultation",
+        "Start 30-Day Trial",
+        "Get ROI Analysis"
+      ]
+    },
+    "testimonials": {
+      "format": "Quote + Name + Title + Company + Result metric",
+      "length": "1-2 sentences",
+      "specificity": "Always include %, €, or time saved"
+    }
+  },
+  "brandPartnershipGuidelines": {
+    "colorUsage": "Primary colors for main elements",
+    "logoPlacement": "Visible but not dominant",
+    "contentApproval": "Required before publishing",
+    "linkRequirement": "https://tenify.ai",
+    "contactForApproval": "hello@tenify.ai"
+  }
+}

@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CustomerAgentConfig {
+  id                   String   @id @default(cuid())
+  customerId           String   @unique
+
+  // Google Integration
+  googleSheetId        String
+  driveFolderId        String?
+  serviceAccountEmail  String
+
+  // Agent Activation
+  leadAgentEnabled     Boolean  @default(true)
+  techAgentEnabled     Boolean  @default(true)
+  salesAgentEnabled    Boolean  @default(true)
+  serviceAgentEnabled  Boolean  @default(false)
+  // Additional Agents
+  masterAgentEnabled   Boolean  @default(true)
+  leadGeneratorEnabled Boolean  @default(false)
+  contentAgentEnabled  Boolean  @default(false)
+  marketingAgentEnabled Boolean @default(false)
+
+  // License Information
+  licenseType          String   // 'full', 'trial', 'limited'
+  activationDate       DateTime
+  expirationDate       DateTime?
+
+  // Webhook Configuration
+  webhookToken         String   @unique
+  webhookBaseUrl       String
+
+  // AI Configuration
+  openAIApiKey         String
+  vectorStoreId        String?
+  ragEnabled           Boolean  @default(true)
+
+  // Branding
+  companyName          String
+  fromEmail            String
+  replyToEmail         String
+  logoUrl              String?
+
+  // Business Rules
+  minBudgetEur         Int      @default(10000)
+  minBantScore         Int      @default(60)
+  autoQualifyScore     Int      @default(85)
+
+  // Status
+  status               String   // 'active', 'suspended', 'expired'
+  lastHealthCheck      DateTime?
+
+  // Personal Assistant (optional; see PA integration doc)
+  paEnabled               Boolean  @default(false)
+  paEmailManagement       Boolean  @default(true)
+  paCalendarManagement    Boolean  @default(true)
+  paTaskManagement        Boolean  @default(true)
+  paAutoResponse          Boolean  @default(true)
+  paAutoResponseThreshold Float    @default(0.85)
+  paWorkingHoursStart     Int      @default(9)
+  paWorkingHoursEnd       Int      @default(17)
+  paTimezone              String   @default("Europe/Berlin")
+  paNotifyUrgent          Boolean  @default(true)
+  paNotifyChannel         String   @default("email")
+  paSlackWebhook          String?
+  paTeamsWebhook          String?
+  paEmailTone             String   @default("professional_friendly")
+  paEmailSignature        String?
+  paOOOEnabled            Boolean  @default(false)
+  paOOOStart              DateTime?
+  paOOOEnd                DateTime?
+  paOOOMessage            String?
+  paOOOBackupContact      String?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  customer             Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model ProductCatalogConfig {
+  id                 String   @id @default(cuid())
+  customerId         String
+
+  category           String   // 'pallet_wrappers', 'palletizers', etc.
+  enabled            Boolean  @default(true)
+  models             String   // JSON string of model names
+  calculationModule  String   // Calculator class name
+
+  // Pricing
+  basePricing        String?
+  discountRules      String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([customerId, category])
+  @@index([customerId])
+}
+
+model SheetMapping {
+  id                 String   @id @default(cuid())
+  customerId         String
+
+  logicalName        String   // 'inquiries', 'quotations', etc.
+  actualSheetName    String   // e.g. '01_…_Inquiries_Log'
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([customerId, logicalName])
+  @@index([customerId])
+}
+
+model AgentExecutionLog {
+  id                 String   @id @default(cuid())
+  customerId         String
+
+  agentName          String   // 'lead_agent', 'technical_agent', etc.
+  inquiryId          String?
+
+  startTime          DateTime
+  endTime            DateTime?
+  durationMs         Int?
+
+  status             String   // 'success', 'error', 'timeout'
+  errorMessage       String?
+
+  inputData          String?
+  outputData         String?
+
+  createdAt          DateTime @default(now())
+
+  @@index([customerId, agentName])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Minimal Customer table just for FK integrity in this standalone backend.
+/// Replace with your real Customer model or remove if existing.
+model Customer {
+  id    String @id
+  email String?
+
+  configs CustomerAgentConfig[]
+}

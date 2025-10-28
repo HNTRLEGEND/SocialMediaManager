@@ -1,0 +1,340 @@
+{
+  "name": "AI_LEAD_AGENT",
+  "nodes": [
+    {
+      "parameters": { "path": "lead-agent", "responseMode": "responseNode", "httpMethod": "POST" },
+      "id": "00_webhook_lead",
+      "name": "00_webhook_lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [320, 220]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const em = $json.data?.email || ''; const domain = em.includes('@') ? em.split('@')[1] : ''; return [{ json: { ...$json, company_domain: domain } }];"
+      },
+      "id": "12_resolve_domain",
+      "name": "12_resolve_domain",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 60]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{'https://api.hunter.io/v2/email-verifier?email=' + encodeURIComponent($json.data.email||'') + '&api_key=' + $vars.HUNTER_API_KEY}}"
+      },
+      "id": "13_hunter_email_verify",
+      "name": "13_hunter_email_verify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [960, 20]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{'https://api.hunter.io/v2/domain-search?domain=' + encodeURIComponent($json.company_domain||'') + '&api_key=' + $vars.HUNTER_API_KEY}}"
+      },
+      "id": "14_hunter_domain_search",
+      "name": "14_hunter_domain_search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1140, 20]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{'https://www.googleapis.com/customsearch/v1?q=' + encodeURIComponent('site:linkedin.com/company ' + ($json.data.company_name||'')) + '&cx=' + $vars.GOOGLE_CSE_ID + '&key=' + $vars.GOOGLE_API_KEY}}"
+      },
+      "id": "15_cse_linkedin",
+      "name": "15_cse_linkedin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1320, 20]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{'https://www.googleapis.com/customsearch/v1?q=' + encodeURIComponent(($json.data.company_name||'') + ' official site') + '&cx=' + $vars.GOOGLE_CSE_ID + '&key=' + $vars.GOOGLE_API_KEY}}"
+      },
+      "id": "17_cse_site",
+      "name": "17_cse_site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1500, 20]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{'https://www.googleapis.com/customsearch/v1?q=' + encodeURIComponent(($json.data.company_name||'') + ' news') + '&cx=' + $vars.GOOGLE_CSE_ID + '&key=' + $vars.GOOGLE_API_KEY}}"
+      },
+      "id": "18_cse_news",
+      "name": "18_cse_news",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1680, 20]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "function pick(items){ if(items && items.items && items.items.length){ return items.items.map(i=>i.link).filter(Boolean); } return []; }\nconst linked = items[0].$node['15_cse_linkedin']?.json || {};\nconst site = items[0].$node['17_cse_site']?.json || {};\nconst news = items[0].$node['18_cse_news']?.json || {};\nconst hunterDom = items[0].$node['14_hunter_domain_search']?.json || {};\nlet linkedin_url = pick(linked)[0] || '';\nlet homepage_url = pick(site)[0] || '' ;\nlet news_urls = pick(news).slice(0,3);\nconst hd = hunterDom?.data?.domain || hunterDom?.data?.organization || '';\nif(!homepage_url && (hunterDom?.data?.domain)){ homepage_url = 'https://' + hunterDom.data.domain; }\nreturn [{ json: { ...$json, linkedin_url, homepage_url, news_urls } }];"
+      },
+      "id": "19_parse_search",
+      "name": "19_parse_search",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 20]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{$json.homepage_url || ''}}",
+        "options": {"redirect":"follow"}
+      },
+      "id": "20_fetch_homepage",
+      "name": "20_fetch_homepage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2040, 20]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "function strip(html){ if(!html||typeof html!=='string') return ''; return html.replace(/<script[\s\S]*?<\\/script>/gi,'').replace(/<style[\s\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); }\nconst body = items[0].$node['20_fetch_homepage']?.json || items[0].$node['20_fetch_homepage']?.data || '';\nconst text = strip(typeof body==='string'?body:(body?.body||body?.data||''));\nreturn [{ json: { ...$json, website_text: { ...( $json.website_text||{} ), home: text.slice(0, 12000) } } }];"
+      },
+      "id": "21_extract_home_text",
+      "name": "21_extract_home_text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 20]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{($json.homepage_url || '') + '/about'}}",
+        "options": {"redirect":"follow"}
+      },
+      "id": "22_fetch_about",
+      "name": "22_fetch_about",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2400, 20]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "function strip(html){ if(!html||typeof html!=='string') return ''; return html.replace(/<script[\s\S]*?<\\/script>/gi,'').replace(/<style[\s\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); }\nconst body = items[0].$node['22_fetch_about']?.json || items[0].$node['22_fetch_about']?.data || '';\nconst text = strip(typeof body==='string'?body:(body?.body||body?.data||''));\nreturn [{ json: { ...$json, website_text: { ...( $json.website_text||{} ), about: text.slice(0, 12000) } } }];"
+      },
+      "id": "23_extract_about_text",
+      "name": "23_extract_about_text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2580, 20]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "requestMethod": "GET",
+        "url": "={{'https://nubela.co/proxycurl/api/linkedin/company?url=' + encodeURIComponent($json.linkedin_url||'')}}",
+        "headerParametersUi": { "parameter": [ { "name": "Authorization", "value": "=Bearer {{$vars.PROXYCURL_API_KEY}}" } ] }
+      },
+      "id": "24_proxycurl_company",
+      "name": "24_proxycurl_company",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2760, 20]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const news = $json.news_urls || [];\nconst urls = [news[0]||'', news[1]||'', news[2]||''];\nreturn urls.map((u,idx)=>({ json:{ ...$json, ['news_url_'+(idx+1)]: u } }));"
+      },
+      "id": "25_prepare_news",
+      "name": "25_prepare_news",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 100]
+    },
+    { "parameters": { "authentication": "none", "requestMethod": "GET", "url": "={{$json.news_url_1||''}}" }, "id": "26_fetch_news1", "name": "26_fetch_news1", "type": "n8n-nodes-base.httpRequest", "typeVersion": 3, "position": [2040, 100] },
+    { "parameters": { "language": "JavaScript", "jsCode": "function strip(s){ if(!s||typeof s!=='string') return ''; return s.replace(/<script[\s\S]*?<\\/script>/gi,'').replace(/<style[\s\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); } const body = items[0].$node['26_fetch_news1']?.json || items[0].$node['26_fetch_news1']?.data || ''; const text = strip(typeof body==='string'?body:(body?.body||body?.data||'')); return [{ json: { ...$json, news_text_1: text.slice(0,6000) } }];" }, "id": "27_text_news1", "name": "27_text_news1", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [2220, 100] },
+    { "parameters": { "authentication": "none", "requestMethod": "GET", "url": "={{$json.news_url_2||''}}" }, "id": "28_fetch_news2", "name": "28_fetch_news2", "type": "n8n-nodes-base.httpRequest", "typeVersion": 3, "position": [2040, 160] },
+    { "parameters": { "language": "JavaScript", "jsCode": "function strip(s){ if(!s||typeof s!=='string') return ''; return s.replace(/<script[\s\S]*?<\\/script>/gi,'').replace(/<style[\s\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); } const body = items[0].$node['28_fetch_news2']?.json || items[0].$node['28_fetch_news2']?.data || ''; const text = strip(typeof body==='string'?body:(body?.body||body?.data||'')); return [{ json: { ...$json, news_text_2: text.slice(0,6000) } }];" }, "id": "29_text_news2", "name": "29_text_news2", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [2220, 160] },
+    { "parameters": { "authentication": "none", "requestMethod": "GET", "url": "={{$json.news_url_3||''}}" }, "id": "30_fetch_news3", "name": "30_fetch_news3", "type": "n8n-nodes-base.httpRequest", "typeVersion": 3, "position": [2040, 220] },
+    { "parameters": { "language": "JavaScript", "jsCode": "function strip(s){ if(!s||typeof s!=='string') return ''; return s.replace(/<script[\s\S]*?<\\/script>/gi,'').replace(/<style[\s\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); } const body = items[0].$node['30_fetch_news3']?.json || items[0].$node['30_fetch_news3']?.data || ''; const text = strip(typeof body==='string'?body:(body?.body||body?.data||'')); return [{ json: { ...$json, news_text_3: text.slice(0,6000) } }];" }, "id": "31_text_news3", "name": "31_text_news3", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [2220, 220] },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const docs = ($json.vectorDocuments||[]).slice(); const website = $json.website_text||{}; const hunterE = items[0].$node['13_hunter_email_verify']?.json || {}; const hunterD = items[0].$node['14_hunter_domain_search']?.json || {}; const proxy = items[0].$node['24_proxycurl_company']?.json || {}; const news = [ $json.news_text_1||'', $json.news_text_2||'', $json.news_text_3||'' ].filter(Boolean).join('\n---\n'); if(website.home) docs.push({id:'web-home', text: String(website.home)}); if(website.about) docs.push({id:'web-about', text: String(website.about)}); if(Object.keys(hunterE).length) docs.push({id:'hunter-email', text: JSON.stringify(hunterE)}); if(Object.keys(hunterD).length) docs.push({id:'hunter-domain', text: JSON.stringify(hunterD)}); if(Object.keys(proxy).length) docs.push({id:'linkedin-company', text: JSON.stringify(proxy)}); if(news) docs.push({id:'news', text: news}); return [{ json: { ...$json, vectorDocuments: docs } }];"
+      },
+      "id": "32_merge_enrichment",
+      "name": "32_merge_enrichment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 60]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const body = $json || {};\nconst errors = [];\nconst data = body.data || {};\nconst config = body.config || {};\nconst sheetMappings = body.sheet_mappings || body.sheetMappings || {};\nconst sheetId = body.sheet_id || body.sheetId || config.googleSheetId || '';\nif (!body.customer_id) errors.push('Missing customer_id');\nif (!sheetId) errors.push('Missing sheet_id (sheet_id or config.googleSheetId)');\nif (!data.email) errors.push('Missing data.email');\nconst inquiryId = body.inquiry_id || 'INQ_' + Date.now();\nconst timestamp = new Date().toISOString();\nreturn [{ json: {\n  customer_id: body.customer_id,\n  action: body.action || 'trigger_lead_agent',\n  data,\n  config,\n  sheet_id: sheetId,\n  sheet_mappings: sheetMappings,\n  base_url: body.base_url || body.baseUrl || '',\n  invalid: errors.length > 0,\n  errors,\n  inquiry_id: inquiryId,\n  timestamp,\n  meta: { master_execution_id: body.master_execution_id || '', source: body.handover?.source || 'lead-webhook' }\n}}];"
+      },
+      "id": "05_validate_input",
+      "name": "05_validate_input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 220]
+    },
+    {
+      "parameters": { "conditions": { "boolean": [ { "value1": "={{$json.invalid}}", "operation": "isFalse" } ] } },
+      "id": "07_is_valid",
+      "name": "07_is_valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [780, 220]
+    },
+    {
+      "parameters": { "responseBody": "={{ JSON.stringify({ status: 'error', errors: $json.errors }) }}", "responseCode": 400 },
+      "id": "08_bad_request",
+      "name": "08_bad_request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [780, 380]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const data = $json.data || {};\nconst config = $json.config || {};\nconst docs = [];\ndocs.push({ id: 'bant-framework', text: 'BANT Playbook: Budget/Authority/Need/Timeline. Use thresholds from config.' });\ndocs.push({ id: 'brand-tone', text: 'WiesLogic brand: Bold, direct, results-driven. 10X energy. Premium support.' });\nif (data.product_type) docs.push({ id: 'product', text: 'Product focus: ' + data.product_type });\nif (config.vectorAppendices){ (Array.isArray(config.vectorAppendices)?config.vectorAppendices:[config.vectorAppendices]).filter(Boolean).forEach((t,i)=>docs.push({id:'config-extra-'+(i+1), text:String(t)})); }\nconst agentInput = {\n  inquiry_id: $json.inquiry_id,\n  customer_id: $json.customer_id,\n  contact: { company_name: data.company_name||'', contact_person: data.contact_person||'', email: data.email||'', phone: data.phone||'' },\n  requirements: { product_type: data.product_type||'', budget: data.budget ?? null, timeline: data.timeline||'', throughput: data.required_pallets_per_hour || data.required_products_per_minute || null, message: data.message || '' },\n  config: { min_budget_eur: config.minBudgetEur ?? null, min_bant_score: config.minBantScore ?? 60, auto_qualify_score: config.autoQualifyScore ?? 80, brand: config.brand || data.brand || 'ROBOPAC' },\n  sheet: { id: $json.sheet_id || '', mappings: $json.sheet_mappings || {} },\n  meta: $json.meta || {},\n  timestamp: $json.timestamp\n};\nreturn [{ json: { ...$json, agentInput, vectorDocuments: docs } }];"
+      },
+      "id": "10_build_agent_payload",
+      "name": "10_build_agent_payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 220]
+    },
+    { "parameters": {}, "id": "15_ai_think_tool", "name": "15_ai_think_tool", "type": "n8n-nodes-base.aiToolThink", "typeVersion": 1, "position": [960, 80] },
+    {
+      "parameters": {
+        "vectorStoreType": "simple",
+        "simpleVectorStore": { "provider": "openai", "model": "text-embedding-3-small", "matchCount": 6, "similarityThreshold": 0.35 },
+        "documents": "={{$json.vectorDocuments}}"
+      },
+      "id": "16_ai_vector_store",
+      "name": "16_ai_vector_store",
+      "type": "n8n-nodes-base.aiToolVectorStore",
+      "typeVersion": 1,
+      "position": [960, 140],
+      "credentials": { "openAiApi": { "name": "OpenAI Account" } }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "instructions": "You are the WiesLogic Lead Qualification Agent. Analyse agentInput, use the Think tool for structured reasoning and the Vector Store for WiesLogic brand/BANT context. Output strict JSON (schema) with BANT scores, category, summary, follow-up questions, and recommended next action. Respect min_budget_eur, min_bant_score, auto_qualify_score.",
+        "temperature": 0.2,
+        "inputKey": "agentInput",
+        "responseFormat": "jsonSchema",
+        "jsonSchema": { "type": "object", "properties": { "status": {"type":"string","enum":["hot","warm","cold","manual_review"]}, "confidence": {"type":"string","enum":["high","medium","low"]}, "summary": {"type":"string"}, "bant": {"type":"object","properties": { "budget": {"type":"object","properties":{"detected":{"type":["number","string","null"]},"score":{"type":"number"},"threshold":{"type":["number","null"]},"notes":{"type":"string"}}}, "authority": {"type":"object","properties":{"score":{"type":"number"},"role":{"type":"string"},"notes":{"type":"string"}}}, "need": {"type":"object","properties":{"score":{"type":"number"},"pain":{"type":"string"}}}, "timeline": {"type":"object","properties":{"score":{"type":"number"},"window":{"type":"string"}}}, "total_score": {"type":"number"}, "category": {"type":"string","enum":["hot","warm","cold","manual_review"]} }, "required":["budget","authority","need","timeline","total_score","category"] }, "questions": {"type":"array","items":{"type":"string"}}, "follow_up": {"type":"array","items":{"type":"string"}}, "handover": {"type":"object","properties":{"recommended_agent":{"type":"string"},"reason":{"type":"string"}} } }, "required":["status","summary","bant"] },
+        "toolStrategy": "automatic"
+      },
+      "id": "20_ai_lead_agent",
+      "name": "20_ai_lead_agent",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1180, 220],
+      "credentials": { "openAiApi": { "name": "OpenAI Account" } }
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const agentNode = items[0].$node[\"20_ai_lead_agent\"] || {};\nlet result = agentNode.json?.output ?? agentNode.json?.result ?? agentNode.json;\nif (typeof result === 'string'){ try{ result = JSON.parse(result);} catch{ result = null; } }\nconst safe = result && typeof result === 'object' ? result : {};\nconst bant = safe.bant || {};\nreturn [{ json: { ...$json, agent: safe, bant: { budget: bant.budget || {}, authority: bant.authority || {}, need: bant.need || {}, timeline: bant.timeline || {}, total_score: bant.total_score ?? bant.totalScore ?? null, category: (bant.category || safe.status || '').toLowerCase() }, agent_status: safe.status || '', agent_confidence: safe.confidence || '', follow_up: safe.follow_up || [], questions: safe.questions || [], summary: safe.summary || '' } }];"
+      },
+      "id": "25_parse_agent_result",
+      "name": "25_parse_agent_result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1380, 220]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const bant = $json.bant || {};\nconst data = $json.data || {};\nconst hunterDom = items[0].$node['14_hunter_domain_search']?.json || {};\nconst proxy = items[0].$node['24_proxycurl_company']?.json || {};\nconst category = (bant.category||'').toLowerCase();\nconst qualified = ['hot','warm'].includes(category);\nconst quotationStatus = qualified ? 'qualified' : 'nurture';\nconst country = proxy?.hq_country || proxy?.country || '';\nconst industry = proxy?.industry || '';\nconst domainPattern = hunterDom?.data?.pattern || '';\nconst websiteUrl = $json.homepage_url || '';\nconst linkedinUrl = $json.linkedin_url || '';\nconst performance = data.required_products_per_minute || data.required_pallets_per_hour || '';\nconst inquiriesRow = [[\n  $json.inquiry_id,\n  data.company_name || '',\n  data.contact_person || '',\n  data.email || '',\n  data.phone || '',\n  country || '',\n  industry || '',\n  data.product_type || '',\n  data.packaging_type || '',\n  data.primary_product_type || '',\n  data.secondary_product_type || '',\n  data.pallet_type || '',\n  data.layers_per_min || '',\n  data.shippers_per_min || '',\n  data.products_per_layer || '',\n  data.formation || '',\n  data.infeed_direction || '',\n  data.required_automation_level || '',\n  data.requested_packaging_category || '',\n  data.primary_product_type || '',\n  data.secondary_product_type || '',\n  data.pallet_type || '',\n  performance || '',\n  '',\n  quotationStatus,\n  '',\n  category || '',\n  $json.agent_confidence || '',\n  ($json.summary || data.message || ''),\n  '',\n  $json.timestamp\n]];\nconst leadId = 'LEAD_' + Date.now();\nconst hunterEmails = (hunterDom?.data?.emails || []);\nconst keyContactsFound = Array.isArray(hunterEmails) ? String(hunterEmails.length) : '';\nconst leadIntelRow = [[\n  leadId,\n  $json.inquiry_id,\n  data.company_name || '',\n  websiteUrl,\n  linkedinUrl,\n  domainPattern,\n  industry || '',\n  proxy?.employee_count_range || '',\n  '',\n  country || '',\n  'inquiry_form',\n  keyContactsFound,\n  '',\n  '',\n  data.email || '',\n  '',\n  ($json.summary || ''),\n  $json.agent_confidence || '',\n  (bant.budget?.score ?? ''),\n  (bant.authority?.score ?? ''),\n  (bant.need?.score ?? ''),\n  (bant.timeline?.score ?? ''),\n  (bant.total_score ?? ''),\n  (category || ''),\n  '',\n  '',\n  ''\n]];\nreturn [{ json: { ...$json, inquiriesRow, leadIntelRow } }];"
+      },
+      "id": "30_prepare_sheet_rows",
+      "name": "30_prepare_sheet_rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 220]
+    },
+    { "parameters": { "language": "JavaScript", "jsCode": "return items;" }, "id": "35_append_inquiries_log", "name": "35_append_inquiries_log", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1740, 220] },
+    { "parameters": { "language": "JavaScript", "jsCode": "return items;" }, "id": "40_append_lead_intel", "name": "40_append_lead_intel", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1900, 220] },
+    {
+      "parameters": { "conditions": { "boolean": [ { "value1": "={{ ['hot','warm'].includes(($json.bant?.category || '').toLowerCase()) }}", "operation": "isTrue" } ] } },
+      "id": "45_is_hot_or_warm",
+      "name": "45_is_hot_or_warm",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2060, 220]
+    },
+    {
+      "parameters": { "responseBody": "={{ JSON.stringify({ status: 'accepted', category: ($json.bant?.category || ''), total_score: $json.bant?.total_score ?? null, inquiry_id: $json.inquiry_id, customer_id: $json.customer_id, summary: $json.summary || '', questions: $json.questions || [], follow_up: $json.follow_up || [], recommended_action: 'trigger_technical_agent', confidence: $json.agent_confidence || '' }) }}", "responseCode": 200 },
+      "id": "50_respond_success",
+      "name": "50_respond_success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2240, 180]
+    },
+    {
+      "parameters": { "responseBody": "={{ JSON.stringify({ status: 'manual_review', category: ($json.bant?.category || 'cold'), total_score: $json.bant?.total_score ?? null, inquiry_id: $json.inquiry_id, customer_id: $json.customer_id, summary: $json.summary || '', next: 'nurture_campaign', recommendations: $json.follow_up || [] }) }}", "responseCode": 202 },
+      "id": "55_respond_cold",
+      "name": "55_respond_cold",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2240, 260]
+    }
+  ],
+  "connections": {
+    "00_webhook_lead": { "main": [ [ { "node": "05_validate_input", "type": "main", "index": 0 } ] ] },
+    "05_validate_input": { "main": [ [ { "node": "07_is_valid", "type": "main", "index": 0 } ] ] },
+    "07_is_valid": { "main": [ [ { "node": "12_resolve_domain", "type": "main", "index": 0 } ], [ { "node": "08_bad_request", "type": "main", "index": 0 } ] ] },
+    "12_resolve_domain": { "main": [ [ { "node": "13_hunter_email_verify", "type": "main", "index": 0 } ] ] },
+    "13_hunter_email_verify": { "main": [ [ { "node": "14_hunter_domain_search", "type": "main", "index": 0 } ] ] },
+    "14_hunter_domain_search": { "main": [ [ { "node": "15_cse_linkedin", "type": "main", "index": 0 } ] ] },
+    "15_cse_linkedin": { "main": [ [ { "node": "17_cse_site", "type": "main", "index": 0 } ] ] },
+    "17_cse_site": { "main": [ [ { "node": "18_cse_news", "type": "main", "index": 0 } ] ] },
+    "18_cse_news": { "main": [ [ { "node": "19_parse_search", "type": "main", "index": 0 } ] ] },
+    "19_parse_search": { "main": [ [ { "node": "20_fetch_homepage", "type": "main", "index": 0 } ], [ { "node": "25_prepare_news", "type": "main", "index": 0 } ] ] },
+    "20_fetch_homepage": { "main": [ [ { "node": "21_extract_home_text", "type": "main", "index": 0 } ] ] },
+    "21_extract_home_text": { "main": [ [ { "node": "22_fetch_about", "type": "main", "index": 0 } ] ] },
+    "22_fetch_about": { "main": [ [ { "node": "23_extract_about_text", "type": "main", "index": 0 } ] ] },
+    "23_extract_about_text": { "main": [ [ { "node": "24_proxycurl_company", "type": "main", "index": 0 } ] ] },
+    "24_proxycurl_company": { "main": [ [ { "node": "10_build_agent_payload", "type": "main", "index": 0 } ] ] },
+    "25_prepare_news": { "main": [ [ { "node": "26_fetch_news1", "type": "main", "index": 0 } ] ] },
+    "26_fetch_news1": { "main": [ [ { "node": "27_text_news1", "type": "main", "index": 0 } ], [ { "node": "28_fetch_news2", "type": "main", "index": 0 } ] ] },
+    "27_text_news1": { "main": [ [ { "node": "28_fetch_news2", "type": "main", "index": 0 } ] ] },
+    "28_fetch_news2": { "main": [ [ { "node": "29_text_news2", "type": "main", "index": 0 } ], [ { "node": "30_fetch_news3", "type": "main", "index": 0 } ] ] },
+    "29_text_news2": { "main": [ [ { "node": "30_fetch_news3", "type": "main", "index": 0 } ] ] },
+    "30_fetch_news3": { "main": [ [ { "node": "31_text_news3", "type": "main", "index": 0 } ] ] },
+    "31_text_news3": { "main": [ [ { "node": "32_merge_enrichment", "type": "main", "index": 0 } ] ] },
+    "10_build_agent_payload": { "main": [ [ { "node": "32_merge_enrichment", "type": "main", "index": 0 } ] ] },
+    "32_merge_enrichment": { "main": [ [ { "node": "20_ai_lead_agent", "type": "main", "index": 0 } ], [ { "node": "16_ai_vector_store", "type": "main", "index": 0 } ] ] },
+    "15_ai_think_tool": { "main": [ [ { "node": "20_ai_lead_agent", "type": "tools", "index": 0 } ] ] },
+    "16_ai_vector_store": { "main": [ [ { "node": "20_ai_lead_agent", "type": "tools", "index": 1 } ] ] },
+    "20_ai_lead_agent": { "main": [ [ { "node": "25_parse_agent_result", "type": "main", "index": 0 } ] ] },
+    "25_parse_agent_result": { "main": [ [ { "node": "30_prepare_sheet_rows", "type": "main", "index": 0 } ] ] },
+    "30_prepare_sheet_rows": { "main": [ [ { "node": "35_append_inquiries_log", "type": "main", "index": 0 } ] ] },
+    "35_append_inquiries_log": { "main": [ [ { "node": "40_append_lead_intel", "type": "main", "index": 0 } ] ] },
+    "40_append_lead_intel": { "main": [ [ { "node": "45_is_hot_or_warm", "type": "main", "index": 0 } ] ] },
+    "45_is_hot_or_warm": { "main": [ [ { "node": "50_respond_success", "type": "main", "index": 0 } ], [ { "node": "55_respond_cold", "type": "main", "index": 0 } ] ] }
+  },
+  "active": false,
+  "settings": { "timezone": "Europe/Berlin", "saveDataErrorExecution": "all", "saveManualExecutions": true },
+  "staticData": {},
+  "pinData": {}
+}

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WiesLogicAI Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/ui/style.css" />
+    <link rel="icon" href="/ui/favicon.svg" type="image/svg+xml" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/ui/logo.svg" alt="WiesLogicAI Logo" />
+          <span>WiesLogicAI</span>
+        </div>
+        <div class="customer-picker">
+          <label>Kunde
+            <select id="customerSelect"></select>
+          </label>
+        </div>
+        <nav class="menu">
+          <button class="tab active" data-tab="settings">Settings</button>
+          <button class="tab" data-tab="customers">Customers</button>
+          <button class="tab" data-tab="config">Config</button>
+          <button class="tab" data-tab="sheets">Sheets</button>
+          <button class="tab" data-tab="agents">Agents</button>
+          <button class="tab" data-tab="catalog">Catalog</button>
+          <button class="tab" data-tab="insights">Insights</button>
+          <button class="tab" data-tab="tests">Tests</button>
+        </nav>
+        <div class="spacer"></div>
+        <div class="links">
+          <a href="/docs" target="_blank">Swagger</a>
+          <a href="/health" target="_blank">Health</a>
+          <button id="themeToggle" title="Toggle Theme">Theme</button>
+        </div>
+      </aside>
+      <main class="content">
+        <nav class="tabs top-tabs">
+          <button class="tab active" data-tab="settings">Settings</button>
+          <button class="tab" data-tab="customers">Customers</button>
+          <button class="tab" data-tab="config">Config</button>
+          <button class="tab" data-tab="sheets">Sheets</button>
+          <button class="tab" data-tab="agents">Agents</button>
+          <button class="tab" data-tab="catalog">Catalog</button>
+          <button class="tab" data-tab="insights">Insights</button>
+          <button class="tab" data-tab="tests">Tests</button>
+          <div class="tabs-spacer"></div>
+          <div class="tabs-right"><span class="badge">Admin</span></div>
+        </nav>
+
+    <section class="card tab-pane active" data-tab-pane="settings">
+      <h2>Einstellungen</h2>
+      <label>
+        Backend URL
+        <input id="baseUrl" value="" placeholder="leer = same origin" />
+      </label>
+      <label>
+        Authorization Token
+        <input id="authToken" value="wl_dev_token_12345" />
+      </label>
+      <label>
+        Customer ID
+        <input id="customerId" value="ROBOPAC_AETNA_001" />
+      </label>
+    </section>
+
+    <section class="card tab-pane" data-tab-pane="customers">
+      <h2>Customers</h2>
+      <div class="actions">
+        <button id="btnRefreshCustomers">Refresh</button>
+      </div>
+      <pre id="customersList"></pre>
+    </section>
+
+    <section class="card tab-pane" data-tab-pane="config">
+      <h2>Config</h2>
+      <div class="grid">
+        <label>Sheet ID <input id="sheetId" value="" placeholder="Google Sheet ID" /></label>
+        <label>Service Account <input id="svcEmail" value="svc@project.iam.gserviceaccount.com" /></label>
+        <label>Company <input id="companyName" value="Robopac/AETNA Group" /></label>
+        <label>From Email <input id="fromEmail" value="noreply@robopac.com" /></label>
+        <label>Reply-To <input id="replyTo" value="sales@robopac.com" /></label>
+        <label>Webhook Base <input id="webhookBase" value="https://dewe90.app.n8n.cloud" /></label>
+      </div>
+      <div class="actions">
+        <button id="btnGetConfig">Get Config</button>
+        <button id="btnUpsertConfig">Create/Update Config</button>
+      </div>
+      <details style="margin-top:12px"><summary>Config Details</summary>
+        <pre id="configDetails"></pre>
+      </details>
+    </section>
+
+    <section class="card tab-pane" data-tab-pane="sheets">
+      <h2>Sheet Mappings</h2>
+      <div class="grid">
+        <label>Logical <input id="mapLogical" value="inquiries" /></label>
+        <label>Actual <input id="mapActual" value="01_Inquiries_Log" /></label>
+      </div>
+      <div class="actions">
+        <button id="btnGetSheets">Get Mappings</button>
+        <button id="btnUpsertMapping">Upsert Mapping</button>
+        <button id="btnSeedMappings">Seed All (Default)</button>
+        <button id="btnGetColumns">Get Columns</button>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div id="mappingsTable"></div>
+        <div>
+          <label>Columns
+            <select id="columnsSelect" size="10" style="width:100%"></select>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card tab-pane" data-tab-pane="agents">
+      <h2>Agents</h2>
+      <div class="grid toggles">
+        <label><input type="checkbox" id="agentMaster" /> Master Orchestrator</label>
+        <label><input type="checkbox" id="agentLead" /> Lead Agent</label>
+        <label><input type="checkbox" id="agentTech" /> Technical Agent</label>
+        <label><input type="checkbox" id="agentSales" /> Sales Agent</label>
+        <label><input type="checkbox" id="agentService" /> Service Agent</label>
+        <label><input type="checkbox" id="agentLeadGen" /> Lead Generator</label>
+        <label><input type="checkbox" id="agentContent" /> Content Agent</label>
+        <label><input type="checkbox" id="agentMarketing" /> Marketing Agent</label>
+        <label><input type="checkbox" id="agentPA" /> Personal Assistant</label>
+      </div>
+      <div class="actions">
+        <button id="btnSaveAgents">Save Agent Toggles</button>
+      </div>
+    </section>
+
+    <section class="card tab-pane" data-tab-pane="catalog">
+      <h2>Catalog Manager</h2>
+      <div class="actions">
+        <button id="btnLoadCatalog">Load Catalog</button>
+      </div>
+      <div id="catalogCards" class="grid" style="margin-top:12px"></div>
+    </section>
+
+    <section class="card tab-pane" data-tab-pane="insights">
+      <h2>Sheets Health & Stats</h2>
+      <div class="actions">
+        <button id="btnSheetHealth">Check Sheet Health</button>
+        <button id="btnGetCatalog">Get Product Catalog</button>
+        <button id="btnImportCatalog">Import from Google Sheets</button>
+        <button id="btnGetStats">Get Execution Stats</button>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <h3>Health</h3>
+          <pre id="sheetHealth"></pre>
+        </div>
+        <div>
+          <h3>Stats</h3>
+          <canvas id="statsChart" height="140"></canvas>
+          <pre id="stats" style="margin-top:8px"></pre>
+        </div>
+        <div>
+          <h3>Catalog</h3>
+          <pre id="catalog"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="card tab-pane" data-tab-pane="tests">
+      <h2>Outbound Tests</h2>
+      <p>Webhooks an n8n Lead/Master Workflows senden.</p>
+      <div class="actions">
+        <button id="btnTriggerLead">Trigger Lead (n8n)</button>
+        <button id="btnTriggerMaster">Trigger Master (n8n)</button>
+      </div>
+      <h3 style="margin-top:16px">Output</h3>
+      <pre id="out"></pre>
+    </section>
+
+      </main>
+    </div>
+
+    <script src="/ui/main.js"></script>
+  </body>
+  </html>

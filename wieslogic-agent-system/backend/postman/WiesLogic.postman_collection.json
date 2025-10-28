@@ -1,0 +1,51 @@
+{
+  "info": {
+    "name": "WiesLogic Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "http://localhost:3000/health" }
+    },
+    {
+      "name": "Get Config (404 until created)",
+      "request": { "method": "GET", "url": "http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001" }
+    },
+    {
+      "name": "Create Config",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"googleSheetId\": \"YOUR_SHEET_ID\",\n  \"serviceAccountEmail\": \"svc@project.iam.gserviceaccount.com\",\n  \"licenseType\": \"full\",\n  \"activationDate\": \"2025-01-01T00:00:00.000Z\",\n  \"webhookBaseUrl\": \"https://n8n.example.com\",\n  \"openAIApiKey\": \"sk-...\",\n  \"companyName\": \"Robopac/AETNA Group\",\n  \"fromEmail\": \"noreply@robopac.com\",\n  \"replyToEmail\": \"sales@robopac.com\"\n}"
+        },
+        "url": "http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001"
+      }
+    },
+    {
+      "name": "Get Sheet Mappings",
+      "request": { "method": "GET", "url": "http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001/sheets" }
+    },
+    {
+      "name": "Upsert Sheet Mapping",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"logicalName\": \"inquiries\",\n  \"actualSheetName\": \"01_Inquiries_Log\"\n}" },
+        "url": "http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001/sheets"
+      }
+    },
+    {
+      "name": "Example Webhook (Lead)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"company_name\": \"Test GmbH\",\n  \"email\": \"test@example.com\"\n}" },
+        "url": "http://localhost:3000/api/wieslogic/webhooks/ROBOPAC_AETNA_001/lead"
+      }
+    }
+  ]
+}
+

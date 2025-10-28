@@ -1,0 +1,43 @@
+### Health
+GET http://localhost:3000/health
+
+### Get config (expected 404 until created)
+GET http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001
+
+### Create config
+POST http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001
+Content-Type: application/json
+
+{
+  "googleSheetId": "YOUR_SHEET_ID",
+  "serviceAccountEmail": "svc@project.iam.gserviceaccount.com",
+  "licenseType": "full",
+  "activationDate": "{{$datetime iso8601}}",
+  "webhookBaseUrl": "https://n8n.example.com",
+  "openAIApiKey": "sk-...",
+  "companyName": "Robopac/AETNA Group",
+  "fromEmail": "noreply@robopac.com",
+  "replyToEmail": "sales@robopac.com"
+}
+
+### Get sheet mappings
+GET http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001/sheets
+
+### Upsert one sheet mapping
+POST http://localhost:3000/api/wieslogic/config/ROBOPAC_AETNA_001/sheets
+Content-Type: application/json
+
+{
+  "logicalName": "inquiries",
+  "actualSheetName": "01_Inquiries_Log"
+}
+
+### Example webhook (lead)
+POST http://localhost:3000/api/wieslogic/webhooks/ROBOPAC_AETNA_001/lead
+Content-Type: application/json
+
+{
+  "company_name": "Test GmbH",
+  "email": "test@example.com"
+}
+

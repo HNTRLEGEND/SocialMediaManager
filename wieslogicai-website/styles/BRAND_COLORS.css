@@ -1,0 +1,389 @@
+/* Tenify.AI Brand Color Palette */
+/* All colors used across the design system */
+
+:root {
+  /* Primary Brand Colors */
+  --color-electric: #00F0FF;
+  --color-electric-rgb: 0, 240, 255;
+  --color-neon: #FF0080;
+  --color-neon-rgb: 255, 0, 128;
+
+  /* Accent Colors */
+  --color-purple: #A855F7;
+  --color-purple-rgb: 168, 85, 247;
+  --color-gold: #FFD700;
+  --color-gold-rgb: 255, 215, 0;
+  --color-green: #22C55E;
+  --color-green-rgb: 34, 197, 94;
+
+  /* Background Colors */
+  --color-primary-950: #030712;
+  --color-primary-950-rgb: 3, 7, 18;
+  --color-primary-900: #0F1622;
+  --color-primary-900-rgb: 15, 22, 34;
+  --color-primary-800: #1A2332;
+  --color-primary-800-rgb: 26, 35, 50;
+
+  /* Text Colors */
+  --color-text-white: #FFFFFF;
+  --color-text-white-rgb: 255, 255, 255;
+  --color-text-primary: #D1D5DB;
+  --color-text-primary-rgb: 209, 213, 219;
+  --color-text-secondary: #9CA3AF;
+  --color-text-secondary-rgb: 156, 163, 175;
+
+  /* Neutral Grays (Semantic) */
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-700: #374151;
+
+  /* Shadow Colors */
+  --color-shadow-light: rgba(0, 0, 0, 0.1);
+  --color-shadow-medium: rgba(0, 0, 0, 0.2);
+  --color-shadow-dark: rgba(0, 0, 0, 0.4);
+
+  /* Gradient Base Colors */
+  --color-electric-transparent: rgba(0, 240, 255, 0.1);
+  --color-neon-transparent: rgba(255, 0, 128, 0.1);
+  --color-purple-transparent: rgba(168, 85, 247, 0.1);
+  --color-gold-transparent: rgba(255, 215, 0, 0.1);
+  --color-green-transparent: rgba(34, 197, 94, 0.1);
+}
+
+/* ===========================
+   BRAND COLOR UTILITIES
+   =========================== */
+
+/* Background Colors */
+.bg-brand-primary-dark {
+  background-color: var(--color-primary-950);
+}
+
+.bg-brand-primary-darker {
+  background-color: var(--color-primary-900);
+}
+
+.bg-brand-primary-card {
+  background-color: rgba(15, 22, 34, 0.5);
+}
+
+/* Text Colors */
+.text-brand-electric {
+  color: var(--color-electric);
+}
+
+.text-brand-neon {
+  color: var(--color-neon);
+}
+
+.text-brand-purple {
+  color: var(--color-purple);
+}
+
+.text-brand-gold {
+  color: var(--color-gold);
+}
+
+.text-brand-success {
+  color: var(--color-green);
+}
+
+/* Gradients */
+.gradient-brand-cta {
+  background: linear-gradient(
+    to right,
+    var(--color-electric),
+    var(--color-neon)
+  );
+  color: white;
+}
+
+.gradient-brand-electric-neon {
+  background: linear-gradient(
+    135deg,
+    var(--color-electric),
+    var(--color-neon)
+  );
+}
+
+.gradient-brand-electric-gold {
+  background: linear-gradient(
+    135deg,
+    var(--color-electric),
+    var(--color-gold)
+  );
+}
+
+.gradient-brand-purple-electric {
+  background: linear-gradient(
+    135deg,
+    var(--color-purple),
+    var(--color-electric)
+  );
+}
+
+/* Border Colors */
+.border-brand-electric {
+  border-color: var(--color-electric);
+}
+
+.border-brand-neon {
+  border-color: var(--color-neon);
+}
+
+.border-brand-subtle {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Shadow Utilities */
+.shadow-brand-glow {
+  box-shadow: 0 0 40px rgba(var(--color-electric-rgb), 0.4);
+}
+
+.shadow-brand-glow-hover {
+  box-shadow: 0 0 60px rgba(var(--color-electric-rgb), 0.6);
+}
+
+.shadow-brand-glow-neon {
+  box-shadow: 0 0 40px rgba(var(--color-neon-rgb), 0.3);
+}
+
+.shadow-brand-glow-green {
+  box-shadow: 0 0 60px rgba(var(--color-green-rgb), 0.3);
+}
+
+/* Hover States */
+.hover-brand-electric:hover {
+  color: var(--color-electric);
+}
+
+.hover-brand-neon:hover {
+  color: var(--color-neon);
+}
+
+.hover-brand-border-electric:hover {
+  border-color: var(--color-electric);
+}
+
+.hover-brand-glow:hover {
+  box-shadow: 0 0 40px rgba(var(--color-electric-rgb), 0.4);
+}
+
+/* ===========================
+   COLOR SWATCHES (FOR REFERENCE)
+   =========================== */
+
+.color-swatch {
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  margin: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.swatch-electric {
+  background-color: var(--color-electric);
+}
+
+.swatch-neon {
+  background-color: var(--color-neon);
+}
+
+.swatch-purple {
+  background-color: var(--color-purple);
+}
+
+.swatch-gold {
+  background-color: var(--color-gold);
+}
+
+.swatch-green {
+  background-color: var(--color-green);
+}
+
+.swatch-primary-950 {
+  background-color: var(--color-primary-950);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.swatch-primary-900 {
+  background-color: var(--color-primary-900);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.swatch-white {
+  background-color: var(--color-text-white);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.swatch-gray-300 {
+  background-color: var(--color-gray-300);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ===========================
+   COLOR CONTRAST HELPERS
+   =========================== */
+
+/* Sufficient contrast combinations */
+.high-contrast-primary {
+  color: var(--color-text-white);
+  background-color: var(--color-primary-950);
+}
+
+.high-contrast-secondary {
+  color: var(--color-text-primary);
+  background-color: var(--color-primary-900);
+}
+
+.high-contrast-electric {
+  color: var(--color-text-white);
+  background-color: var(--color-primary-950);
+}
+/* Use electric as accent/text on dark */
+
+.high-contrast-success {
+  color: var(--color-text-white);
+  background-color: var(--color-green);
+}
+
+/* ===========================
+   BRAND THEME VARIATIONS
+   =========================== */
+
+/* Theme: Electric (Blue) */
+.theme-electric {
+  --accent-color: var(--color-electric);
+  --accent-transparent: var(--color-electric-transparent);
+  --accent-rgb: var(--color-electric-rgb);
+}
+
+/* Theme: Neon (Pink) */
+.theme-neon {
+  --accent-color: var(--color-neon);
+  --accent-transparent: var(--color-neon-transparent);
+  --accent-rgb: var(--color-neon-rgb);
+}
+
+/* Theme: Purple */
+.theme-purple {
+  --accent-color: var(--color-purple);
+  --accent-transparent: var(--color-purple-transparent);
+  --accent-rgb: var(--color-purple-rgb);
+}
+
+/* Theme: Gold */
+.theme-gold {
+  --accent-color: var(--color-gold);
+  --accent-transparent: var(--color-gold-transparent);
+  --accent-rgb: var(--color-gold-rgb);
+}
+
+/* Theme: Green (Success) */
+.theme-green {
+  --accent-color: var(--color-green);
+  --accent-transparent: var(--color-green-transparent);
+  --accent-rgb: var(--color-green-rgb);
+}
+
+/* ===========================
+   WORKFLOW SPECIFIC COLORS
+   =========================== */
+
+/* AI Voice Agent - Electric Blue */
+.workflow-voice-agent {
+  --workflow-color: var(--color-electric);
+  --workflow-transparent: var(--color-electric-transparent);
+  border-color: rgba(var(--color-electric-rgb), 0.3);
+}
+
+/* Sales Agent - Neon Pink */
+.workflow-sales-agent {
+  --workflow-color: var(--color-neon);
+  --workflow-transparent: var(--color-neon-transparent);
+  border-color: rgba(var(--color-neon-rgb), 0.3);
+}
+
+/* Service Agent - Gold */
+.workflow-service-agent {
+  --workflow-color: var(--color-gold);
+  --workflow-transparent: var(--color-gold-transparent);
+  border-color: rgba(var(--color-gold-rgb), 0.3);
+}
+
+/* Technical Agent - Purple */
+.workflow-technical-agent {
+  --workflow-color: var(--color-purple);
+  --workflow-transparent: var(--color-purple-transparent);
+  border-color: rgba(var(--color-purple-rgb), 0.3);
+}
+
+/* Lead Generator - Electric Blue */
+.workflow-lead-generator {
+  --workflow-color: var(--color-electric);
+  --workflow-transparent: var(--color-electric-transparent);
+  border-color: rgba(var(--color-electric-rgb), 0.3);
+}
+
+/* Lead Manager - Neon Pink */
+.workflow-lead-manager {
+  --workflow-color: var(--color-neon);
+  --workflow-transparent: var(--color-neon-transparent);
+  border-color: rgba(var(--color-neon-rgb), 0.3);
+}
+
+/* ===========================
+   DARK MODE SUPPORT
+   =========================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Values already set for dark mode (primary palette) */
+  }
+}
+
+/* Light mode is not officially supported, but if needed: */
+@media (prefers-color-scheme: light) {
+  /* Tenify.AI is dark-only, but include fallbacks if necessary */
+  .bg-brand-primary-dark {
+    background-color: var(--color-primary-950);
+  }
+}
+
+/* ===========================
+   ACCESSIBILITY
+   =========================== */
+
+/* Ensure sufficient contrast for focus states */
+:focus-visible {
+  outline: 3px solid var(--color-electric);
+  outline-offset: 2px;
+}
+
+/* Reduce animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===========================
+   PRINT STYLES
+   =========================== */
+
+@media print {
+  /* Ensure colors print correctly */
+  .bg-brand-primary-dark,
+  .gradient-brand-cta {
+    background: #000;
+    color: #000;
+  }
+
+  .text-brand-electric,
+  .text-brand-neon {
+    color: #000;
+  }
+}
