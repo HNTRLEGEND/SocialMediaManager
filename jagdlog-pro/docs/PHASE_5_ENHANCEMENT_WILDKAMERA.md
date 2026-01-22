@@ -395,35 +395,91 @@ SELECT * FROM v_wildkamera_activity_30d;
 
 ---
 
-## 🚀 NEXT STEPS (Phase 7 - Full Implementation)
+## 🚀 NEXT STEPS
 
-### **Phase 7A: Foto-Import & Galerie** (2-3 Wochen)
+### **Phase 5A-5D: Cloud ML System** (17-24 Wochen) ⭐ **PRIORITY**
+**Siehe:** [`CLOUD_ML_ARCHITECTURE.md`](./CLOUD_ML_ARCHITECTURE.md)
+
+#### **Phase 5A: Cloud ML Foundation** (4-6 Wochen)
+- [ ] AWS/Google Cloud Setup (ML Pipeline, Data Lake)
+- [ ] Anonymisierungs-Pipeline (DSGVO-konform)
+- [ ] User Consent Management
+- [ ] Data Upload API
+- [ ] Initial Model Training (XGBoost Ensemble)
+
+#### **Phase 5B: External Data Integration** (3-4 Wochen)
+- [ ] DWD Weather API (Historische Daten)
+- [ ] NASA Lunar API (Mondphasen-Korrelationen)
+- [ ] Phänologie-Daten (Eichelmast, Graswuchs)
+- [ ] Wildtier-Forschung Integration
+- [ ] Re-Training mit erweiterten Features
+
+#### **Phase 5C: Federated Learning** (6-8 Wochen)
+- [ ] On-Device Training (TensorFlow Lite)
+- [ ] Model Delta Upload (Privacy-Preserving)
+- [ ] Federated Averaging (Server-Side)
+- [ ] Differential Privacy Implementation
+- [ ] Model Distribution & Versioning
+
+#### **Phase 5D: Community Wildkamera Network** (4-6 Wochen)
+- [ ] Wildkamera Data Aggregation API
+- [ ] Regional Activity Tracking
+- [ ] Real-Time Hotspot Detection
+- [ ] Community Dashboard
+
+**🎯 Impact:**
+- **87% Vorhersage-Genauigkeit** (statt 65%)
+- **6 Millionen+ Training Events** (statt 100)
+- **Sofort nutzbar** für neue User (Pre-Trained Models)
+- **Regional optimiert** (Bundesland-spezifisch)
+
+---
+
+### **Phase 6: Gesellschaftsjagd Management** (8-10 Wochen)
+- [ ] Gruppen-Jagd Planung
+- [ ] Teilnehmer-Verwaltung
+- [ ] Standort-Zuweisung
+- [ ] Echtzeit-Kommunikation
+- [ ] Strecken-Erfassung (gemeinsam)
+
+---
+
+### **Phase 7: KI-Vision & Wildkamera** (11-15 Wochen)
+**Siehe:** [`PHASE_7_KI_VISION_SPEC.md`](./PHASE_7_KI_VISION_SPEC.md)
+
+#### **Phase 7A: Foto-Import & Galerie** (2-3 Wochen)
 - [ ] Background Photo Scanner (expo-media-library)
 - [ ] Point-in-Polygon GPS-Filter für Revier-Grenzen
 - [ ] Revier-Galerie UI
 - [ ] Foto-Kategorisierung
 
-### **Phase 7B: Wildart-Erkennung** (3-4 Wochen)
+#### **Phase 7B: Wildart-Erkennung** (3-4 Wochen)
 - [ ] Deepfaune API Integration
 - [ ] iNaturalist Fallback
 - [ ] Custom TensorFlow Lite Model
 - [ ] Ensemble Learning
 - [ ] Geschlechts- & Größenbestimmung
 
-### **Phase 7C: Auto-Eintrag System** (2-3 Wochen)
+#### **Phase 7C: Auto-Eintrag System** (2-3 Wochen)
 - [ ] Sichtung Auto-Generierung
 - [ ] Abschuss Auto-Dokumentation
 - [ ] Vorschlags-System (User-Review)
 - [ ] Wildmarken-Zuordnung
 
-### **Phase 7D: Wildkamera-Integration** (4-5 Wochen)
+#### **Phase 7D: Wildkamera-Integration** (4-5 Wochen)
 - [ ] Wildkamera-Verwaltung UI
 - [ ] Multi-Brand Connectivity (WiFi, BT, Cellular, SD)
 - [ ] Auto-Import Pipeline
 - [ ] Bewegungsmuster-Analyse
 - [ ] Full Integration in AI-Recommendations
 
-**Total Phase 7 Timeline:** 11-15 Wochen (3-4 Monate)
+---
+
+**Timeline Gesamt:**
+- Phase 5A-5D (Cloud ML): 17-24 Wochen
+- Phase 6 (Gesellschaftsjagd): 8-10 Wochen
+- Phase 7 (KI-Vision): 11-15 Wochen
+- **Total: 36-49 Wochen (9-12 Monate)**
 
 ---
 
