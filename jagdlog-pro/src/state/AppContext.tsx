@@ -36,6 +36,10 @@ interface AppContextType {
 
   // Lade-Status
   isLoading: boolean;
+
+  // Data Refresh (für Aktualisierung nach Änderungen)
+  lastUpdate: number;
+  refreshData: () => void;
 }
 
 // Default Context
@@ -51,6 +55,8 @@ const AppContext = createContext<AppContextType>({
   bundesland: 'nordrhein-westfalen',
   setzeBundesland: () => {},
   isLoading: true,
+  lastUpdate: 0,
+  refreshData: () => {},
 });
 
 // Hook
@@ -71,6 +77,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [aktivesRevier, setAktivesRevierState] = useState<Revier | null>(null);
   const [aktuellerPlan, setAktuellerPlan] = useState<Plan>('revier_m');
   const [bundesland, setBundeslandState] = useState('nordrhein-westfalen');
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+
+  // Daten aktualisieren (triggert Refresh in Komponenten)
+  const refreshData = useCallback(() => {
+    setLastUpdate(Date.now());
+  }, []);
 
   // Datenbank initialisieren
   useEffect(() => {
@@ -196,6 +208,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         bundesland,
         setzeBundesland,
         isLoading,
+        lastUpdate,
+        refreshData,
       }}
     >
       {children}

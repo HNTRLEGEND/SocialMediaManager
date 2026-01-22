@@ -17,12 +17,15 @@ import NewEntryScreen from '../screens/NewEntryScreen';
 import MapScreen from '../screens/MapScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import HarvestScreen from '../screens/HarvestScreen';
+import EntryDetailScreen from '../screens/EntryDetailScreen';
+import EditEntryScreen from '../screens/EditEntryScreen';
 
 // Navigation Types
 export type RootStackParamList = {
   MainTabs: undefined;
   NewEntry: { typ?: 'beobachtung' | 'abschuss' };
   EntryDetail: { id: string };
+  EditEntry: { id: string };
   RevierSettings: undefined;
   ContactList: undefined;
   ContactDetail: { id?: string };
@@ -197,7 +200,21 @@ const AppNavigator: React.FC = () => {
             presentation: 'modal',
           }}
         />
-        {/* Weitere Stack Screens hier hinzufügen */}
+        <Stack.Screen
+          name="EntryDetail"
+          component={EntryDetailScreen}
+          options={{
+            title: 'Eintrag Details',
+          }}
+        />
+        <Stack.Screen
+          name="EditEntry"
+          component={EditEntryScreen}
+          options={{
+            title: 'Eintrag bearbeiten',
+            presentation: 'modal',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

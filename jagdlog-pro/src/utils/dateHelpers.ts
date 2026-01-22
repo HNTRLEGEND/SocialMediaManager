@@ -39,6 +39,24 @@ export const formatiereDeutsch = (isoDate: string, mitZeit: boolean = true): str
 };
 
 /**
+ * Formatiert nur das Datum (ohne Zeit)
+ */
+export const formatiereDatum = (isoDate: string): string => {
+  const datum = new Date(isoDate);
+
+  if (isNaN(datum.getTime())) {
+    return 'Ungültiges Datum';
+  }
+
+  return datum.toLocaleDateString('de-DE', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+/**
  * Formatiert nur die Zeit
  */
 export const formatiereZeit = (isoDate: string): string => {
