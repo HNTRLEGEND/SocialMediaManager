@@ -30,9 +30,9 @@
     "react-native-reanimated": "^4.2.1",
     "react-native-safe-area-context": "^5.6.2",
     "react-native-screens": "^4.20.0",
-    "react-native-svg": "^16.0.0",
+    "react-native-svg": "15.8.0",
     "uuid": "^13.0.0",
-    "zod": "^4.3.5"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

@@ -139,11 +139,11 @@ const MapScreen: React.FC = () => {
     queryFn: () => getEnhancedWeather(region.latitude, region.longitude),
     refetchInterval: weatherConfig.updateIntervals.weather,
     enabled: layers.find((l) => l.id === 'wetter')?.aktiv || false,
-  }); id: 'beobachtungen', name: 'Beobachtungen', icon: '👁️', aktiv: true },
-    { id: 'pois', name: 'Einrichtungen', icon: '🏠', aktiv: true },
-    { id: 'grenzen', name: 'Reviergrenzen', icon: '📍', aktiv: true },
-    { id: 'zonen', name: 'Zonen', icon: '🟩', aktiv: false },
-  ]);
+  });
+
+  // POI & Einträge State
+  const [pois, setPois] = useState<MapFeature[]>([]);
+  const [eintraege, setEintraege] = useState<JagdEintrag[]>([]);
 
   // Karten-Stile
   const MAP_STYLES: { id: MapType; name: string; icon: string }[] = [
