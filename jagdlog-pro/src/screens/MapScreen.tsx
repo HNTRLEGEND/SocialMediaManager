@@ -1,6 +1,7 @@
 /**
  * HNTR LEGEND Pro - Map Screen
  * Interaktive Revierkarte mit POIs, Grenzen und Einträgen
+ * PHASE 4: Weather & Wind Intelligence Integration
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -16,6 +17,7 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE, Region, Callout } from 'react-native-maps';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useQuery } from '@tanstack/react-query';
 
 // Karten-Typen
 type MapType = 'standard' | 'satellite' | 'hybrid' | 'terrain';
@@ -25,6 +27,10 @@ import { getCurrentLocation } from '../services/locationService';
 import { getPOIs, getEntries } from '../services/storageService';
 import { GPSKoordinaten, MapFeature, JagdEintrag, POIKategorie } from '../types';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { getEnhancedWeather } from '../services/enhancedWeatherService';
+import { WeatherOverlay } from '../components/WeatherOverlay';
+import { WindIndicator } from '../components/WindIndicator';
+import { WeatherLayerConfig } from '../types/weather';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -84,14 +90,56 @@ const MapScreen: React.FC = () => {
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Daten
-  const [pois, setPois] = useState<MapFeature[]>([]);
-  const [eintraege, setEintraege] = useState<JagdEintrag[]>([]);
-
   // Layer-State
   const [layers, setLayers] = useState<MapLayer[]>([
     { id: 'abschuesse', name: 'Abschüsse', icon: '🎯', aktiv: true },
     { id: 'beobachtungen', name: 'Beobachtungen', icon: '👁️', aktiv: true },
+    { id: 'pois', name: 'Einrichtungen', icon: '🏠', aktiv: true },
+    { id: 'grenzen', name: 'Reviergrenzen', icon: '📍', aktiv: true },
+    { id: 'zonen', name: 'Zonen', icon: '🟩', aktiv: false },
+    { id: 'wetter', name: 'Wetter', icon: '🌤️', aktiv: true },
+    { id: 'wind', name: 'Wind', icon: '💨', aktiv: true },
+  ]);
+
+  // Weather Config
+  const [weatherConfig, setWeatherConfig] = useState<WeatherLayerConfig>({
+    layers: {
+      windParticles: true,
+      windDirection: true,
+      cloudRadar: false,
+      precipitation: true,
+      temperature: true,
+      alerts: true,
+      scentCarry: true,
+    },
+    opacity: {
+      windParticles: 0.6,
+      cloudRadar: 0.5,
+      precipitation: 0.7,
+      temperature: 0.8,
+      scentCarry: 0.8,
+    },
+    windParticles: {
+      particleCount: 500,
+      particleSpeed: 2,
+      particleSize: 2,
+      fadeSpeed: 0.05,
+      color: '#FFFFFF',
+    },
+    updateIntervals: {
+      weather: 600000, // 10 min
+      radar: 300000, // 5 min
+      forecast: 1800000, // 30 min
+    },
+  });
+
+  // Weather Data via React Query
+  const { data: weatherData, isLoading: weatherLoading } = useQuery({
+    queryKey: ['weather', region.latitude, region.longitude],
+    queryFn: () => getEnhancedWeather(region.latitude, region.longitude),
+    refetchInterval: weatherConfig.updateIntervals.weather,
+    enabled: layers.find((l) => l.id === 'wetter')?.aktiv || false,
+  }); id: 'beobachtungen', name: 'Beobachtungen', icon: '👁️', aktiv: true },
     { id: 'pois', name: 'Einrichtungen', icon: '🏠', aktiv: true },
     { id: 'grenzen', name: 'Reviergrenzen', icon: '📍', aktiv: true },
     { id: 'zonen', name: 'Zonen', icon: '🟩', aktiv: false },
@@ -528,6 +576,48 @@ const MapScreen: React.FC = () => {
               </Marker>
             ))}
       </MapView>
+
+      {/* Weather Overlay Layer */}
+      {weatherData && isLayerActive('wetter') && (
+        <WeatherOverlay
+          weather={weatherData}
+          config={weatherConfig}
+          mapBounds={{
+            north: region.latitude + region.latitudeDelta / 2,
+            south: region.latitude - region.latitudeDelta / 2,
+            east: region.longitude + region.longitudeDelta / 2,
+            west: region.longitude - region.longitudeDelta / 2,
+          }}
+          visible={true}
+          onToggleLayer={(layerName) => {
+            setWeatherConfig((prev) => ({
+              ...prev,
+              layers: {
+                ...prev.layers,
+                [layerName]: !prev.layers[layerName],
+              },
+            }));
+          }}
+        />
+      )}
+
+      {/* Wind Indicator / Compass */}
+      {weatherData && isLayerActive('wind') && (
+        <WindIndicator
+          wind={weatherData.wind}
+          position="top-right"
+          style="modern"
+          opacity={0.8}
+          size={80}
+          showWindData={true}
+          onPress={() => {
+            // Nord-Ausrichtung der Karte
+            mapRef.current?.animateCamera({
+              heading: 0,
+            });
+          }}
+        />
+      )}
 
       {/* Loading Overlay */}
       {isLoading && (

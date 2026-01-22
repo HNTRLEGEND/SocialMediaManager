@@ -42,6 +42,13 @@ interface RevierVerwaltung {
     kreis: string;
     gemeinde: string;
     reviernummer?: string;
+    veterinaeramt: {
+      name: string;
+      adresse: string;
+      telefon: string;
+      email: string;
+      zustaendigerBereich: string;
+    };
   };
   
   // Rechtliches
@@ -109,6 +116,564 @@ interface AbschussPlan {
   genehmigungsDatum: Date;
 }
 ```
+
+#### 1.2 Digitale Wildmarken-Verwaltung
+
+```typescript
+/**
+ * WILDMARKEN-SYSTEM (nach deutschem Veterinärrecht)
+ * Basiert auf Trichinenverordnung & Wildfleisch-Hygieneverordnung
+ */
+
+interface WildmarkenVerwaltung {
+  revierId: UUID;
+  veterinaeramt: {
+    id: string;
+    name: string;
+    adresse: string;
+    telefon: string;
+    email: string;
+    oeffnungszeiten: string;
+    notfallKontakt?: string;
+  };
+  
+  // Wildmarken-Bestand
+  wildmarkenBestand: WildmarkenBestand[];
+  
+  // Verwendete Wildmarken
+  verwendeteWildmarken: WildmarkenVerwendung[];
+  
+  // Statistik
+  statistik: {
+    gesamtBestellt: number;
+    gesamtVerwendet: number;
+    verfuegbar: number;
+    abgelaufen: number;
+  };
+}
+
+interface WildmarkenBestand {
+  id: UUID;
+  
+  // Bestellung
+  bestelltAm: Date;
+  bestelltVon: User;
+  veterinaeramt: string;
+  bestellnummer?: string;
+  
+  // Marken-Details
+  wildart: WildArt;              // Rotwild, Schwarzwild, etc.
+  markentyp: 'plombe' | 'etikett' | 'ohrmarke' | 'clip';
+  
+  // Nummernkreis
+  nummernkreis: {
+    von: string;                 // z.B. "DE-NI-001-00001"
+    bis: string;                 // z.B. "DE-NI-001-00100"
+    prefix: string;              // "DE-NI-001"
+    anzahl: number;              // 100 Stück
+  };
+  
+  // Gültigkeit
+  ausgestelltAm: Date;
+  gueltigBis?: Date;             // Manche Bundesländer haben Ablaufdatum
+  
+  // Status
+  status: 'bestellt' | 'erhalten' | 'in_verwendung' | 'aufgebraucht' | 'abgelaufen';
+  empfangenAm?: Date;
+  
+  // Lagerort
+  lagerort: string;              // "Kühlhaus", "Büro", etc.
+  
+  // Kosten
+  stueckpreis: number;           // € pro Marke
+  gesamtkosten: number;
+  bezahltAm?: Date;
+  
+  // Dokumente
+  lieferschein?: MediaRef;
+  rechnung?: MediaRef;
+}
+
+interface WildmarkenVerwendung {
+  id: UUID;
+  
+  // Marken-Info
+  wildmarkenNummer: string;      // z.B. "DE-NI-001-00042"
+  wildmarkenBestandId: UUID;     // Aus welchem Bestand
+  
+  // Wild-Zuordnung
+  jagdEintragId: UUID;           // Verknüpft mit Abschuss
+  wildart: WildArt;
+  geschlecht: 'männlich' | 'weiblich';
+  
+  // Wann & Wo
+  erlegungsdatum: Date;
+  erlegungsort: GPSKoordinaten;
+  jaeger: User;
+  
+  // Wildpret-Details
+  aufbrechgewicht?: number;      // kg
+  wildpretgewicht?: number;      // kg
+  wildbretZustand: 'einwandfrei' | 'bedingt_verwertbar' | 'nicht_verwertbar';
+  
+  // Trichinenuntersuchung (Pflicht für Schwarzwild)
+  trichinenuntersuchung?: {
+    erforderlich: boolean;
+    durchgefuehrtAm?: Date;
+    untersuchungsstelle: string;
+    probennummer?: string;
+    ergebnis?: 'negativ' | 'positiv' | 'ausstehend';
+    bescheinigung?: MediaRef;
+    kosten?: number;
+  };
+  
+  // Fleischbeschau (bei bedenklichen Merkmalen)
+  fleischbeschau?: {
+    erforderlich: boolean;
+    durchgefuehrtAm?: Date;
+    tierarzt: string;
+    ergebnis?: 'tauglich' | 'bedingt_tauglich' | 'untauglich';
+    befund?: string;
+    bescheinigung?: MediaRef;
+    kosten?: number;
+  };
+  
+  // Verwertung
+  verwertung: {
+    art: 'eigenverbrauch' | 'verkauf' | 'wildhandel' | 'gastronomie' | 'entsorgung';
+    kaeufer?: string;
+    verkaufsdatum?: Date;
+    verkaufspreis?: number;        // € pro kg
+    erloes?: number;               // €
+  };
+  
+  // Rückverfolgbarkeit
+  rueckverfolgung: {
+    kuehlketteEingehalten: boolean;
+    kuehlungVon?: Date;
+    kuehlungBis?: Date;
+    temperatur?: number;           // °C
+    
+    // Wildursprung-Kennzeichnung (EU-Verordnung 853/2004)
+    wildursprungsKennzeichen?: string;
+    
+    // Chargen-Nummer (falls mehrere Stücke)
+    chargenNummer?: string;
+    
+    // Dokumentation
+    begleitdokumente?: MediaRef[];
+  };
+  
+  // Anmerkungen
+  besonderheiten?: string;
+  fotos?: MediaRef[];
+  
+  // Status
+  markeAngebracht: boolean;
+  markeAngebrachtAm?: Date;
+  markeEntferntAm?: Date;        // Bei Verwertung
+  
+  // Zeitstempel
+  erstelltAm: Date;
+  geaendertAm: Date;
+}
+
+/**
+ * Wildmarken-Dashboard & Verwaltung
+ */
+interface WildmarkenDashboard {
+  // Übersicht
+  uebersicht: {
+    verfuegbareMarken: number;
+    verwendeteMarken: number;
+    abgelaufeneMarken: number;
+    bestelltAberNichtErhalten: number;
+    
+    // Pro Wildart
+    proWildart: Record<WildArt, {
+      verfuegbar: number;
+      verwendet: number;
+      nachbestellenAb: number;     // Schwellwert
+    }>;
+  };
+  
+  // Benachrichtigungen
+  benachrichtigungen: {
+    bestandNiedrig: Array<{
+      wildart: WildArt;
+      verfuegbar: number;
+      empfohleneBestellung: number;
+    }>;
+    ablaufendeBald: WildmarkenBestand[];
+    trichinenErgebnisAusstehend: WildmarkenVerwendung[];
+    fleischbeschauErforderlich: WildmarkenVerwendung[];
+  };
+  
+  // Schnellzugriff
+  schnellaktionen: {
+    neueBestellungErstellen: () => void;
+    trichinenprobeAnmelden: (verwendungId: UUID) => void;
+    fleischbeschauAnfordern: (verwendungId: UUID) => void;
+    wildmarkeZuweisen: (abschussId: UUID) => void;
+  };
+  
+  // Filter & Suche
+  filter: {
+    wildart?: WildArt;
+    zeitraum?: { von: Date; bis: Date };
+    status?: string;
+    veterinaeramt?: string;
+  };
+}
+
+/**
+ * Wildmarken-Bestellung (Online-Integration mit Veterinäramt)
+ */
+interface WildmarkenBestellung {
+  id: UUID;
+  
+  // Bestellung
+  bestelldatum: Date;
+  besteller: User;
+  revier: UUID;
+  
+  // Veterinäramt
+  veterinaeramt: {
+    id: string;
+    name: string;
+    email: string;
+    telefon: string;
+  };
+  
+  // Bestellte Marken
+  positionen: Array<{
+    wildart: WildArt;
+    markentyp: 'plombe' | 'etikett' | 'ohrmarke' | 'clip';
+    anzahl: number;
+    stueckpreis: number;
+    gesamtpreis: number;
+    
+    // Optional: Wunsch-Nummernkreis
+    wunschNummernkreis?: {
+      von: number;
+      bis: number;
+    };
+  }>;
+  
+  // Gesamtkosten
+  gesamtkosten: number;
+  versandkosten?: number;
+  
+  // Status
+  status: 'entwurf' | 'gesendet' | 'bestaetigt' | 'versandt' | 'erhalten' | 'storniert';
+  
+  // Kommunikation
+  bestellungGesendetAm?: Date;
+  bestaetigung?: {
+    empfangenAm: Date;
+    bestaetiger: string;
+    nachricht?: string;
+  };
+  versand?: {
+    versandtAm: Date;
+    trackingnummer?: string;
+    voraussichtlicheZustellung?: Date;
+  };
+  empfang?: {
+    empfangenAm: Date;
+    empfaenger: User;
+    vollstaendig: boolean;
+    bemerkungen?: string;
+  };
+  
+  // Dokumente
+  bestellformular: MediaRef;
+  bestaetigung?: MediaRef;
+  lieferschein?: MediaRef;
+  rechnung?: MediaRef;
+  
+  // Notizen
+  notizen?: string;
+}
+
+/**
+ * Trichinenuntersuchung-Management
+ */
+interface Trichinenstelle {
+  id: UUID;
+  
+  // Untersuchungsstelle
+  name: string;
+  adresse: string;
+  telefon: string;
+  email: string;
+  oeffnungszeiten: string;
+  notdienst?: string;
+  
+  // Zuständigkeit
+  bundesland: string;
+  landkreis?: string[];
+  
+  // Gebühren
+  gebuehrenordnung: Array<{
+    wildart: WildArt;
+    preis: number;
+    einheit: 'pro_stueck' | 'pro_probe';
+  }>;
+  
+  // Erreichbarkeit
+  oeffnungstage: string[];        // ["Montag", "Dienstag", ...]
+  schließtage?: Date[];           // Feiertage, Urlaub
+  
+  // Online-Anmeldung
+  onlineAnmeldung: boolean;
+  anmeldungEmail?: string;
+  anmeldungPortal?: string;
+  
+  // Probenannahme
+  annahmezeiten: string;
+  probenabgabe: 'persoenlich' | 'post' | 'kurier' | 'alle';
+  
+  // Untersuchungsdauer
+  regelbearbeitungszeit: string;  // "24 Stunden"
+  expressVerfuegbar: boolean;
+  expressAufpreis?: number;
+}
+
+interface TrichinenProbe {
+  id: UUID;
+  
+  // Probe
+  probennummer: string;           // Von Untersuchungsstelle
+  wildmarkenNummer: string;
+  verwendungId: UUID;
+  
+  // Wild
+  wildart: WildArt;              // Meist Schwarzwild
+  erlegungsdatum: Date;
+  jaeger: User;
+  revier: UUID;
+  
+  // Probenentnahme
+  probeEntnommenAm: Date;
+  probeEntnommenVon: User;
+  probenart: 'muskel' | 'zwerchfell';
+  probenmenge: string;           // "20g"
+  
+  // Untersuchungsstelle
+  trichinenstelle: UUID;
+  abgegebenAm?: Date;
+  abgegebenVon?: User;
+  abgabeArt: 'persoenlich' | 'post' | 'kurier';
+  
+  // Untersuchung
+  untersuchungGestartetAm?: Date;
+  untersuchungAbgeschlossenAm?: Date;
+  untersuchungsmethode?: 'verdauungsmethode' | 'magnetruehrermethode';
+  
+  // Ergebnis
+  ergebnis?: {
+    status: 'negativ' | 'positiv' | 'zweifelhaft';
+    befund: string;
+    untersuchenderTierarzt: string;
+    
+    // Bei positivem Befund
+    trichinenArt?: string;
+    parasitenlast?: number;
+    
+    // Maßnahmen
+    massnahmen?: string;
+    meldepflicht: boolean;
+    meldungAn?: string[];
+  };
+  
+  // Bescheinigung
+  bescheinigung?: {
+    ausgestelltAm: Date;
+    nummer: string;
+    dokument: MediaRef;
+    gueltigBis?: Date;
+  };
+  
+  // Kosten
+  gebuehr: number;
+  bezahlt: boolean;
+  bezahltAm?: Date;
+  
+  // Status
+  status: 'angemeldet' | 'probe_abgegeben' | 'in_untersuchung' | 
+          'ergebnis_verfuegbar' | 'abgeschlossen';
+  
+  // Benachrichtigungen
+  benachrichtigungen: {
+    smsBestaetigung: boolean;
+    emailBenachrichtigung: boolean;
+    ergebnisPerSMS: boolean;
+    ergebnisPerEmail: boolean;
+  };
+}
+
+/**
+ * Wildpret-Verkauf & Dokumentation
+ */
+interface WildpretVerkauf {
+  id: UUID;
+  
+  // Wild-Stück(e)
+  wildmarken: string[];           // Mehrere Marken möglich
+  verwendungen: UUID[];           // WildmarkenVerwendung IDs
+  
+  // Verkauf
+  verkaufsdatum: Date;
+  verkaeufer: User;
+  kaeufer: {
+    typ: 'privatperson' | 'wildhandel' | 'gastronomie' | 'metzgerei';
+    name: string;
+    adresse?: string;
+    telefon?: string;
+    email?: string;
+    
+    // Falls gewerblich
+    betriebsnummer?: string;
+    zulassungsnummer?: string;    // EU-Zulassung
+  };
+  
+  // Wildpret-Details
+  wildpret: Array<{
+    wildmarke: string;
+    wildart: WildArt;
+    teilstueck?: string;          // "Keule", "Rücken", "Schulter"
+    gewicht: number;              // kg
+    einzelpreis: number;          // € pro kg
+    gesamtpreis: number;          // €
+  }>;
+  
+  // Gesamtsumme
+  gesamtgewicht: number;          // kg
+  gesamtpreis: number;            // €
+  
+  // Rückverfolgbarkeit
+  begleitdokumente: {
+    wildursprungsbescheinigung: MediaRef;
+    trichinenBescheinigung?: MediaRef;
+    fleischbeschauProtokoll?: MediaRef;
+    lieferschein: MediaRef;
+  };
+  
+  // Kühlkette
+  kuehlketteProtokoll: {
+    temperaturBeimVerkauf: number;
+    transportmittel: string;
+    kuehlungGarantiert: boolean;
+  };
+  
+  // Zahlung
+  zahlungsart: 'bar' | 'ueberweisung' | 'paypal' | 'rechnung';
+  bezahlt: boolean;
+  bezahltAm?: Date;
+  
+  // Rechnung
+  rechnungsnummer?: string;
+  rechnung?: MediaRef;
+  
+  // Status
+  status: 'angeboten' | 'reserviert' | 'verkauft' | 'abgeholt' | 'storniert';
+}
+
+/**
+ * Meldungen an Behörden (automatisch)
+ */
+interface BehoerdenMeldung {
+  id: UUID;
+  typ: BehoerdeMeldungTyp;
+  
+  // Bezug
+  wildmarkenVerwendungId?: UUID;
+  abschussId?: UUID;
+  
+  // Empfänger
+  behoerde: {
+    typ: 'jagdbehoerde' | 'veterinaeramt' | 'hegegemeinschaft' | 'seuchenkasse';
+    name: string;
+    adresse: string;
+    email?: string;
+  };
+  
+  // Inhalt
+  meldungsdaten: any;             // Je nach Typ unterschiedlich
+  
+  // Übermittlung
+  erstelltAm: Date;
+  gesendetAm?: Date;
+  uebermittlungsart: 'email' | 'fax' | 'portal' | 'post' | 'manuell';
+  
+  // Bestätigung
+  bestaetigung?: {
+    empfangenAm: Date;
+    bestaetiger: string;
+    aktenzeichen?: string;
+  };
+  
+  // Dokument
+  dokument: MediaRef;
+  
+  // Status
+  status: 'entwurf' | 'gesendet' | 'bestaetigt' | 'fehler';
+}
+
+enum BehoerdeMeldungTyp {
+  ABSCHUSSMELDUNG = 'abschuss',
+  TRICHINENBEFUND = 'trichinen',
+  WILDKRANKHEIT = 'krankheit',
+  FALLWILD = 'fallwild',
+  SEUCHENANZEIGEPFLICHT = 'seuche',
+  WILDUNFALL = 'unfall',
+  JAEHRLICHER_ABSCHLUSSBERICHT = 'jahresbericht',
+}
+```
+
+**Integration mit Veterinäramt:**
+```typescript
+// API-Integration für moderne Veterinärämter
+interface VeterinaerAmtAPI {
+  // Online-Bestellung
+  wildmarkenBestellen: (bestellung: WildmarkenBestellung) => Promise<{
+    bestaetigung: boolean;
+    bestellnummer: string;
+    voraussichtlicheLieferung: Date;
+  }>;
+  
+  // Trichinenuntersuchung online anmelden
+  trichinenProbeAnmelden: (probe: Partial<TrichinenProbe>) => Promise<{
+    probennummer: string;
+    abgabetermin: Date;
+  }>;
+  
+  // Ergebnis abrufen
+  trichinenErgebnisAbrufen: (probennummer: string) => Promise<{
+    ergebnis: 'negativ' | 'positiv' | 'ausstehend';
+    bescheinigung?: string;      // PDF URL
+  }>;
+  
+  // Wildmarken-Bestand synchronisieren
+  bestandSynchronisieren: () => Promise<WildmarkenBestand[]>;
+}
+```
+
+**Features:**
+- [ ] Digitale Wildmarken-Bestandsverwaltung
+- [ ] Online-Bestellung bei Veterinärämtern
+- [ ] Automatische Nummernkreis-Verwaltung
+- [ ] Trichinenuntersuchung-Tracking
+- [ ] Fleischbeschau-Dokumentation
+- [ ] Rückverfolgbarkeit (EU-konform)
+- [ ] Wildpret-Verkauf mit Begleitdokumenten
+- [ ] Automatische Behörden-Meldungen
+- [ ] QR-Code auf Wildmarken (scannen & zuordnen)
+- [ ] Integration mit Veterinäramt-Systemen
+- [ ] Erinnerungen für Untersuchungen
+- [ ] Kühlketten-Protokollierung
+- [ ] Export für Jahresabrechnung
 
 **Fehlende Features:**
 - [ ] Digitaler Abschussplan mit Tracking
