@@ -148,6 +148,353 @@ interface TreiberZone {
 }
 
 // ===================================
+// DRÜCKJAGD-SPEZIFISCHE FEATURES
+// ===================================
+
+enum JagdTyp {
+  ANSITZJAGD = 'ansitz',           // Klassische Einzeljagd
+  TREIBJAGD = 'treiben',           // Große Treibjagd
+  DRUECKJAGD = 'druecken',         // Drückjagd (langsames Treiben)
+  PIRSCH = 'pirsch',               // Pirschjagd
+  LOCKJAGD = 'locken',             // Lockjagd (Blatter, etc.)
+  ANSPRECHEN = 'ansprechen',       // Bewegungsjagd
+}
+
+/**
+ * Drückjagd-Trupp Management
+ * Mehrere kleine Gruppen statt einer großen Linie
+ */
+interface DrueckjagdTrupp {
+  id: UUID;
+  name: string;                    // "Trupp Alpha", "Trupp 1"
+  farbe: string;                   // Für Karten-Visualisierung (hex)
+  
+  // Team-Zusammensetzung
+  fuehrer: Jaeger;                 // Trupp-Führer
+  mitglieder: Jaeger[];            // Restliche Jäger
+  hunde: Hund[];                   // Hunde im Trupp
+  
+  // Zugewiesene Zone
+  zone: Polygon;                   // Wo der Trupp jagt
+  startPosition: GPSKoordinaten;   // Sammelstelle
+  routeVorschlag: Waypoint[];      // Geplante Route
+  
+  // Kommunikation
+  funkKanal: FunkChannel;
+  truppFuehrerKontakt: string;     // Telefon
+  
+  // Status
+  status: 'wartend' | 'unterwegs' | 'in_position' | 'aktiv' | 'abgeschlossen';
+  letzteMeldung: {
+    timestamp: Date;
+    position: GPSKoordinaten;
+    nachricht: string;
+  };
+  
+  // Zeitplan
+  bereitstellungsZeit: Time;       // Wann an Startposition
+  beginnZeit: Time;                // Wann losmarschieren
+  zielZeit: Time;                  // Wann an Endposition erwartet
+  
+  // Erfolgsbilanz
+  wildSichtungen: number;
+  kontakte: number;
+  abschuesse: Abschuss[];
+}
+
+/**
+ * Ansteller-Management
+ * Koordiniert Positionen von Hochsitzern
+ */
+interface AnstellerSystem {
+  id: UUID;
+  gesellschaftsjagdId: UUID;
+  
+  // Ansteller-Team
+  hauptAnsteller: Jaeger;          // Koordiniert alle Ansteller
+  ansteller: Array<{
+    jaeger: Jaeger;
+    verantwortlicherBereich: Polygon;
+    zustaendigFuerStaende: StandAssignment[];
+    fahrzeug?: string;             // "Geländewagen Nr. 3"
+  }>;
+  
+  // Anstell-Karte
+  anstellKarte: {
+    staende: StandAssignment[];
+    fahrtrouten: Route[];          // Wie Jäger zu Ständen kommen
+    parkplaetze: Waypoint[];       // Wo geparkt wird
+    sammelstellen: Waypoint[];     // Wo sich getroffen wird
+    zeitplan: Array<{
+      zeit: Time;
+      aktion: string;              // "Alle an Sammelstelle"
+      beteiligte: Jaeger[];
+    }>;
+  };
+  
+  // Koordination
+  anstellBeginn: Time;             // Wann Anstellen beginnt
+  alleBereit: boolean;             // Alle Jäger in Position?
+  meldungen: Array<{
+    jaeger: Jaeger;
+    stand: StandAssignment;
+    zeitpunkt: Date;
+    status: 'unterwegs' | 'angekommen' | 'in_position' | 'bereit';
+    bemerkung?: string;
+  }>;
+  
+  // Kommunikation
+  funkVerbindung: FunkChannel;
+  notfallProtokoll: {
+    verspätung: (jaeger: Jaeger) => void;
+    standBesetzt: (stand: StandAssignment) => void;
+    standDefekt: (stand: StandAssignment) => void;
+    umleitungErforderlich: (jaeger: Jaeger, neuerStand: StandAssignment) => void;
+  };
+}
+
+/**
+ * Bergetrupp-Management
+ * Organisiert das Bergen von erlegtem Wild
+ */
+interface BergeTrupp {
+  id: UUID;
+  name: string;                    // "Bergetrupp Nord"
+  
+  // Team
+  leiter: Jaeger;
+  helfer: Jaeger[];
+  fahrzeuge: Array<{
+    typ: 'gelaendewagen' | 'traktor' | 'quad' | 'argo';
+    kennzeichen?: string;
+    kapazitaet: number;            // Wie viele Stück Wild
+    ausruestung: string[];         // ["Seilwinde", "Wildwanne", "Anhänger"]
+  }>;
+  
+  // Aktuelle Einsätze
+  offeneAuftraege: Array<{
+    id: UUID;
+    wildPosition: GPSKoordinaten;
+    wildArt: WildArt;
+    gewichtGeschaetzt: number;     // kg
+    jaeger: Jaeger;                // Wer hat erlegt
+    zeitpunkt: Date;
+    prioritaet: 'niedrig' | 'mittel' | 'hoch' | 'sofort';
+    status: 'gemeldet' | 'unterwegs' | 'wird_geborgen' | 'abgeschlossen';
+    besonderheiten?: string;       // "Schwer zugänglich", "In Bach", etc.
+  }>;
+  
+  // Sammelstellen
+  wildsammelstellen: Array<{
+    position: GPSKoordinaten;
+    name: string;
+    kapazitaet: number;
+    kuehlungVerfuegbar: boolean;
+    aktuelleBelegung: number;
+    wildListe: Array<{
+      wildArt: WildArt;
+      anzahl: number;
+      zeitpunktEinlieferung: Date;
+    }>;
+  }>;
+  
+  // Kommunikation & Tracking
+  funkKanal: FunkChannel;
+  position: GPSKoordinaten;
+  status: 'bereit' | 'im_einsatz' | 'pause' | 'nicht_verfuegbar';
+  
+  // Statistik
+  geborgenesWild: number;
+  durchschnittlicheBergezeit: number; // Minuten
+  weitesterTransport: number;     // Meter
+}
+
+/**
+ * Nachsuche-Koordination
+ * Für verwundetes/flüchtiges Wild
+ */
+interface NachsucheEinsatz {
+  id: UUID;
+  gesellschaftsjagdId: UUID;
+  
+  // Meldung
+  gemeldetVon: Jaeger;
+  gemeldetAm: Date;
+  schussPosition: GPSKoordinaten;
+  
+  // Wild-Info
+  wildArt: WildArt;
+  geschlecht?: 'männlich' | 'weiblich' | 'unbekannt';
+  schaetzGroesse?: string;
+  
+  // Schuss-Details
+  schussentfernung?: number;       // Meter
+  trefferlage?: string;            // "Kammer", "Träger", "Keule", etc.
+  schweissVorhanden: boolean;      // Blut gefunden?
+  schweissMenge: 'wenig' | 'mittel' | 'stark';
+  fluchtrichtung?: number;         // Grad (0-360)
+  fluchtdistanz?: number;          // Meter (geschätzt)
+  
+  // Nachsuche-Team
+  hundefuehrer: Jaeger;
+  hund: Hund;
+  begleiter: Jaeger[];
+  
+  // Nachsuche-Verlauf
+  startZeit: Date;
+  nachsucheRoute: Array<{
+    timestamp: Date;
+    position: GPSKoordinaten;
+    ereignis: 'schweiss_gefunden' | 'spur_verloren' | 'wild_gestellt' | 
+              'wild_erlegt' | 'abbruch' | 'notiz';
+    beschreibung?: string;
+    foto?: MediaRef;
+  }>;
+  
+  // Karten-Layer für Nachsuche
+  nachsucheKarte: {
+    schussort: GPSKoordinaten;
+    anschusszeichen: {
+      position: GPSKoordinaten;
+      typ: 'schweiss' | 'haar' | 'losung' | 'bruch' | 'spur';
+      beschreibung: string;
+      foto?: MediaRef;
+    }[];
+    nachsucheStrecke: GPSKoordinaten[];  // Hunderoute
+    fundort?: GPSKoordinaten;
+    sperrzone?: Polygon;           // Bereich der nicht betreten werden soll
+  };
+  
+  // Ergebnis
+  status: 'laufend' | 'erfolgreich' | 'erfolglos' | 'abgebrochen';
+  endZeit?: Date;
+  wildGefunden: boolean;
+  fundPosition?: GPSKoordinaten;
+  totOderLebendig?: 'tot' | 'lebend' | 'verendet';
+  bemerkungen?: string;
+  
+  // Zeitverlauf wichtig für Dokumentation
+  dauer: number;                   // Minuten
+  distanz: number;                 // Meter
+}
+
+/**
+ * Karten-Overlay Typen für verschiedene Jagd-Phasen
+ */
+interface JagdKartenOverlay {
+  id: UUID;
+  typ: KartenOverlayTyp;
+  sichtbarFuer: JaegerRolle[];
+  aktiv: boolean;
+  opacity: number;                 // 0-1
+  zIndex: number;                  // Layer-Reihenfolge
+}
+
+enum KartenOverlayTyp {
+  // Basis-Layer
+  STANDORTE = 'standorte',         // Hochsitz-Positionen
+  REVIERGRENZEN = 'grenzen',
+  VERBOTSZONEN = 'verboten',
+  
+  // Jagd-spezifisch
+  TREIBLINIEN = 'treiben',
+  DRUECKTRUPPS = 'trupps',
+  ANSTELLER_ROUTEN = 'ansteller',
+  BERGE_POSITIONEN = 'bergen',
+  NACHSUCHE_AKTIV = 'nachsuche',
+  
+  // Wild-Daten
+  ABSCHUSS_POSITIONEN = 'abschuesse',
+  SICHTUNGEN = 'sichtungen',
+  WILD_WECHSEL = 'wechsel',
+  WILD_VORKOMMEN_HEATMAP = 'heatmap',
+  
+  // Tracking
+  JAEGER_LIVE = 'jaeger_live',
+  HUNDE_LIVE = 'hunde_live',
+  DROHNEN_LIVE = 'drohnen_live',
+  FAHRZEUGE = 'fahrzeuge',
+  
+  // Umwelt
+  WETTER_WIND = 'wind',
+  WETTER_NIEDERSCHLAG = 'niederschlag',
+  GELANDE_HOEHEN = 'terrain',
+  VEGETATION = 'vegetation',
+  
+  // Sicherheit
+  GEFAHRENZONEN = 'gefahren',
+  NOTFALL_POSITIONEN = 'notfall',
+  SAMMELSTELLEN = 'sammeln',
+  RETTUNGSPUNKTE = 'rettung',
+}
+
+/**
+ * Dezenter Kompass für Karte
+ */
+interface KartenKompass {
+  // Position auf Screen
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  size: 'small' | 'medium' | 'large';  // 40px, 60px, 80px
+  
+  // Styling
+  stil: 'minimal' | 'klassisch' | 'modern' | 'taktisch';
+  opacity: number;                 // 0.3-1.0 (dezent!)
+  showDegrees: boolean;            // Zeige Gradzahl?
+  showCardinal: boolean;           // Zeige N/S/E/W?
+  
+  // Funktionalität
+  rotateWithMap: boolean;          // Dreht mit wenn Karte rotiert
+  showNorthArrow: boolean;         // Roter Nord-Pfeil
+  magneticNorth: boolean;          // Magnetisch vs. geografisch
+  
+  // Interaktiv
+  tappable: boolean;               // Tap = Karte nach Norden drehen
+  longPressActions: {
+    resetOrientation: boolean;     // Long Press = Reset Karte
+    showCoordinates: boolean;      // Zeige GPS-Koordinaten
+  };
+  
+  // Wind-Integration
+  showWindDirection: boolean;      // Zeige aktuellen Wind
+  windIndicatorColor: string;
+}
+
+/**
+ * Erweiterte Fahrzeug-Verwaltung
+ */
+interface FahrzeugTracking {
+  id: UUID;
+  kennzeichen: string;
+  typ: 'gelaendewagen' | 'traktor' | 'quad' | 'argo' | 'motorrad' | 'pkw';
+  
+  // Zuordnung
+  fahrer: Jaeger;
+  insassen: Jaeger[];
+  verwendung: 'ansteller' | 'bergen' | 'nachsuche' | 'jagdleitung' | 'versorgung';
+  
+  // Tracking
+  position?: GPSKoordinaten;
+  geschwindigkeit?: number;        // km/h
+  richtung?: number;               // Grad
+  
+  // Kapazität
+  sitzplaetze: number;
+  ladeflaeche: {
+    kapazitaetKg: number;
+    kapazitaetStueck: number;      // Wild-Stücke
+    aktuelleLast: number;
+  };
+  
+  // Ausrüstung
+  ausruestung: string[];           // ["Seilwinde", "Bergegurt", "Erste Hilfe"]
+  funkGeraet: boolean;
+  
+  // Status
+  status: 'bereit' | 'im_einsatz' | 'beladen' | 'defekt' | 'voll';
+  tankstand?: number;              // %
+}
+
+// ===================================
 // LIVE-TRACKING
 // ===================================
 
@@ -548,35 +895,73 @@ interface Zwischenfall {
 JAGDORGANISATOR
 ├─ Neue Gesellschaftsjagd erstellen
 │  ├─ Grunddaten (Datum, Revier, Name)
+│  ├─ Jagdtyp wählen (Treibjagd/Drückjagd/Ansitz)
 │  ├─ Teilnehmer einladen
 │  └─ Sicherheitsrichtlinien setzen
 │
-├─ Standecken planen
-│  ├─ Hochsitze auswählen
-│  ├─ Zielwildart pro Stand definieren
-│  ├─ Jäger zuordnen
-│  └─ Zeit-Slots festlegen
+├─ WENN Drückjagd:
+│  ├─ Drückjagd-Trupps erstellen
+│  │  ├─ Trupp-Führer bestimmen
+│  │  ├─ Mitglieder zuordnen
+│  │  ├─ Zonen zuweisen
+│  │  ├─ Routen planen
+│  │  └─ Funk-Kanäle zuteilen
+│  │
+│  ├─ Ansteller-System konfigurieren
+│  │  ├─ Haupt-Ansteller bestimmen
+│  │  ├─ Bereiche zuteilen
+│  │  ├─ Fahrtrouten planen
+│  │  ├─ Parkplätze definieren
+│  │  └─ Zeitplan erstellen
+│  │
+│  ├─ Bergetrupp organisieren
+│  │  ├─ Team zusammenstellen
+│  │  ├─ Fahrzeuge zuweisen
+│  │  ├─ Sammelstellen festlegen
+│  │  └─ Kühlmöglichkeiten prüfen
+│  │
+│  └─ Nachsuche-Kapazität
+│     ├─ Schweißhunde registrieren
+│     ├─ Hundeführer benennen
+│     ├─ Bereitschafts-Teams
+│     └─ Nachsuche-Routen vorbereiten
 │
-├─ Treiberlinien definieren
-│  ├─ Gebiet eingrenzen
-│  ├─ Treiber-Team zusammenstellen
-│  ├─ Route planen
-│  └─ Warnsystem einrichten
+├─ WENN Treibjagd:
+│  ├─ Standecken planen
+│  │  ├─ Hochsitze auswählen
+│  │  ├─ Zielwildart pro Stand definieren
+│  │  ├─ Jäger zuordnen
+│  │  └─ Zeit-Slots festlegen
+│  │
+│  └─ Treiberlinien definieren
+│     ├─ Gebiet eingrenzen
+│     ├─ Treiber-Team zusammenstellen
+│     ├─ Route planen
+│     └─ Warnsystem einrichten
 │
 ├─ Ressourcen-Check
-│  ├─ Funkgeräte prüfen
+│  ├─ Funkgeräte prüfen (+ Kanäle testen)
 │  ├─ Drohnen verfügbar?
 │  ├─ GPS-Tracker für Hunde aktivieren
-│  └─ Versicherung prüfen
+│  ├─ Fahrzeuge einsatzbereit?
+│  ├─ Versicherung prüfen
+│  └─ Wildmarken/Plomben bereitstellen
 │
 └─ Notfallplanung
    ├─ Erste-Hilfe-Person bestimmen
    ├─ Notfall-Kontakte hinterlegen
-   └─ Evakuierungs-Plan
+   ├─ Evakuierungs-Plan
+   ├─ Rettungspunkte markieren
+   └─ Nächstes Krankenhaus/Tierarzt
 
 TEILNEHMER (Jäger)
 ├─ Einladung erhalten & akzeptieren
-├─ Standzuweisung ansehen
+├─ Rolle zugewiesen bekommen:
+│  ├─ Hochsitzer → Stand-Info erhalten
+│  ├─ Treiber/Drücker → Trupp-Info erhalten
+│  ├─ Ansteller → Bereiche & Routen
+│  └─ Bergetrupp → Fahrzeug & Ausrüstung
+├─ Anstell-Karte studieren
 ├─ Ausrüstung checken
 ├─ Verfügbarkeit bestätigen
 └─ Equipment-Checkliste abhaken
