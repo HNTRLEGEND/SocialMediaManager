@@ -652,3 +652,231 @@ export const getGlobalStats = async (): Promise<RevierStats> => {
     monatlicheEintraege: monatlich,
   };
 };
+
+// ============================================================
+// MAP FEATURES / POIs
+// ============================================================
+
+export interface POIFilter {
+  revierId?: string;
+  typ?: MapFeature['typ'];
+  poiKategorie?: string;
+  nurAktive?: boolean;
+}
+
+/**
+ * Speichert einen neuen POI / Map Feature
+ */
+export const savePOI = async (
+  poi: Omit<MapFeature, 'id' | 'erstelltAm' | 'aktualisiertAm' | 'syncStatus' | 'version' | 'geloeschtAm'>
+): Promise<string> => {
+  const db = await getDatabase();
+  const id = generateUUID();
+  const jetzt = now();
+
+  await db.runAsync(
+    `INSERT INTO map_features (
+      id, revier_id, typ, name, beschreibung,
+      geometry_type, coordinates, poi_kategorie, poi_status,
+      letzte_kontrolle, naechste_kontrolle, zonen_typ,
+      foto_ids, icon, farbe,
+      erstellt_am, aktualisiert_am, erstellt_von, sync_status, version
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      poi.revierId,
+      poi.typ,
+      poi.name,
+      poi.beschreibung ?? null,
+      poi.geometryType,
+      poi.coordinates,
+      poi.poiKategorie ?? null,
+      poi.poiStatus ?? 'aktiv',
+      poi.letzteKontrolle ?? null,
+      poi.naechsteKontrolle ?? null,
+      poi.zonenTyp ?? null,
+      JSON.stringify(poi.fotoIds ?? []),
+      poi.icon ?? null,
+      poi.farbe ?? null,
+      jetzt,
+      jetzt,
+      poi.erstelltVon ?? null,
+      'lokal',
+      1,
+    ]
+  );
+
+  return id;
+};
+
+/**
+ * Lädt alle POIs / Map Features
+ */
+export const getPOIs = async (filter: POIFilter = {}): Promise<MapFeature[]> => {
+  const db = await getDatabase();
+
+  let sql = 'SELECT * FROM map_features WHERE 1=1';
+  const params: (string | number)[] = [];
+
+  // Filter: Nur aktive
+  if (filter.nurAktive !== false) {
+    sql += ' AND geloescht_am IS NULL';
+  }
+
+  // Filter: Revier
+  if (filter.revierId) {
+    sql += ' AND revier_id = ?';
+    params.push(filter.revierId);
+  }
+
+  // Filter: Typ
+  if (filter.typ) {
+    sql += ' AND typ = ?';
+    params.push(filter.typ);
+  }
+
+  // Filter: POI-Kategorie
+  if (filter.poiKategorie) {
+    sql += ' AND poi_kategorie = ?';
+    params.push(filter.poiKategorie);
+  }
+
+  sql += ' ORDER BY name';
+
+  const rows = await db.getAllAsync<Record<string, unknown>>(sql, params);
+
+  return rows.map(mapRowToPOI);
+};
+
+/**
+ * Lädt einen einzelnen POI
+ */
+export const getPOI = async (id: string): Promise<MapFeature | null> => {
+  const db = await getDatabase();
+  const row = await db.getFirstAsync<Record<string, unknown>>(
+    'SELECT * FROM map_features WHERE id = ?',
+    [id]
+  );
+
+  return row ? mapRowToPOI(row) : null;
+};
+
+/**
+ * Aktualisiert einen POI
+ */
+export const updatePOI = async (id: string, updates: Partial<MapFeature>): Promise<void> => {
+  const db = await getDatabase();
+  const jetzt = now();
+
+  const fields: string[] = ['aktualisiert_am = ?', 'version = version + 1'];
+  const params: (string | number | null)[] = [jetzt];
+
+  if (updates.name !== undefined) {
+    fields.push('name = ?');
+    params.push(updates.name);
+  }
+  if (updates.beschreibung !== undefined) {
+    fields.push('beschreibung = ?');
+    params.push(updates.beschreibung ?? null);
+  }
+  if (updates.coordinates !== undefined) {
+    fields.push('coordinates = ?');
+    params.push(updates.coordinates);
+  }
+  if (updates.poiKategorie !== undefined) {
+    fields.push('poi_kategorie = ?');
+    params.push(updates.poiKategorie ?? null);
+  }
+  if (updates.poiStatus !== undefined) {
+    fields.push('poi_status = ?');
+    params.push(updates.poiStatus ?? null);
+  }
+  if (updates.letzteKontrolle !== undefined) {
+    fields.push('letzte_kontrolle = ?');
+    params.push(updates.letzteKontrolle ?? null);
+  }
+  if (updates.naechsteKontrolle !== undefined) {
+    fields.push('naechste_kontrolle = ?');
+    params.push(updates.naechsteKontrolle ?? null);
+  }
+  if (updates.fotoIds !== undefined) {
+    fields.push('foto_ids = ?');
+    params.push(JSON.stringify(updates.fotoIds));
+  }
+  if (updates.icon !== undefined) {
+    fields.push('icon = ?');
+    params.push(updates.icon ?? null);
+  }
+  if (updates.farbe !== undefined) {
+    fields.push('farbe = ?');
+    params.push(updates.farbe ?? null);
+  }
+
+  params.push(id);
+
+  await db.runAsync(
+    `UPDATE map_features SET ${fields.join(', ')} WHERE id = ?`,
+    params
+  );
+};
+
+/**
+ * Soft-Delete eines POIs
+ */
+export const deletePOI = async (id: string): Promise<void> => {
+  const db = await getDatabase();
+  const jetzt = now();
+
+  await db.runAsync(
+    'UPDATE map_features SET geloescht_am = ?, aktualisiert_am = ? WHERE id = ?',
+    [jetzt, jetzt, id]
+  );
+};
+
+/**
+ * Zählt POIs pro Kategorie
+ */
+export const countPOIsByKategorie = async (revierId: string): Promise<{ kategorie: string; anzahl: number }[]> => {
+  const db = await getDatabase();
+
+  const rows = await db.getAllAsync<{ kategorie: string; anzahl: number }>(
+    `SELECT poi_kategorie as kategorie, COUNT(*) as anzahl
+     FROM map_features
+     WHERE revier_id = ? AND typ = 'poi' AND geloescht_am IS NULL
+     GROUP BY poi_kategorie`,
+    [revierId]
+  );
+
+  return rows;
+};
+
+// Hilfsfunktion: DB-Row zu POI-Objekt
+const mapRowToPOI = (row: Record<string, unknown>): MapFeature => {
+  const fotoIds: string[] = row.foto_ids
+    ? JSON.parse(row.foto_ids as string)
+    : [];
+
+  return {
+    id: row.id as string,
+    revierId: row.revier_id as string,
+    typ: row.typ as MapFeature['typ'],
+    name: row.name as string,
+    beschreibung: row.beschreibung as string | undefined,
+    geometryType: row.geometry_type as MapFeature['geometryType'],
+    coordinates: row.coordinates as string,
+    poiKategorie: row.poi_kategorie as MapFeature['poiKategorie'] | undefined,
+    poiStatus: row.poi_status as MapFeature['poiStatus'] | undefined,
+    letzteKontrolle: row.letzte_kontrolle as string | undefined,
+    naechsteKontrolle: row.naechste_kontrolle as string | undefined,
+    zonenTyp: row.zonen_typ as MapFeature['zonenTyp'] | undefined,
+    fotoIds,
+    icon: row.icon as string | undefined,
+    farbe: row.farbe as string | undefined,
+    erstelltAm: row.erstellt_am as string,
+    aktualisiertAm: row.aktualisiert_am as string,
+    erstelltVon: row.erstellt_von as string | undefined,
+    syncStatus: (row.sync_status as 'lokal' | 'synchronisiert' | 'konflikt') ?? 'lokal',
+    version: row.version as number,
+    geloeschtAm: row.geloescht_am as string | null,
+  };
+};

@@ -19,6 +19,9 @@ import ProfileScreen from '../screens/ProfileScreen';
 import HarvestScreen from '../screens/HarvestScreen';
 import EntryDetailScreen from '../screens/EntryDetailScreen';
 import EditEntryScreen from '../screens/EditEntryScreen';
+import NewPOIScreen from '../screens/NewPOIScreen';
+import POIDetailScreen from '../screens/POIDetailScreen';
+import { GPSKoordinaten } from '../types';
 
 // Navigation Types
 export type RootStackParamList = {
@@ -26,6 +29,8 @@ export type RootStackParamList = {
   NewEntry: { typ?: 'beobachtung' | 'abschuss' };
   EntryDetail: { id: string };
   EditEntry: { id: string };
+  NewPOI: { coordinates?: GPSKoordinaten };
+  POIDetail: { id: string };
   RevierSettings: undefined;
   ContactList: undefined;
   ContactDetail: { id?: string };
@@ -213,6 +218,21 @@ const AppNavigator: React.FC = () => {
           options={{
             title: 'Eintrag bearbeiten',
             presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="NewPOI"
+          component={NewPOIScreen}
+          options={{
+            title: 'Neuer POI',
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="POIDetail"
+          component={POIDetailScreen}
+          options={{
+            title: 'POI Details',
           }}
         />
       </Stack.Navigator>
