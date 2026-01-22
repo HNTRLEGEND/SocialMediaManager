@@ -67,6 +67,11 @@ export const HuntingEventSchema = z.object({
   erfolgreich: z.boolean(), // true bei Abschuss, false bei Leer-Ansitz
   notizen: z.string().optional(),
   
+  // Phase 5 Enhancement: Wildkamera-Integration
+  quelle: z.enum(['manual', 'wildkamera']).optional(), // Datenquelle
+  wildkameraId: z.string().optional(), // ID der Wildkamera
+  kiConfidence: z.number().min(0).max(100).optional(), // KI-Confidence bei Wildkamera
+  
   // Metadata
   erstelltAm: z.date(),
 });
@@ -295,6 +300,7 @@ export interface SpotScore {
     mondphase: number; // 0-100
     saisonaleEignung: number; // 0-100
     letzterErfolg: number; // 0-100 (Bonus wenn kürzlich erfolgreich)
+    wildkameraAktivitaet?: number; // 0-100 (Phase 5 Enhancement: Wildkamera-Insights)
   };
   
   // Gewichtung (kann konfiguriert werden)
@@ -311,6 +317,7 @@ export interface SpotScore {
   // Prognose
   prognose: {
     erfolgswahrscheinlichkeit: number; // 0-100
+    confidence: number; // Phase 5 Enhancement: Confidence Score
     erwarteteWildarten: Array<{
       wildart: string;
       wahrscheinlichkeit: number;

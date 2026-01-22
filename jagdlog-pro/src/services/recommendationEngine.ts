@@ -17,6 +17,7 @@ import { EnhancedWeather } from '../types/weather';
 import { GPSKoordinaten } from '../types';
 import {
   collectTrainingData,
+  collectTrainingDataEnhanced,
   enrichWithPOIData,
   extractAllFeatures,
   analyzeTemporalPatterns,
@@ -24,6 +25,7 @@ import {
 } from './trainingDataService';
 import { getEnhancedWeather, calculateHuntingCondition } from './enhancedWeatherService';
 import { getPOIs } from './storageService';
+import type { Wildkamera, WildkameraInsights } from '../types/wildkamera';
 
 // ===========================
 // CONFIGURATION
@@ -189,6 +191,47 @@ async function generateBestSpotRecommendations(
     if (spotScore.scores.tageszeit > 70) {
       gruende.push('Ideale Tageszeit');
     }
+
+    // === PHASE 5 ENHANCEMENT: WILDKAMERA-INSIGHTS ===
+    // Prüfe ob Wildkamera in der Nähe (500m Radius)
+    const nearbyKameras = await findNearbyWildkameras(
+      { latitude: hotspot.latitude, longitude: hotspot.longitude },
+      500
+    );
+
+    if (nearbyKameras.length > 0) {
+      // Hole letzte Aktivität der letzten 7 Tage
+      const recentActivity = await getRecentWildkameraActivity(
+        nearbyKameras.map((k) => k.id),
+        wildart,
+        7 // letzte 7 Tage
+      );
+
+      if (recentActivity.totalSichtungen > 0) {
+        // Boost Score wenn Wildkamera kürzlich Wild gesehen hat
+        spotScore.gesamtScore = Math.min(100, spotScore.gesamtScore + 15);
+        
+        // Wildkamera-Score hinzufügen
+        spotScore.scores.wildkameraAktivitaet = recentActivity.totalSichtungen * 5;
+
+        gruende.push(
+          `🎥 Wildkamera: ${recentActivity.totalSichtungen}x ${wildart || 'Wild'} in letzten 7 Tagen gesichtet`
+        );
+        
+        if (recentActivity.letzteZeit) {
+          gruende.push(
+            `⏰ Letzte Sichtung: ${formatRelativeTime(recentActivity.letzteZeit)}`
+          );
+        }
+
+        // Höhere Confidence durch Wildkamera-Daten
+        spotScore.prognose.confidence = Math.min(
+          100,
+          spotScore.prognose.confidence + 10
+        );
+      }
+    }
+    // === ENDE WILDKAMERA-ENHANCEMENT ===
 
     const recommendation: Recommendation = {
       id: `best_spot_${hotspot.latitude}_${hotspot.longitude}`,
@@ -664,6 +707,184 @@ function getNextOccurrenceOfDaytime(daytime: string): { von: Date; bis: Date } {
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   const timeRanges: Record<string, { start: number; end: number }> = {
+    vor_morgengrauen: { start: 4, end: 5 },
+    morgengrauen: { start: 5, end: 7 },
+    morgenstunden: { start: 7, end: 9 },
+    vormittag: { start: 9, end: 12 },
+    mittag: { start: 12, end: 14 },
+    nachmittag: { start: 14, end: 17 },
+    abenddaemmerung: { start: 17, end: 19 },
+    nachts: { start: 20, end: 23 },
+  };
+
+  const range = timeRanges[daytime] || { start: 6, end: 18 };
+
+  const von = new Date(now);
+  von.setHours(range.start, 0, 0, 0);
+  if (von < now) {
+    von.setDate(von.getDate() + 1);
+  }
+
+  const bis = new Date(von);
+  bis.setHours(range.end, 0, 0, 0);
+
+  return { von, bis };
+}
+
+// ===========================
+// WILDKAMERA HELPER FUNCTIONS (Phase 5 Enhancement)
+// ===========================
+
+/**
+ * Findet Wildkameras in der Nähe einer Position
+ * 
+ * @param position - GPS-Position
+ * @param radius - Radius in Metern
+ * @returns Array von Wildkameras im Radius
+ */
+async function findNearbyWildkameras(
+  position: GPSKoordinaten,
+  radius: number
+): Promise<Wildkamera[]> {
+  try {
+    // Hole alle Wildkameras aus Storage
+    // TODO: In Phase 7 mit richtigem Storage-Service ersetzen
+    const allKamerasJSON = await AsyncStorage.getItem('wildkameras_all');
+    if (!allKamerasJSON) return [];
+
+    const allKameras: Wildkamera[] = JSON.parse(allKamerasJSON);
+
+    // Filtere nach Distanz
+    const nearby = allKameras.filter((kamera) => {
+      const distance = calculateDistance(position, kamera.gps);
+      return distance <= radius;
+    });
+
+    return nearby;
+  } catch (error) {
+    console.warn('Wildkameras noch nicht implementiert');
+    return [];
+  }
+}
+
+/**
+ * Holt letzte Wildkamera-Aktivität für Wildart
+ * 
+ * @param kameraIds - Array von Wildkamera IDs
+ * @param wildart - Wildart (optional)
+ * @param tage - Anzahl Tage zurück (default: 7)
+ * @returns Aktivitäts-Zusammenfassung
+ */
+async function getRecentWildkameraActivity(
+  kameraIds: string[],
+  wildart: string | undefined,
+  tage: number = 7
+): Promise<{
+  totalSichtungen: number;
+  letzteZeit?: Date;
+  wildartVerteilung: Record<string, number>;
+}> {
+  try {
+    const zeitraum = {
+      von: new Date(Date.now() - tage * 24 * 60 * 60 * 1000),
+      bis: new Date(),
+    };
+
+    let totalSichtungen = 0;
+    let letzteZeit: Date | undefined;
+    const wildartVerteilung: Record<string, number> = {};
+
+    for (const kameraId of kameraIds) {
+      // Hole Media von Wildkamera
+      const mediaJSON = await AsyncStorage.getItem(`wildkamera_media_${kameraId}`);
+      if (!mediaJSON) continue;
+
+      const allMedia = JSON.parse(mediaJSON);
+
+      // Filter nach Zeitraum und Wildart
+      const relevantMedia = allMedia.filter((m: any) => {
+        const timestamp = new Date(m.zeitpunkt);
+        const inZeitraum = timestamp >= zeitraum.von && timestamp <= zeitraum.bis;
+        const hasAnalysis = m.aiAnalyse && m.aiAnalyse.status === 'completed';
+        const matchesWildart = wildart ? m.aiAnalyse?.wildart === wildart : true;
+        return inZeitraum && hasAnalysis && matchesWildart;
+      });
+
+      totalSichtungen += relevantMedia.length;
+
+      // Finde letzte Zeit
+      for (const media of relevantMedia) {
+        const mediaTime = new Date(media.zeitpunkt);
+        if (!letzteZeit || mediaTime > letzteZeit) {
+          letzteZeit = mediaTime;
+        }
+
+        // Zähle Wildart
+        const detectedWildart = media.aiAnalyse?.wildart;
+        if (detectedWildart) {
+          wildartVerteilung[detectedWildart] =
+            (wildartVerteilung[detectedWildart] || 0) + 1;
+        }
+      }
+    }
+
+    return {
+      totalSichtungen,
+      letzteZeit,
+      wildartVerteilung,
+    };
+  } catch (error) {
+    return {
+      totalSichtungen: 0,
+      wildartVerteilung: {},
+    };
+  }
+}
+
+/**
+ * Formatiert relative Zeit (z.B. "vor 2 Stunden")
+ */
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 60) {
+    return `vor ${diffMins} Min`;
+  } else if (diffHours < 24) {
+    return `vor ${diffHours} Std`;
+  } else if (diffDays === 1) {
+    return 'gestern';
+  } else if (diffDays < 7) {
+    return `vor ${diffDays} Tagen`;
+  } else {
+    return date.toLocaleDateString('de-DE');
+  }
+}
+
+/**
+ * Haversine-Formel für Distanz-Berechnung
+ */
+function calculateDistance(
+  pos1: GPSKoordinaten,
+  pos2: GPSKoordinaten
+): number {
+  const R = 6371e3; // Erdradius in Metern
+  const φ1 = (pos1.latitude * Math.PI) / 180;
+  const φ2 = (pos2.latitude * Math.PI) / 180;
+  const Δφ = ((pos2.latitude - pos1.latitude) * Math.PI) / 180;
+  const Δλ = ((pos2.longitude - pos1.longitude) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distanz in Metern
+}
+
     vor_morgengrauen: { start: 4, end: 5 },
     morgengrauen: { start: 5, end: 7 },
     morgenstunden: { start: 7, end: 10 },

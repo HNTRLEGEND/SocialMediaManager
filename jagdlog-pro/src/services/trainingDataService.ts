@@ -8,6 +8,7 @@ import { getEntries, getPOIs } from './storageService';
 import { getEnhancedWeather } from './enhancedWeatherService';
 import { HuntingEvent, ExtractedFeatures } from '../types/ai';
 import { JagdEintrag } from '../types';
+import type { Wildkamera, WildkameraMedia } from '../types/wildkamera';
 
 // ===========================
 // DATA COLLECTION
@@ -528,3 +529,189 @@ export function calculateStatistics(events: HuntingEvent[]): {
     eventsPerWildart,
   };
 }
+
+// ===========================
+// WILDKAMERA INTEGRATION (Phase 5 Enhancement)
+// ===========================
+
+/**
+ * Sammelt Wildkamera-Daten und konvertiert zu HuntingEvents
+ * 
+ * PHASE 5 ENHANCEMENT:
+ * Integriert Wildkamera-Sichtungen in AI-Training Pipeline
+ * Wildkamera-Fotos werden als 'beobachtung' Events behandelt
+ * 
+ * @param revierId - Revier ID
+ * @param minConfidence - Minimale KI-Confidence (default: 60)
+ * @returns Array von HuntingEvents aus Wildkamera-Daten
+ */
+export async function collectWildkameraData(
+  revierId: string,
+  minConfidence: number = 60
+): Promise<HuntingEvent[]> {
+  try {
+    // 1. Hole alle Wildkameras im Revier
+    const wildkameras = await getWildkamerasForRevier(revierId);
+    
+    if (wildkameras.length === 0) {
+      return [];
+    }
+
+    const events: HuntingEvent[] = [];
+    
+    // 2. Hole Aufnahmen der letzten 365 Tage für jede Kamera
+    const zeitraum = {
+      von: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+      bis: new Date(),
+    };
+
+    for (const kamera of wildkameras) {
+      const aufnahmen = await getWildkameraMedia(kamera.id, zeitraum);
+      
+      // 3. Konvertiere zu HuntingEvents
+      for (const aufnahme of aufnahmen) {
+        // Skip wenn keine KI-Analyse vorhanden
+        if (!aufnahme.aiAnalyse || aufnahme.aiAnalyse.status !== 'completed') {
+          continue;
+        }
+
+        // Skip wenn Confidence zu niedrig
+        if (aufnahme.aiAnalyse.confidence < minConfidence) {
+          continue;
+        }
+
+        // Skip wenn keine Wildart erkannt
+        if (!aufnahme.aiAnalyse.wildart) {
+          continue;
+        }
+
+        // 4. Erstelle HuntingEvent
+        const event: HuntingEvent = {
+          typ: 'beobachtung', // Wildkamera = immer Beobachtung
+          wildart: aufnahme.aiAnalyse.wildart,
+          anzahl: aufnahme.aiAnalyse.anzahl || 1,
+          geschlecht: aufnahme.aiAnalyse.geschlecht || 'unbekannt',
+          altersklasse: aufnahme.aiAnalyse.altersklasse,
+          
+          // GPS von Wildkamera
+          gps: aufnahme.gps,
+          zeitpunkt: aufnahme.zeitpunkt,
+          
+          // Wetter (falls verfügbar oder historisch abrufen)
+          wetterDaten: undefined, // Wird später enriched
+          
+          // Zeitliche Features
+          tageszeit: calculateDaytime(aufnahme.zeitpunkt),
+          wochentag: aufnahme.zeitpunkt.getDay(),
+          jahreszeit: calculateSeason(aufnahme.zeitpunkt),
+          
+          // POI Zuordnung
+          poiId: kamera.poi_id,
+          distanzZumPoi: kamera.poi_id ? 0 : undefined, // Kamera IST am POI
+          
+          // Erfolgreich = false (nur Sichtung, kein Abschuss)
+          erfolgreich: false,
+          
+          // Metadaten
+          quelle: 'wildkamera',
+          wildkameraId: kamera.id,
+          kiConfidence: aufnahme.aiAnalyse.confidence,
+        };
+
+        events.push(event);
+      }
+    }
+
+    console.log(`[TrainingData] ${events.length} Wildkamera-Events gesammelt`);
+    
+    return events;
+  } catch (error) {
+    console.error('Fehler beim Sammeln der Wildkamera-Daten:', error);
+    return [];
+  }
+}
+
+/**
+ * ENHANCED: Sammelt ALLE Training-Daten (manuelle + Wildkamera)
+ * 
+ * PHASE 5 ENHANCEMENT:
+ * Kombiniert manuelle Jagdeinträge mit Wildkamera-Sichtungen
+ * für umfassenderes AI-Training
+ * 
+ * @param revierId - Revier ID
+ * @param includeWildkamera - Wildkamera-Daten einbeziehen (default: true)
+ * @returns Kombiniertes Array aller HuntingEvents
+ */
+export async function collectTrainingDataEnhanced(
+  revierId: string,
+  includeWildkamera: boolean = true
+): Promise<HuntingEvent[]> {
+  try {
+    // 1. Bisherige manuelle Daten
+    const manualEvents = await collectTrainingData(revierId);
+    
+    if (!includeWildkamera) {
+      return manualEvents;
+    }
+
+    // 2. Wildkamera-Daten hinzufügen
+    const wildkameraEvents = await collectWildkameraData(revierId);
+    
+    // 3. Kombinieren
+    const combined = [...manualEvents, ...wildkameraEvents];
+    
+    console.log(`[TrainingData Enhanced] Total: ${combined.length} Events (${manualEvents.length} manuell, ${wildkameraEvents.length} Wildkamera)`);
+    
+    return combined;
+  } catch (error) {
+    console.error('Fehler beim Sammeln der erweiterten Training-Daten:', error);
+    // Fallback: Nur manuelle Daten
+    return collectTrainingData(revierId);
+  }
+}
+
+// ===========================
+// WILDKAMERA HELPER FUNCTIONS
+// ===========================
+
+/**
+ * Placeholder: Hole alle Wildkameras für ein Revier
+ * TODO: Implementierung in Phase 7 (Wildkamera-Integration)
+ */
+async function getWildkamerasForRevier(revierId: string): Promise<Wildkamera[]> {
+  try {
+    const wildkamerasJSON = await AsyncStorage.getItem(`wildkameras_${revierId}`);
+    if (!wildkamerasJSON) return [];
+    
+    const wildkameras = JSON.parse(wildkamerasJSON);
+    return wildkameras || [];
+  } catch (error) {
+    console.warn('Wildkameras noch nicht implementiert');
+    return [];
+  }
+}
+
+/**
+ * Placeholder: Hole Wildkamera-Media für Zeitraum
+ * TODO: Implementierung in Phase 7 (Wildkamera-Integration)
+ */
+async function getWildkameraMedia(
+  kameraId: string,
+  zeitraum: { von: Date; bis: Date }
+): Promise<WildkameraMedia[]> {
+  try {
+    const mediaJSON = await AsyncStorage.getItem(`wildkamera_media_${kameraId}`);
+    if (!mediaJSON) return [];
+    
+    const allMedia: WildkameraMedia[] = JSON.parse(mediaJSON);
+    
+    // Filter nach Zeitraum
+    return allMedia.filter((m) => {
+      const timestamp = new Date(m.zeitpunkt);
+      return timestamp >= zeitraum.von && timestamp <= zeitraum.bis;
+    });
+  } catch (error) {
+    return [];
+  }
+}
+
