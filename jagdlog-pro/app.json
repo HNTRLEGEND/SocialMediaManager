@@ -1,30 +1,84 @@
 {
   "expo": {
-    "name": "jagdlog-pro",
-    "slug": "jagdlog-pro",
-    "version": "1.0.0",
+    "name": "HNTR LEGEND PRO",
+    "slug": "hntr-legend-pro",
+    "version": "2.8.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "hntrlegend",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#2E7D32"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/YOUR_PROJECT_ID"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hntrlegend.jagdlogpro",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "HNTR LEGEND benötigt GPS-Zugriff für Nachsuche-Tracking und Fundort-Vorhersage.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "HNTR LEGEND benötigt GPS-Zugriff im Hintergrund für automatisches Tracking während der Nachsuche.",
+        "NSCameraUsageDescription": "HNTR LEGEND benötigt Kamera-Zugriff für Anschussfotos und KI-Analyse.",
+        "NSPhotoLibraryUsageDescription": "HNTR LEGEND benötigt Galerie-Zugriff zum Hochladen von Trainings-Daten.",
+        "UIBackgroundModes": ["location"]
+      }
     },
     "android": {
+      "package": "com.hntrlegend.jagdlogpro",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#2E7D32"
       },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "HNTR LEGEND benötigt GPS-Zugriff für Nachsuche-Tracking."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "HNTR LEGEND benötigt Galerie-Zugriff für Trainings-Daten."
+        }
+      ]
+    ],
+    "extra": {
+      "enableShotAnalysis": true,
+      "enableFundortPrediction": true,
+      "enableCrowdsourcing": true,
+      "enableMLModels": false,
+      "eas": {
+        "projectId": "YOUR_PROJECT_ID"
+      }
     }
   }
 }
