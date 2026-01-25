@@ -20,6 +20,7 @@ interface MapFeature {
   lon: number;
   timestamp?: string;
   details?: any;
+  revier_id?: string | null;
 }
 
 interface Revier {
@@ -35,6 +36,8 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [features, setFeatures] = useState<MapFeature[]>([]);
   const [reviere, setReviere] = useState<Revier[]>([]);
+  const [allReviere, setAllReviere] = useState<any[]>([]); // For dropdown
+  const [selectedRevierId, setSelectedRevierId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
   const [drawingMode, setDrawingMode] = useState(false);
   const [gpsEnabled, setGpsEnabled] = useState(false);
@@ -50,6 +53,15 @@ export default function MapPage() {
     }
     setUser(currentUser);
     loadMapData(currentUser);
+
+    // Check for Revier URL parameter
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const revierParam = params.get('revier');
+      if (revierParam) {
+        setSelectedRevierId(revierParam);
+      }
+    }
   }, [router]);
 
   const loadMapData = async (user: any) => {
@@ -57,9 +69,22 @@ export default function MapPage() {
     try {
       const db = await initDatabase();
 
+      // Load all Reviere for dropdown
+      const reviereListResult = db.exec(
+        `SELECT id, name FROM reviere WHERE user_id = ? AND geloescht_am IS NULL ORDER BY name`,
+        [user.id]
+      );
+      if (reviereListResult.length > 0 && reviereListResult[0].values.length > 0) {
+        const reviereList = reviereListResult[0].values.map((row) => ({
+          id: row[0] as string,
+          name: row[1] as string,
+        }));
+        setAllReviere(reviereList);
+      }
+
       // Load Map Features
       const featuresResult = db.exec(
-        `SELECT id, type, name, latitude, longitude, erstellt_am, details
+        `SELECT id, type, name, latitude, longitude, erstellt_am, details, revier_id
          FROM map_features
          WHERE user_id = ? AND geloescht_am IS NULL
          ORDER BY erstellt_am DESC`,
@@ -73,6 +98,10 @@ export default function MapPage() {
           name: row[2] as string,
           lat: Number(row[3]),
           lon: Number(row[4]),
+          timestamp: row[5] as string,
+          details: row[6] ? JSON.parse(row[6] as string) : {},
+          revier_id: row[7] as string | null,
+        }));
           timestamp: row[5] as string,
           details: row[6] ? JSON.parse(row[6] as string) : null,
         }));
@@ -316,10 +345,19 @@ export default function MapPage() {
     }
   };
 
-  const filteredFeatures =
-    filterType === 'all'
-      ? features
-      : features.filter((f) => f.type === filterType);
+  // Apply both filters: Revier and Type
+  const filteredFeatures = features.filter((f) => {
+    // Filter by Revier if selected
+    const matchesRevier = selectedRevierId ? f.revier_id === selectedRevierId : true;
+    // Filter by Type
+    const matchesType = filterType === 'all' ? true : f.type === filterType;
+    return matchesRevier && matchesType;
+  });
+
+  // Filter Reviere polygons by selected Revier
+  const filteredReviere = selectedRevierId
+    ? reviere.filter((r) => r.id === selectedRevierId)
+    : reviere;
 
   if (loading) {
     return (
@@ -339,6 +377,23 @@ export default function MapPage() {
       {/* Controls */}
       <div className="card mb-6">
         <div className="flex flex-wrap gap-4">
+          {/* Revier Filter Dropdown */}
+          <div className="flex items-center gap-2 border-r border-gray-300 pr-4">
+            <label className="font-semibold">🏞️ Revier:</label>
+            <select
+              value={selectedRevierId || ''}
+              onChange={(e) => setSelectedRevierId(e.target.value || null)}
+              className="border border-gray-300 px-3 py-2 rounded hover:bg-gray-50"
+            >
+              <option value="">Alle Reviere</option>
+              {allReviere.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Filter Buttons */}
           <div className="flex gap-2">
             <button
@@ -349,7 +404,7 @@ export default function MapPage() {
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
             >
-              🗺️ Alle ({features.length})
+              🗺️ Alle ({filteredFeatures.length})
             </button>
             <button
               onClick={() => setFilterType('anschuss')}
@@ -359,7 +414,7 @@ export default function MapPage() {
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
             >
-              🎯 Anschuss ({features.filter((f) => f.type === 'anschuss').length})
+              🎯 Anschuss ({filteredFeatures.filter((f) => f.type === 'anschuss').length})
             </button>
             <button
               onClick={() => setFilterType('fundort')}
@@ -369,7 +424,7 @@ export default function MapPage() {
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
             >
-              🟢 Fundort ({features.filter((f) => f.type === 'fundort').length})
+              🟢 Fundort ({filteredFeatures.filter((f) => f.type === 'fundort').length})
             </button>
             <button
               onClick={() => setFilterType('wildkamera')}
@@ -379,7 +434,7 @@ export default function MapPage() {
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
             >
-              📷 Kameras ({features.filter((f) => f.type === 'wildkamera').length})
+              📷 Kameras ({filteredFeatures.filter((f) => f.type === 'wildkamera').length})
             </button>
             <button
               onClick={() => setFilterType('poi')}
@@ -389,7 +444,7 @@ export default function MapPage() {
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
             >
-              📍 POIs ({features.filter((f) => f.type === 'poi').length})
+              📍 POIs ({filteredFeatures.filter((f) => f.type === 'poi').length})
             </button>
           </div>
 
@@ -486,7 +541,7 @@ export default function MapPage() {
         <div className="lg:col-span-2 card p-0 overflow-hidden">
           <MapComponent
             features={filteredFeatures}
-            reviere={reviere}
+            reviere={filteredReviere}
             onAddMarker={clickToAddMode ? handleAddMarker : undefined}
             onAddRevier={drawingMode ? handleAddRevier : undefined}
             drawingEnabled={drawingMode}
