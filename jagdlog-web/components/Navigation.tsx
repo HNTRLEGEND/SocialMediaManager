@@ -35,6 +35,7 @@ export default function Navigation() {
     { href: '/hunt-log', label: 'Jagdtagebuch', icon: '📋' },
     { href: '/shot-analysis', label: 'Shot Analysis', icon: '🎯' },
     { href: '/map', label: 'Karte', icon: '🗺️' },
+    { href: '/reviere', label: 'Reviere', icon: '🏞️' },
     { href: '/statistics', label: 'Statistiken', icon: '📊' },
     { href: '/crowdsourcing', label: 'Community', icon: '🤝' },
     { href: '/profile', label: 'Profil', icon: '👤' },
@@ -88,8 +89,8 @@ export default function Navigation() {
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40">
-        <div className="grid grid-cols-4 gap-1 p-2">
-          {navItems.slice(0, 4).map((item) => (
+        <div className="grid grid-cols-5 gap-1 p-2">
+          {navItems.slice(0, 5).map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -105,7 +106,7 @@ export default function Navigation() {
           ))}
         </div>
         <div className="grid grid-cols-4 gap-1 p-2 pt-0">
-          {navItems.slice(4).map((item) => (
+          {navItems.slice(5).map((item) => (
             <Link
               key={item.href}
               href={item.href}
