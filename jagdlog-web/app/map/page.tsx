@@ -1,139 +1,284 @@
-'use client'
+'use client';
+
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { auth } from '@/lib/api';
+
+// Dynamic import für Leaflet (SSR-Problem vermeiden)
+const MapComponent = dynamic(() => import('@/components/MapComponent'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+      <p className="text-gray-600">🗺️ Karte lädt...</p>
+    </div>
+  ),
+});
+
+interface MapFeature {
+  id: string;
+  type: 'anschuss' | 'fundort' | 'wildkamera' | 'poi';
+  name: string;
+  lat: number;
+  lon: number;
+  timestamp?: string;
+  details?: any;
+}
 
 export default function MapPage() {
+  const [user, setUser] = useState<any>(null);
+  const [features, setFeatures] = useState<MapFeature[]>([]);
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [showAddMenu, setShowAddMenu] = useState(false);
+
+  useEffect(() => {
+    const currentUser = auth.getCurrentUser();
+    setUser(currentUser);
+    
+    loadMapFeatures();
+  }, []);
+
+  const loadMapFeatures = async () => {
+    // Mock-Daten - später aus API
+    const mockFeatures: MapFeature[] = [
+      {
+        id: '1',
+        type: 'anschuss',
+        name: 'Rehbock - Hochsitz 3',
+        lat: 51.1657,
+        lon: 10.4515,
+        timestamp: '2026-01-23T08:30:00Z',
+      },
+      {
+        id: '2',
+        type: 'fundort',
+        name: 'Fundort Rehbock',
+        lat: 51.1667,
+        lon: 10.4525,
+        timestamp: '2026-01-23T09:15:00Z',
+      },
+      {
+        id: '3',
+        type: 'wildkamera',
+        name: 'Wildkamera 1 - Kirrung',
+        lat: 51.1647,
+        lon: 10.4505,
+      },
+      {
+        id: '4',
+        type: 'wildkamera',
+        name: 'Wildkamera 2 - Wechsel',
+        lat: 51.1677,
+        lon: 10.4535,
+      },
+      {
+        id: '5',
+        type: 'poi',
+        name: 'Ansitz 1',
+        lat: 51.1637,
+        lon: 10.4495,
+      },
+    ];
+
+    setFeatures(mockFeatures);
+  };
+
+  const filteredFeatures = selectedType === 'all' 
+    ? features 
+    : features.filter(f => f.type === selectedType);
+
+  const handleAddMarker = (type: string) => {
+    console.log('Add marker:', type);
+    setShowAddMenu(false);
+    // TODO: GPS-Position abrufen und Marker hinzufügen
+  };
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-4xl font-bold text-green-800">🗺️ Karte</h1>
-
-      {/* Map Container */}
-      <div className="card p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-green-100 to-green-200 h-[600px] flex items-center justify-center relative">
-          {/* Mock Map */}
-          <div className="text-center">
-            <p className="text-6xl mb-4">🗺️</p>
-            <p className="text-xl font-semibold mb-2">Interactive Karte</p>
-            <p className="text-gray-600">Leaflet/OpenStreetMap Integration</p>
+    <div className="max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-4xl font-bold">🗺️ Interaktive Karte</h1>
+          <p className="text-gray-600 mt-1">Anschüsse, Fundorte und Wildkameras</p>
+        </div>
+        
+        {user && (
+          <div className="relative">
+            <button
+              onClick={() => setShowAddMenu(!showAddMenu)}
+              className="btn-primary"
+            >
+              ➕ Marker hinzufügen
+            </button>
+            
+            {showAddMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border z-10">
+                <button
+                  onClick={() => handleAddMarker('anschuss')}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b"
+                >
+                  🔴 Anschuss markieren
+                </button>
+                <button
+                  onClick={() => handleAddMarker('fundort')}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b"
+                >
+                  🟢 Fundort markieren
+                </button>
+                <button
+                  onClick={() => handleAddMarker('wildkamera')}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b"
+                >
+                  📷 Wildkamera setzen
+                </button>
+                <button
+                  onClick={() => handleAddMarker('poi')}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50"
+                >
+                  📍 POI hinzufügen
+                </button>
+              </div>
+            )}
           </div>
+        )}
+      </div>
 
-          {/* Map Legend */}
-          <div className="absolute bottom-4 left-4 bg-white p-4 rounded shadow-lg">
-            <h3 className="font-bold mb-2">Legende</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-                <span>Anschuss-Punkt</span>
+      {/* Filter */}
+      <div className="card mb-6">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedType('all')}
+            className={`px-4 py-2 rounded ${
+              selectedType === 'all'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            🌐 Alle ({features.length})
+          </button>
+          <button
+            onClick={() => setSelectedType('anschuss')}
+            className={`px-4 py-2 rounded ${
+              selectedType === 'anschuss'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            🔴 Anschüsse ({features.filter(f => f.type === 'anschuss').length})
+          </button>
+          <button
+            onClick={() => setSelectedType('fundort')}
+            className={`px-4 py-2 rounded ${
+              selectedType === 'fundort'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            🟢 Fundorte ({features.filter(f => f.type === 'fundort').length})
+          </button>
+          <button
+            onClick={() => setSelectedType('wildkamera')}
+            className={`px-4 py-2 rounded ${
+              selectedType === 'wildkamera'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            📷 Wildkameras ({features.filter(f => f.type === 'wildkamera').length})
+          </button>
+          <button
+            onClick={() => setSelectedType('poi')}
+            className={`px-4 py-2 rounded ${
+              selectedType === 'poi'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            📍 POIs ({features.filter(f => f.type === 'poi').length})
+          </button>
+        </div>
+      </div>
+
+      {/* Karte */}
+      <div className="card p-0 overflow-hidden">
+        <MapComponent features={filteredFeatures} />
+      </div>
+
+      {/* Legende & Liste */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div className="card">
+          <h3 className="text-xl font-bold mb-4">📋 Legende</h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">
+                A
               </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                <span>Fundort</span>
+              <div>
+                <p className="font-semibold">Anschuss-Punkt</p>
+                <p className="text-sm text-gray-600">Ort des Schusses</p>
               </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
-                <span>Tracking-Punkt</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+                F
               </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
-                <span>Wildkamera</span>
+              <div>
+                <p className="font-semibold">Fundort</p>
+                <p className="text-sm text-gray-600">Wild aufgefunden</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white">
+                📷
+              </div>
+              <div>
+                <p className="font-semibold">Wildkamera</p>
+                <p className="text-sm text-gray-600">Aktive Wildkamera</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                📍
+              </div>
+              <div>
+                <p className="font-semibold">POI</p>
+                <p className="text-sm text-gray-600">Ansitz, Hochsitz, etc.</p>
               </div>
             </div>
           </div>
-
-          {/* Map Controls */}
-          <div className="absolute top-4 right-4 space-y-2">
-            <button className="bg-white p-3 rounded shadow hover:bg-gray-100">
-              🎯 Anschuss markieren
-            </button>
-            <button className="bg-white p-3 rounded shadow hover:bg-gray-100">
-              📍 Fundort markieren
-            </button>
-            <button className="bg-white p-3 rounded shadow hover:bg-gray-100">
-              📷 Wildkamera hinzufügen
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Locations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h2 className="text-xl font-bold mb-4">📍 Letzte Anschüsse</h2>
-          <div className="space-y-3">
-            <LocationItem
-              name="Rehbock - Hochsitz 3"
-              date="23.01.2026 08:15"
-              coords="48.1234, 11.5678"
-              status="Geborgen"
-            />
-            <LocationItem
-              name="Wildsau - Drückjagd Ost"
-              date="22.01.2026 16:30"
-              coords="48.1456, 11.5789"
-              status="Geborgen"
-            />
-            <LocationItem
-              name="Rehgeiß - Kanzel West"
-              date="21.01.2026 07:45"
-              coords="48.1567, 11.5890"
-              status="Geborgen"
-            />
-          </div>
         </div>
 
         <div className="card">
-          <h2 className="text-xl font-bold mb-4">📷 Wildkameras</h2>
+          <h3 className="text-xl font-bold mb-4">🕐 Letzte Einträge</h3>
           <div className="space-y-3">
-            <CameraItem
-              name="Wildkamera 1 - Kirrung"
-              lastActivity="vor 2 Stunden"
-              detections="23 Sichtungen heute"
-            />
-            <CameraItem
-              name="Wildkamera 2 - Wechsel"
-              lastActivity="vor 5 Stunden"
-              detections="14 Sichtungen heute"
-            />
-            <CameraItem
-              name="Wildkamera 3 - Suhle"
-              lastActivity="vor 8 Stunden"
-              detections="8 Sichtungen heute"
-            />
+            {filteredFeatures.slice(0, 5).map((feature) => (
+              <div
+                key={feature.id}
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer"
+              >
+                <div className={`w-3 h-3 rounded-full ${
+                  feature.type === 'anschuss' ? 'bg-red-500' :
+                  feature.type === 'fundort' ? 'bg-green-500' :
+                  feature.type === 'wildkamera' ? 'bg-purple-500' :
+                  'bg-blue-500'
+                }`}></div>
+                <div className="flex-1">
+                  <p className="font-semibold">{feature.name}</p>
+                  {feature.timestamp && (
+                    <p className="text-sm text-gray-600">
+                      {new Date(feature.timestamp).toLocaleDateString('de-DE', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
     </div>
-  )
-}
-
-function LocationItem({ name, date, coords, status }: {
-  name: string
-  date: string
-  coords: string
-  status: string
-}) {
-  return (
-    <div className="p-3 bg-gray-50 rounded flex items-start justify-between">
-      <div>
-        <p className="font-semibold">{name}</p>
-        <p className="text-sm text-gray-600">{date}</p>
-        <p className="text-xs text-gray-500">{coords}</p>
-      </div>
-      <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">
-        {status}
-      </span>
-    </div>
-  )
-}
-
-function CameraItem({ name, lastActivity, detections }: {
-  name: string
-  lastActivity: string
-  detections: string
-}) {
-  return (
-    <div className="p-3 bg-gray-50 rounded">
-      <p className="font-semibold">{name}</p>
-      <p className="text-sm text-gray-600">{lastActivity}</p>
-      <p className="text-xs text-purple-600 font-semibold">{detections}</p>
-    </div>
-  )
+  );
 }
