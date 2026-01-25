@@ -102,9 +102,6 @@ export default function MapPage() {
           details: row[6] ? JSON.parse(row[6] as string) : {},
           revier_id: row[7] as string | null,
         }));
-          timestamp: row[5] as string,
-          details: row[6] ? JSON.parse(row[6] as string) : null,
-        }));
         setFeatures(loadedFeatures);
       } else {
         // Mock data if empty
