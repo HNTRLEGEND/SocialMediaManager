@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { auth } from '@/lib/api';
+import { initDatabase } from '@/lib/database';
 
 export default function ShotAnalysisPage() {
   const [step, setStep] = useState<'input' | 'result'>('input');
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [allReviere, setAllReviere] = useState<any[]>([]);
 
   // Form data
+  const [revierId, setRevierId] = useState('');
   const [distance, setDistance] = useState('');
   const [direction, setDirection] = useState('');
   const [wildReaction, setWildReaction] = useState('');
@@ -23,7 +26,30 @@ export default function ShotAnalysisPage() {
   useEffect(() => {
     const currentUser = auth.getCurrentUser();
     setUser(currentUser);
+    
+    if (currentUser) {
+      loadReviere(currentUser);
+    }
   }, []);
+
+  const loadReviere = async (user: any) => {
+    try {
+      const db = await initDatabase();
+      const result = db.exec(
+        `SELECT id, name FROM reviere WHERE user_id = ? AND geloescht_am IS NULL ORDER BY name`,
+        [user.id]
+      );
+      if (result.length > 0 && result[0].values.length > 0) {
+        const reviereList = result[0].values.map((row) => ({
+          id: row[0] as string,
+          name: row[1] as string,
+        }));
+        setAllReviere(reviereList);
+      }
+    } catch (error) {
+      console.error('Error loading reviere:', error);
+    }
+  };
 
   const handleAnalyze = async () => {
     if (!bloodColor || !bloodAmount || !wildReaction) {
@@ -45,7 +71,7 @@ export default function ShotAnalysisPage() {
           bloodAmount,
           bloodDistribution,
           bloodHeight,
-          revierId: user?.revierId,
+          revierId: revierId || null,
           userId: user?.id,
         }),
       });
@@ -68,6 +94,7 @@ export default function ShotAnalysisPage() {
 
   const resetForm = () => {
     setStep('input');
+    setRevierId('');
     setDistance('');
     setDirection('');
     setWildReaction('');
@@ -86,8 +113,23 @@ export default function ShotAnalysisPage() {
 
         <div className="card space-y-6">
           <div>
-            <h3 className="text-xl font-bold mb-4">📍 Schussdetails</h3>
+            <h3 className="text-xl font-bold mb-4">🏞️ Revier & Schussdetails</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Revier (optional)</label>
+                <select
+                  value={revierId}
+                  onChange={(e) => setRevierId(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="">Kein Revier zugeordnet</option>
+                  {allReviere.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Entfernung (m)</label>
                 <input

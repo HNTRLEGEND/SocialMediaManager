@@ -14,6 +14,8 @@ interface HuntEntry {
   ort_beschreibung: string;
   notizen?: string;
   erfolg?: boolean;
+  revier_id?: string | null;
+  revier_name?: string;
 }
 
 export default function HuntLogPage() {
@@ -21,6 +23,8 @@ export default function HuntLogPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<HuntEntry[]>([]);
+  const [allReviere, setAllReviere] = useState<any[]>([]);
+  const [selectedRevierId, setSelectedRevierId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -31,6 +35,7 @@ export default function HuntLogPage() {
     ort: '',
     notizen: '',
     erfolg: false,
+    revier_id: '',
   });
 
   useEffect(() => {
@@ -48,11 +53,25 @@ export default function HuntLogPage() {
     try {
       const db = await initDatabase();
 
+      // Load Reviere for dropdown
+      const reviereResult = db.exec(
+        `SELECT id, name FROM reviere WHERE user_id = ? AND geloescht_am IS NULL ORDER BY name`,
+        [user.id]
+      );
+      if (reviereResult.length > 0 && reviereResult[0].values.length > 0) {
+        const reviereList = reviereResult[0].values.map((row) => ({
+          id: row[0] as string,
+          name: row[1] as string,
+        }));
+        setAllReviere(reviereList);
+      }
+
       const result = db.exec(
-        `SELECT id, typ, wildart_name, zeitpunkt, ort_beschreibung, notizen
-         FROM eintraege
-         WHERE user_id = ? AND geloescht_am IS NULL
-         ORDER BY zeitpunkt DESC`,
+        `SELECT e.id, e.typ, e.wildart_name, e.zeitpunkt, e.ort_beschreibung, e.notizen, e.revier_id, r.name as revier_name
+         FROM eintraege e
+         LEFT JOIN reviere r ON e.revier_id = r.id
+         WHERE e.user_id = ? AND e.geloescht_am IS NULL
+         ORDER BY e.zeitpunkt DESC`,
         [user.id]
       );
 
@@ -64,6 +83,8 @@ export default function HuntLogPage() {
           zeitpunkt: row[3] as string,
           ort_beschreibung: row[4] as string,
           notizen: row[5] as string,
+          revier_id: row[6] as string | null,
+          revier_name: row[7] as string,
           erfolg: row[1] === 'harvest',
         }));
         setEntries(loadedEntries);
@@ -89,7 +110,7 @@ export default function HuntLogPage() {
         db.run(
           `UPDATE eintraege
            SET typ = ?, wildart_name = ?, zeitpunkt = ?, ort_beschreibung = ?, 
-               notizen = ?, geaendert_am = ?
+               notizen = ?, revier_id = ?, geaendert_am = ?
            WHERE id = ?`,
           [
             formData.erfolg ? 'harvest' : 'hunt',
@@ -97,6 +118,7 @@ export default function HuntLogPage() {
             formData.zeitpunkt,
             formData.ort,
             formData.notizen,
+            formData.revier_id || null,
             timestamp,
             editingId,
           ]
@@ -112,7 +134,7 @@ export default function HuntLogPage() {
           [
             id,
             user.id,
-            null,
+            formData.revier_id || null,
             formData.erfolg ? 'harvest' : 'hunt',
             formData.wildart,
             formData.zeitpunkt,
@@ -138,6 +160,7 @@ export default function HuntLogPage() {
         ort: '',
         notizen: '',
         erfolg: false,
+        revier_id: '',
       });
 
       alert(editingId ? '✅ Eintrag aktualisiert!' : '✅ Eintrag erstellt!');
@@ -156,6 +179,7 @@ export default function HuntLogPage() {
       ort: entry.ort_beschreibung,
       notizen: entry.notizen || '',
       erfolg: entry.erfolg || false,
+      revier_id: entry.revier_id || '',
     });
     setShowForm(true);
   };
@@ -193,23 +217,40 @@ export default function HuntLogPage() {
     <div className="max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold">📋 Jagdtagebuch</h1>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditingId(null);
-            setFormData({
-              typ: 'hunt',
-              wildart: 'Rehwild',
-              zeitpunkt: new Date().toISOString().slice(0, 16),
-              ort: '',
-              notizen: '',
-              erfolg: false,
-            });
-          }}
-          className="px-6 py-3 bg-green-600 text-white font-semibold rounded hover:bg-green-700"
-        >
-          {showForm ? '❌ Abbrechen' : '➕ Neuer Eintrag'}
-        </button>
+        <div className="flex gap-3 items-center">
+          {/* Revier Filter */}
+          <select
+            value={selectedRevierId || ''}
+            onChange={(e) => setSelectedRevierId(e.target.value || null)}
+            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            <option value="">🏞️ Alle Reviere</option>
+            {allReviere.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditingId(null);
+              setFormData({
+                typ: 'hunt',
+                wildart: 'Rehwild',
+                zeitpunkt: new Date().toISOString().slice(0, 16),
+                ort: '',
+                notizen: '',
+                erfolg: false,
+                revier_id: '',
+              });
+            }}
+            className="px-6 py-3 bg-green-600 text-white font-semibold rounded hover:bg-green-700"
+          >
+            {showForm ? '❌ Abbrechen' : '➕ Neuer Eintrag'}
+          </button>
+        </div>
       </div>
 
       {/* Form */}
@@ -220,6 +261,22 @@ export default function HuntLogPage() {
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">🏞️ Revier</label>
+                <select
+                  value={formData.revier_id}
+                  onChange={(e) => setFormData({ ...formData, revier_id: e.target.value })}
+                  className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Kein Revier zugeordnet</option>
+                  {allReviere.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-2">Wildart</label>
                 <select
@@ -298,14 +355,16 @@ export default function HuntLogPage() {
 
       {/* Entries List */}
       <div className="space-y-4">
-        {entries.length === 0 ? (
+        {entries.filter(e => !selectedRevierId || e.revier_id === selectedRevierId).length === 0 ? (
           <div className="card text-center py-12">
             <div className="text-6xl mb-4">📭</div>
             <p className="text-xl font-semibold mb-2">Keine Einträge</p>
-            <p className="text-gray-600">Erstelle deinen ersten Jagd-Eintrag!</p>
+            <p className="text-gray-600">
+              {selectedRevierId ? 'Keine Einträge für dieses Revier gefunden.' : 'Erstelle deinen ersten Jagd-Eintrag!'}
+            </p>
           </div>
         ) : (
-          entries.map((entry) => (
+          entries.filter(e => !selectedRevierId || e.revier_id === selectedRevierId).map((entry) => (
             <div key={entry.id} className="card hover:shadow-lg transition">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -335,6 +394,12 @@ export default function HuntLogPage() {
                   </div>
 
                   <div className="space-y-1 text-sm">
+                    {entry.revier_name && (
+                      <p className="flex items-center gap-2">
+                        <span className="font-medium">🏞️ Revier:</span>
+                        {entry.revier_name}
+                      </p>
+                    )}
                     <p className="flex items-center gap-2">
                       <span className="font-medium">📍 Ort:</span>
                       {entry.ort_beschreibung}

@@ -11,6 +11,8 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [allReviere, setAllReviere] = useState<any[]>([]);
+  const [selectedRevierId, setSelectedRevierId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalHunts: 0,
     successRate: 0,
@@ -33,22 +35,37 @@ export default function DashboardPage() {
     }
     setUser(currentUser);
     loadDashboardData(currentUser);
-  }, [router]);
+  }, [router, selectedRevierId]);
 
   const loadDashboardData = async (user: any) => {
     setLoading(true);
     try {
       const db = await initDatabase();
 
-      // Stats aus Datenbank laden
+      // Load Reviere for dropdown
+      const reviereResult = db.exec(
+        `SELECT id, name FROM reviere WHERE user_id = ? AND geloescht_am IS NULL ORDER BY name`,
+        [user.id]
+      );
+      if (reviereResult.length > 0 && reviereResult[0].values.length > 0) {
+        const reviereList = reviereResult[0].values.map((row) => ({
+          id: row[0] as string,
+          name: row[1] as string,
+        }));
+        setAllReviere(reviereList);
+      }
+
+      // Stats aus Datenbank laden (mit Revier-Filter)
+      const revierFilter = selectedRevierId ? ` AND revier_id = '${selectedRevierId}'` : '';
+      
       const huntsResult = db.exec(
-        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'hunt' AND geloescht_am IS NULL`,
+        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'hunt' AND geloescht_am IS NULL${revierFilter}`,
         [user.id]
       );
       const totalHunts = huntsResult[0]?.values[0]?.[0] || 0;
 
       const successResult = db.exec(
-        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'harvest' AND geloescht_am IS NULL`,
+        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'harvest' AND geloescht_am IS NULL${revierFilter}`,
         [user.id]
       );
       const successful = successResult[0]?.values[0]?.[0] || 0;
@@ -76,11 +93,11 @@ export default function DashboardPage() {
         communityUploads: Number(uploads),
       });
 
-      // Recent Activity laden
+      // Recent Activity laden (mit Revier-Filter)
       const activityResult = db.exec(
-        `SELECT typ, wildart_name, zeitpunkt, ort_beschreibung
+        `SELECT typ, wildart_name, zeitpunkt, ort_beschreibung, revier_id
          FROM eintraege
-         WHERE user_id = ? AND geloescht_am IS NULL
+         WHERE user_id = ? AND geloescht_am IS NULL${revierFilter}
          ORDER BY zeitpunkt DESC
          LIMIT 5`,
         [user.id]
@@ -92,6 +109,7 @@ export default function DashboardPage() {
           wildart: row[1],
           timestamp: row[2],
           location: row[3],
+          revierId: row[4],
         }));
         setRecentActivity(activities);
       }
@@ -175,7 +193,21 @@ export default function DashboardPage() {
           </p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Revier Filter */}
+          <select
+            value={selectedRevierId || ''}
+            onChange={(e) => setSelectedRevierId(e.target.value || null)}
+            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            <option value="">🏞️ Alle Reviere</option>
+            {allReviere.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+
           <button
             onClick={handleSync}
             disabled={syncing}

@@ -25,6 +25,8 @@ export default function StatisticsPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('all'); // all, year, month
+  const [allReviere, setAllReviere] = useState<any[]>([]);
+  const [selectedRevierId, setSelectedRevierId] = useState<string | null>(null);
   
   const [stats, setStats] = useState({
     totalHunts: 0,
@@ -46,22 +48,38 @@ export default function StatisticsPage() {
     }
     setUser(currentUser);
     loadStatistics(currentUser);
-  }, [router, timeRange]);
+  }, [router, timeRange, selectedRevierId]);
 
   const loadStatistics = async (user: any) => {
     setLoading(true);
     try {
       const db = await initDatabase();
 
+      // Load Reviere for dropdown
+      const reviereResult = db.exec(
+        `SELECT id, name FROM reviere WHERE user_id = ? AND geloescht_am IS NULL ORDER BY name`,
+        [user.id]
+      );
+      if (reviereResult.length > 0 && reviereResult[0].values.length > 0) {
+        const reviereList = reviereResult[0].values.map((row) => ({
+          id: row[0] as string,
+          name: row[1] as string,
+        }));
+        setAllReviere(reviereList);
+      }
+
+      // Revier-Filter
+      const revierFilter = selectedRevierId ? ` AND revier_id = '${selectedRevierId}'` : '';
+
       // Overall Stats
       const huntsResult = db.exec(
-        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'hunt' AND geloescht_am IS NULL`,
+        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'hunt' AND geloescht_am IS NULL${revierFilter}`,
         [user.id]
       );
       const totalHunts = Number(huntsResult[0]?.values[0]?.[0] || 0);
 
       const successResult = db.exec(
-        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'harvest' AND geloescht_am IS NULL`,
+        `SELECT COUNT(*) FROM eintraege WHERE user_id = ? AND typ = 'harvest' AND geloescht_am IS NULL${revierFilter}`,
         [user.id]
       );
       const successful = Number(successResult[0]?.values[0]?.[0] || 0);
@@ -89,7 +107,7 @@ export default function StatisticsPage() {
           strftime('%Y-%m', zeitpunkt) as month,
           COUNT(*) as count
          FROM eintraege
-         WHERE user_id = ? AND typ IN ('hunt', 'harvest') AND geloescht_am IS NULL
+         WHERE user_id = ? AND typ IN ('hunt', 'harvest') AND geloescht_am IS NULL${revierFilter}
          GROUP BY strftime('%Y-%m', zeitpunkt)
          ORDER BY month DESC
          LIMIT 12`,
@@ -122,7 +140,7 @@ export default function StatisticsPage() {
           AVG(confidence) as avg_confidence
          FROM shot_analysis sa
          JOIN eintraege e ON sa.eintrag_id = e.id
-         WHERE e.user_id = ? AND hit_zone IS NOT NULL
+         WHERE e.user_id = ? AND hit_zone IS NOT NULL${revierFilter}
          GROUP BY hit_zone`,
         [user.id]
       );
@@ -154,7 +172,7 @@ export default function StatisticsPage() {
           wildart_name,
           COUNT(*) as count
          FROM eintraege
-         WHERE user_id = ? AND typ IN ('hunt', 'harvest') AND geloescht_am IS NULL
+         WHERE user_id = ? AND typ IN ('hunt', 'harvest') AND geloescht_am IS NULL${revierFilter}
          GROUP BY wildart_name
          ORDER BY count DESC
          LIMIT 10`,
@@ -201,7 +219,21 @@ export default function StatisticsPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">📊 Statistiken</h1>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Revier Filter */}
+          <select
+            value={selectedRevierId || ''}
+            onChange={(e) => setSelectedRevierId(e.target.value || null)}
+            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            <option value="">🏞️ Alle Reviere</option>
+            {allReviere.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+
           <button
             onClick={() => setTimeRange('all')}
             className={`px-4 py-2 rounded ${

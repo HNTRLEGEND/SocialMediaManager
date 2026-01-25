@@ -57,16 +57,37 @@ export default function RevierePage() {
       );
 
       if (result.length > 0 && result[0].values.length > 0) {
-        const loadedReviere = result[0].values.map((row) => ({
-          id: row[0] as string,
-          name: row[1] as string,
-          flaeche: row[2] ? Number(row[2]) : undefined,
-          ort: row[3] as string,
-          beschreibung: row[4] as string,
-          grenzen_geojson: row[5] as string,
-          farbe: row[6] as string,
-          erstellt_am: row[7] as string,
-        }));
+        const loadedReviere = result[0].values.map((row) => {
+          const revierId = row[0] as string;
+          
+          // Get stats for each Revier
+          const huntStats = db.exec(
+            `SELECT COUNT(*) FROM eintraege WHERE revier_id = ? AND geloescht_am IS NULL`,
+            [revierId]
+          );
+          const huntCount = Number(huntStats[0]?.values[0]?.[0] || 0);
+          
+          const featureStats = db.exec(
+            `SELECT COUNT(*) FROM map_features WHERE revier_id = ? AND geloescht_am IS NULL`,
+            [revierId]
+          );
+          const featureCount = Number(featureStats[0]?.values[0]?.[0] || 0);
+
+          return {
+            id: revierId,
+            name: row[1] as string,
+            flaeche: row[2] ? Number(row[2]) : undefined,
+            ort: row[3] as string,
+            beschreibung: row[4] as string,
+            grenzen_geojson: row[5] as string,
+            farbe: row[6] as string,
+            erstellt_am: row[7] as string,
+            stats: {
+              hunts: huntCount,
+              features: featureCount,
+            },
+          };
+        });
         setReviere(loadedReviere);
       } else {
         setReviere([]);
@@ -409,15 +430,15 @@ export default function RevierePage() {
                 <span>📅 Erstellt: {new Date(revier.erstellt_am).toLocaleDateString('de-DE')}</span>
               </div>
 
-              {/* Stats - würde async laden */}
+              {/* Stats - Real data from DB */}
               <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-gray-50 rounded">
                 <div className="text-center">
                   <p className="text-xs text-gray-600">Jagden</p>
-                  <p className="text-lg font-bold">-</p>
+                  <p className="text-lg font-bold">{(revier as any).stats?.hunts || 0}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-gray-600">Map Features</p>
-                  <p className="text-lg font-bold">-</p>
+                  <p className="text-lg font-bold">{(revier as any).stats?.features || 0}</p>
                 </div>
               </div>
 
