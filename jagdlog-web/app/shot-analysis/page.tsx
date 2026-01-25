@@ -1,217 +1,213 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react';
+import { auth } from '@/lib/api';
 
 export default function ShotAnalysisPage() {
-  const [step, setStep] = useState<'input' | 'result'>('input')
-  const [analysis, setAnalysis] = useState({
-    hitZone: 'Blattschuss',
-    confidence: 95,
-    waitTime: { min: 15, optimal: 30, max: 60 },
-    dogRequired: 'Optional',
-    successProbability: 95,
-  })
+  const [step, setStep] = useState<'input' | 'result'>('input');
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  const handleAnalyze = () => {
-    setStep('result')
-  }
+  // Form data
+  const [distance, setDistance] = useState('');
+  const [direction, setDirection] = useState('');
+  const [wildReaction, setWildReaction] = useState('');
+  const [bloodColor, setBloodColor] = useState('');
+  const [bloodAmount, setBloodAmount] = useState('');
+  const [bloodDistribution, setBloodDistribution] = useState('');
+  const [bloodHeight, setBloodHeight] = useState('');
 
-  if (step === 'result') {
+  // Result data
+  const [result, setResult] = useState<any>(null);
+
+  useEffect(() => {
+    const currentUser = auth.getCurrentUser();
+    setUser(currentUser);
+  }, []);
+
+  const handleAnalyze = async () => {
+    if (!bloodColor || !bloodAmount || !wildReaction) {
+      alert('Bitte füllen Sie alle Pflichtfelder aus');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/shot-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          distance: parseFloat(distance) || 0,
+          direction,
+          wildReaction,
+          bloodColor,
+          bloodAmount,
+          bloodDistribution,
+          bloodHeight,
+          revierId: user?.revierId,
+          userId: user?.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setResult(data);
+        setStep('result');
+      } else {
+        alert('Fehler bei der Analyse');
+      }
+    } catch (error) {
+      console.error('Analysis error:', error);
+      alert('Verbindungsfehler');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setStep('input');
+    setDistance('');
+    setDirection('');
+    setWildReaction('');
+    setBloodColor('');
+    setBloodAmount('');
+    setBloodDistribution('');
+    setBloodHeight('');
+    setResult(null);
+  };
+
+  if (step === 'input') {
     return (
-      <div className="space-y-6">
-        <h1 className="text-4xl font-bold text-green-800">🎯 Shot Analysis Ergebnis</h1>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-2">🎯 KI-Shot-Analysis</h1>
+        <p className="text-gray-600 mb-8">Professionelle Trefferlage-Diagnose</p>
 
-        {/* Diagnosis */}
-        <div className="card bg-green-50 border-2 border-green-500">
-          <h2 className="text-2xl font-bold mb-4">Diagnose</h2>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-4xl font-bold text-green-800">{analysis.hitZone}</p>
-              <p className="text-gray-600 mt-2">Herz/Lunge getroffen - optimale Trefferlage</p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-green-600">{analysis.confidence}%</div>
-              <div className="text-sm text-gray-600">Confidence</div>
+        <div className="card space-y-6">
+          <div>
+            <h3 className="text-xl font-bold mb-4">📍 Schussdetails</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Entfernung (m)</label>
+                <input
+                  type="number"
+                  value={distance}
+                  onChange={(e) => setDistance(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Schussrichtung</label>
+                <select
+                  value={direction}
+                  onChange={(e) => setDirection(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="">Bitte wählen</option>
+                  <option value="frontal">Frontal</option>
+                  <option value="seitlich">Seitlich</option>
+                  <option value="schräg">Schräg</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Wait Time */}
-        <div className="card">
-          <h2 className="text-2xl font-bold mb-4">⏱️ Wartezeit-Empfehlung</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-yellow-50 rounded">
-              <div className="text-2xl font-bold">{analysis.waitTime.min} Min</div>
-              <div className="text-sm text-gray-600">Minimum</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded border-2 border-green-500">
-              <div className="text-2xl font-bold">{analysis.waitTime.optimal} Min</div>
-              <div className="text-sm text-gray-600">Optimal</div>
-            </div>
-            <div className="text-center p-4 bg-orange-50 rounded">
-              <div className="text-2xl font-bold">{analysis.waitTime.max} Min</div>
-              <div className="text-sm text-gray-600">Maximum</div>
+          <div>
+            <h3 className="text-xl font-bold mb-4">🦌 Wildreaktion *</h3>
+            <select
+              value={wildReaction}
+              onChange={(e) => setWildReaction(e.target.value)}
+              className="w-full border rounded px-3 py-2"
+              required
+            >
+              <option value="">Bitte wählen</option>
+              <option value="zusammengebrochen">Sofort zusammengebrochen</option>
+              <option value="kurz-geflüchtet">Kurz geflüchtet</option>
+              <option value="weit-geflüchtet">Weit geflüchtet</option>
+            </select>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-bold mb-4">🩸 Blut/Schweiß *</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Farbe *</label>
+                <select
+                  value={bloodColor}
+                  onChange={(e) => setBloodColor(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                >
+                  <option value="">Bitte wählen</option>
+                  <option value="hell-rot">Hell-rot (Lungenblut)</option>
+                  <option value="dunkel-rot">Dunkel-rot (Leberblut)</option>
+                  <option value="wässrig">Wässrig (Pansen)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Menge *</label>
+                <select
+                  value={bloodAmount}
+                  onChange={(e) => setBloodAmount(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                >
+                  <option value="">Bitte wählen</option>
+                  <option value="viel">Viel</option>
+                  <option value="mittel">Mittel</option>
+                  <option value="wenig">Wenig</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Dog Recommendation */}
-        <div className="card">
-          <h2 className="text-2xl font-bold mb-4">🐕 Hunde-Empfehlung</h2>
-          <div className="bg-blue-50 p-4 rounded">
-            <p className="text-lg font-semibold">{analysis.dogRequired}</p>
-            <p className="text-gray-600 mt-2">
-              Bei Blattschuss kann auf Schweißhund verzichtet werden. 
-              Wild sollte innerhalb des Suchkreises liegen.
-            </p>
+          <div className="flex gap-4">
+            <button
+              onClick={handleAnalyze}
+              disabled={loading}
+              className="btn-primary flex-1 disabled:opacity-50"
+            >
+              {loading ? '🔄 Analysiere...' : '🎯 Jetzt analysieren'}
+            </button>
           </div>
-        </div>
-
-        {/* Recovery Probability Map */}
-        <div className="card">
-          <h2 className="text-2xl font-bold mb-4">📍 Fundort-Vorhersage</h2>
-          <div className="bg-gray-200 h-96 rounded flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-6xl mb-4">🗺️</p>
-              <p className="text-gray-600">Karten-Ansicht mit Wahrscheinlichkeits-Zonen</p>
-              <a href="/map" className="btn-primary mt-4 inline-block">
-                Zur Karte
-              </a>
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-red-500 rounded mr-2"></div>
-              <span className="text-sm">Zone 1: 60% (20-50m)</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-yellow-500 rounded mr-2"></div>
-              <span className="text-sm">Zone 2: 25% (50-100m)</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-              <span className="text-sm">Zone 3: 15% (100-200m)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex space-x-4">
-          <button onClick={() => setStep('input')} className="btn-primary">
-            ← Neue Analyse
-          </button>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            🚀 Nachsuche starten
-          </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-4xl font-bold text-green-800">🎯 Shot Analysis</h1>
-
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-4">Schussdetails</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Entfernung (Meter)</label>
-            <input type="number" className="w-full p-2 border rounded" placeholder="80" />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">Schussrichtung (°)</label>
-            <input type="number" className="w-full p-2 border rounded" placeholder="45" />
-          </div>
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-4xl font-bold mb-2">📊 Analyse-Ergebnis</h1>
+      
+      <div className="space-y-6">
+        <div className="card bg-green-50 border-l-4 border-green-600">
+          <h3 className="text-2xl font-bold text-green-800 mb-2">{result.hitZone}</h3>
+          <p className="text-lg">Konfidenz: {(result.confidence * 100).toFixed(1)}%</p>
         </div>
-      </div>
 
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-4">Wildreaktion</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Reaktionstyp</label>
-            <select className="w-full p-2 border rounded">
-              <option>Zusammenbruch</option>
-              <option>Flucht</option>
-              <option>Zeichnen</option>
-              <option>Keine Reaktion</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2">Fluchtrichtung (°)</label>
-              <input type="number" className="w-full p-2 border rounded" placeholder="90" />
+        <div className="card">
+          <h3 className="text-xl font-bold mb-4">⏱️ Wartezeit</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-yellow-50 rounded">
+              <p className="text-2xl font-bold">{result.waitTimeMin} min</p>
+              <p className="text-sm">Minimum</p>
             </div>
-            <div>
-              <label className="block text-sm font-semibold mb-2">Geschwindigkeit</label>
-              <select className="w-full p-2 border rounded">
-                <option>Langsam</option>
-                <option>Mittel</option>
-                <option>Schnell</option>
-              </select>
+            <div className="text-center p-4 bg-green-50 rounded border-2 border-green-500">
+              <p className="text-2xl font-bold">{result.waitTimeOptimal} min</p>
+              <p className="text-sm">Optimal</p>
+            </div>
+            <div className="text-center p-4 bg-red-50 rounded">
+              <p className="text-2xl font-bold">{result.waitTimeMax} min</p>
+              <p className="text-sm">Maximum</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-4">🩸 Blut/Schweiß</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Farbe</label>
-            <select className="w-full p-2 border rounded">
-              <option>Hellrot (Lungenblut)</option>
-              <option>Dunkelrot (Lebertreffer)</option>
-              <option>Bräunlich (Pansenschuss)</option>
-              <option>Schaumig (Lungenblut)</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">Menge</label>
-            <select className="w-full p-2 border rounded">
-              <option>Wenig</option>
-              <option>Mittel</option>
-              <option>Viel</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">Verteilung</label>
-            <select className="w-full p-2 border rounded">
-              <option>Tropfen</option>
-              <option>Spritzer</option>
-              <option>Fährte</option>
-              <option>Lache</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">Höhe</label>
-            <select className="w-full p-2 border rounded">
-              <option>Bodennah</option>
-              <option>Kniehoch</option>
-              <option>Brusthoch</option>
-            </select>
-          </div>
-        </div>
+        <button onClick={resetForm} className="btn-primary w-full">
+          🔄 Neue Analyse
+        </button>
       </div>
-
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-4">📸 Foto-Upload (Optional)</h2>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <p className="text-4xl mb-2">📷</p>
-          <p className="text-gray-600 mb-4">Foto von Anschusszeichen hochladen</p>
-          <button className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-            Datei auswählen
-          </button>
-          <p className="text-xs text-gray-500 mt-2">
-            KI-Analyse erkennt automatisch Blutfarbe, Haare und Wildpret
-          </p>
-        </div>
-      </div>
-
-      <button onClick={handleAnalyze} className="btn-primary w-full text-xl py-4">
-        🚀 Analyse starten
-      </button>
     </div>
-  )
+  );
 }

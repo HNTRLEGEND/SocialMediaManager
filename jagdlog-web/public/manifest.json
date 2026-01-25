@@ -1,0 +1,81 @@
+{
+  "name": "HNTR LEGEND Pro",
+  "short_name": "HNTR LEGEND",
+  "description": "Weltweit erste Jagd-App mit KI-Shot-Analysis, GPS-Tracking und ML-powered Fundort-Vorhersage",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2E7D32",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard mit Live-Statistiken"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "KI-Shot-Analysis"
+    }
+  ],
+  "categories": ["lifestyle", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Shot Analysis",
+      "short_name": "Analysis",
+      "description": "Neue Shot Analysis starten",
+      "url": "/shot-analysis",
+      "icons": [{ "src": "/icon-shot-analysis.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Karte",
+      "short_name": "Map",
+      "description": "Karte öffnen",
+      "url": "/map",
+      "icons": [{ "src": "/icon-map.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Dashboard öffnen",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-dashboard.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "/crowdsourcing",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  },
+  "prefer_related_applications": false
+}
