@@ -24,6 +24,20 @@ const nextConfig = {
   // Turbopack config (empty to suppress warning)
   turbopack: {},
   
+  // Webpack config to handle SQL.js
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Polyfills for browser
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        crypto: false,
+      };
+    }
+    return config;
+  },
+  
   // Headers für PWA
   async headers() {
     return [
