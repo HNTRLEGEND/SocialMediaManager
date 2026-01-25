@@ -34,3 +34,30 @@ body {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   padding: 1.5rem;
 }
+
+/* PWA Installer Animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Pulse Animation für GPS Marker */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.9);
+  }
+}
+

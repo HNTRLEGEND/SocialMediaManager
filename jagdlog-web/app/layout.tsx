@@ -1,16 +1,19 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
+import Navigation from '@/components/Navigation'
+import PWAInstaller from '@/components/PWAInstaller'
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'HNTR LEGEND PRO - Web Dashboard',
-  description: 'Professionelle Jagdverwaltung mit KI-Shot-Analysis',
+  title: 'JagdLog - Professionelle Jagdverwaltung',
+  description: 'Professionelle Jagdverwaltung mit KI-Shot-Analysis, Revierkarten und Offline-Support',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'HNTR LEGEND Pro',
+    title: 'JagdLog',
   },
   themeColor: '#2E7D32',
 }
@@ -28,21 +31,12 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
       <body className={inter.className}>
-        <nav className="bg-green-800 text-white p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">🎯 HNTR LEGEND PRO</h1>
-            <div className="space-x-4">
-              <a href="/dashboard" className="hover:underline">Dashboard</a>
-              <a href="/map" className="hover:underline">Karte</a>
-              <a href="/shot-analysis" className="hover:underline">Shot Analysis</a>
-              <a href="/statistics" className="hover:underline">Statistiken</a>
-              <a href="/crowdsourcing" className="hover:underline">Community-KI</a>
-            </div>
-          </div>
-        </nav>
-        <main className="container mx-auto p-4">
+        <ServiceWorkerRegister />
+        <Navigation />
+        <main className="container mx-auto p-4 pt-20 md:pt-28 pb-32 md:pb-8">
           {children}
         </main>
+        <PWAInstaller />
       </body>
     </html>
   )
