@@ -1,6 +1,6 @@
 /**
  * GESELLSCHAFTSJAGD SERVICE - Web Version
- * Phase 6.1: Critical Fixes
+ * Phase 6.2: Extended Features
  * HNTR LEGEND Pro
  */
 
@@ -11,6 +11,8 @@ import {
   TeilnehmerSchema,
   Standort,
   StandortSchema,
+  StandortZuweisung,
+  StandortZuweisungSchema,
 } from '@/lib/types/gesellschaftsjagd';
 
 // ============================================================================
@@ -176,6 +178,54 @@ export async function removeTeilnehmer(
   localStorage.setItem('jagd_teilnehmer', JSON.stringify(filtered));
 }
 
+/**
+ * Teilnehmer aktualisieren
+ */
+export async function updateTeilnehmer(
+  teilnehmerId: string,
+  updates: Partial<Teilnehmer>,
+  userId: string
+): Promise<void> {
+  const teilnehmer = getStoredTeilnehmer();
+  const index = teilnehmer.findIndex(t => t.id === teilnehmerId);
+  
+  if (index === -1) {
+    throw new Error('Teilnehmer nicht gefunden');
+  }
+  
+  teilnehmer[index] = {
+    ...teilnehmer[index],
+    ...updates,
+  };
+  
+  localStorage.setItem('jagd_teilnehmer', JSON.stringify(teilnehmer));
+}
+
+/**
+ * Teilnehmer-Status aktualisieren
+ */
+export async function updateTeilnehmerStatus(
+  teilnehmerId: string,
+  status: 'eingeladen' | 'zugesagt' | 'abgesagt' | 'warteliste',
+  kommentar?: string,
+  userId?: string
+): Promise<void> {
+  const teilnehmer = getStoredTeilnehmer();
+  const index = teilnehmer.findIndex(t => t.id === teilnehmerId);
+  
+  if (index === -1) {
+    throw new Error('Teilnehmer nicht gefunden');
+  }
+  
+  teilnehmer[index].anmeldung = {
+    status,
+    angemeldetAm: new Date(),
+    kommentar,
+  };
+  
+  localStorage.setItem('jagd_teilnehmer', JSON.stringify(teilnehmer));
+}
+
 // ============================================================================
 // STANDORT MANAGEMENT
 // ============================================================================
@@ -207,6 +257,169 @@ export async function createStandort(
 export async function getStandorte(jagdId: string): Promise<Standort[]> {
   const standorte = getStoredStandorte();
   return standorte.filter(s => s.jagdId === jagdId);
+}
+
+/**
+ * Standort aktualisieren
+ */
+export async function updateStandort(
+  standortId: string,
+  updates: Partial<Standort>,
+  userId: string
+): Promise<void> {
+  const standorte = getStoredStandorte();
+  const index = standorte.findIndex(s => s.id === standortId);
+  
+  if (index === -1) {
+    throw new Error('Standort nicht gefunden');
+  }
+  
+  standorte[index] = {
+    ...standorte[index],
+    ...updates,
+  };
+  
+  localStorage.setItem('jagd_standorte', JSON.stringify(standorte));
+}
+
+/**
+ * Standort löschen
+ */
+export async function deleteStandort(
+  standortId: string,
+  userId: string
+): Promise<void> {
+  const standorte = getStoredStandorte();
+  const filtered = standorte.filter(s => s.id !== standortId);
+  localStorage.setItem('jagd_standorte', JSON.stringify(filtered));
+}
+
+// ============================================================================
+// STANDORT-ZUWEISUNG MANAGEMENT
+// ============================================================================
+
+/**
+ * Standort einem Teilnehmer zuweisen
+ */
+export async function assignStandort(
+  jagdId: string,
+  standortId: string,
+  teilnehmerId: string,
+  zugewiesenVon: string,
+  prioritaet: number = 1,
+  notizen?: string
+): Promise<StandortZuweisung> {
+  const zuweisung: StandortZuweisung = {
+    id: crypto.randomUUID(),
+    jagdId,
+    standortId,
+    teilnehmerId,
+    zugewiesenVon,
+    zugewiesenAm: new Date(),
+    prioritaet,
+    bestaetigt: false,
+    notizen,
+  };
+  
+  // Validate
+  const validated = StandortZuweisungSchema.parse(zuweisung);
+  
+  // Store
+  const stored = getStoredZuweisungen();
+  stored.push(validated);
+  localStorage.setItem('jagd_standort_zuweisungen', JSON.stringify(stored));
+  
+  // Update Teilnehmer
+  const teilnehmer = getStoredTeilnehmer();
+  const teilnehmerIndex = teilnehmer.findIndex(t => t.id === teilnehmerId);
+  if (teilnehmerIndex !== -1) {
+    teilnehmer[teilnehmerIndex].zugewiesenerStandort = standortId;
+    localStorage.setItem('jagd_teilnehmer', JSON.stringify(teilnehmer));
+  }
+  
+  // Update Standort
+  const standorte = getStoredStandorte();
+  const standortIndex = standorte.findIndex(s => s.id === standortId);
+  if (standortIndex !== -1) {
+    if (!standorte[standortIndex].zugewiesenePersonen.includes(teilnehmerId)) {
+      standorte[standortIndex].zugewiesenePersonen.push(teilnehmerId);
+      standorte[standortIndex].status = 'besetzt';
+      localStorage.setItem('jagd_standorte', JSON.stringify(standorte));
+    }
+  }
+  
+  return validated;
+}
+
+/**
+ * Standort-Zuweisungen laden
+ */
+export async function getStandortZuweisungen(jagdId: string): Promise<StandortZuweisung[]> {
+  const zuweisungen = getStoredZuweisungen();
+  return zuweisungen.filter(z => z.jagdId === jagdId);
+}
+
+/**
+ * Standort-Zuweisung bestätigen
+ */
+export async function confirmStandortZuweisung(
+  zuweisungId: string,
+  userId: string
+): Promise<void> {
+  const zuweisungen = getStoredZuweisungen();
+  const index = zuweisungen.findIndex(z => z.id === zuweisungId);
+  
+  if (index === -1) {
+    throw new Error('Zuweisung nicht gefunden');
+  }
+  
+  zuweisungen[index].bestaetigt = true;
+  zuweisungen[index].bestaetigtAm = new Date();
+  
+  localStorage.setItem('jagd_standort_zuweisungen', JSON.stringify(zuweisungen));
+}
+
+/**
+ * Standort-Zuweisung aufheben
+ */
+export async function unassignStandort(
+  zuweisungId: string,
+  userId: string
+): Promise<void> {
+  const zuweisungen = getStoredZuweisungen();
+  const zuweisung = zuweisungen.find(z => z.id === zuweisungId);
+  
+  if (!zuweisung) {
+    throw new Error('Zuweisung nicht gefunden');
+  }
+  
+  // Remove from zuweisungen
+  const filtered = zuweisungen.filter(z => z.id !== zuweisungId);
+  localStorage.setItem('jagd_standort_zuweisungen', JSON.stringify(filtered));
+  
+  // Update Teilnehmer
+  const teilnehmer = getStoredTeilnehmer();
+  const teilnehmerIndex = teilnehmer.findIndex(t => t.id === zuweisung.teilnehmerId);
+  if (teilnehmerIndex !== -1) {
+    teilnehmer[teilnehmerIndex].zugewiesenerStandort = undefined;
+    localStorage.setItem('jagd_teilnehmer', JSON.stringify(teilnehmer));
+  }
+  
+  // Update Standort
+  const standorte = getStoredStandorte();
+  const standortIndex = standorte.findIndex(s => s.id === zuweisung.standortId);
+  if (standortIndex !== -1) {
+    standorte[standortIndex].zugewiesenePersonen = standorte[standortIndex].zugewiesenePersonen.filter(
+      (p: string) => p !== zuweisung.teilnehmerId
+    );
+    
+    // Update status if no more assignments
+    if (standorte[standortIndex].zugewiesenePersonen.length === 0) {
+      standorte[standortIndex].status = 'verfuegbar';
+    }
+    
+    localStorage.setItem('jagd_standorte', JSON.stringify(standorte));
+  }
 }
 
 // ============================================================================
@@ -275,6 +488,27 @@ function getStoredStandorte(): Standort[] {
     return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     console.error('Error parsing standorte:', e);
+    return [];
+  }
+}
+
+function getStoredZuweisungen(): StandortZuweisung[] {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('jagd_standort_zuweisungen');
+  if (!stored) return [];
+  
+  try {
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return [];
+    
+    // Convert date strings back to Date objects
+    return parsed.map((z: any) => ({
+      ...z,
+      zugewiesenAm: z.zugewiesenAm ? new Date(z.zugewiesenAm) : new Date(),
+      bestaetigtAm: z.bestaetigtAm ? new Date(z.bestaetigtAm) : undefined,
+    }));
+  } catch (e) {
+    console.error('Error parsing zuweisungen:', e);
     return [];
   }
 }
