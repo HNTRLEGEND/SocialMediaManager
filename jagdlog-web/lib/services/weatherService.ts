@@ -41,7 +41,9 @@ export async function fetchWeather(
   }
   
   try {
-    const url = `${config.api.weather}?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,cloud_cover,visibility,pressure_msl&timezone=Europe/Berlin`;
+    // Use system timezone or default to Europe/Berlin
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Berlin';
+    const url = `${config.api.weather}?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,cloud_cover,visibility,pressure_msl&timezone=${encodeURIComponent(timezone)}`;
     
     const response = await fetch(url);
     
@@ -66,17 +68,23 @@ export async function fetchWeather(
  * Parse API response into our format
  */
 function parseWeatherData(data: any, latitude: number, longitude: number): EnhancedWeather {
+  // Validate data structure
+  if (!data || typeof data !== 'object' || !data.current) {
+    console.error('[Weather] Invalid API response structure');
+    return getMockWeatherData(latitude, longitude);
+  }
+  
   const current = data.current;
   
   const weather: WeatherData = {
-    temperature: current.temperature_2m || 0,
-    windSpeed: current.wind_speed_10m || 0,
-    windDirection: current.wind_direction_10m || 0,
-    humidity: current.relative_humidity_2m || 0,
-    precipitation: current.precipitation || 0,
-    cloudCover: current.cloud_cover || 0,
-    visibility: current.visibility || 10000,
-    pressure: current.pressure_msl || 1013,
+    temperature: typeof current.temperature_2m === 'number' ? current.temperature_2m : 0,
+    windSpeed: typeof current.wind_speed_10m === 'number' ? current.wind_speed_10m : 0,
+    windDirection: typeof current.wind_direction_10m === 'number' ? current.wind_direction_10m : 0,
+    humidity: typeof current.relative_humidity_2m === 'number' ? current.relative_humidity_2m : 0,
+    precipitation: typeof current.precipitation === 'number' ? current.precipitation : 0,
+    cloudCover: typeof current.cloud_cover === 'number' ? current.cloud_cover : 0,
+    visibility: typeof current.visibility === 'number' ? current.visibility : 10000,
+    pressure: typeof current.pressure_msl === 'number' ? current.pressure_msl : 1013,
     timestamp: new Date(),
   };
   

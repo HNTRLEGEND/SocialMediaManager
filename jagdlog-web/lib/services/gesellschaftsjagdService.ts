@@ -220,13 +220,31 @@ function getStoredJagden(): Gesellschaftsjagd[] {
   
   try {
     const parsed = JSON.parse(stored);
-    // Convert date strings back to Date objects
-    return parsed.map((j: any) => ({
-      ...j,
-      datum: new Date(j.datum),
-      erstelltAm: new Date(j.erstelltAm),
-      aktualisiertAm: new Date(j.aktualisiertAm),
-    }));
+    if (!Array.isArray(parsed)) {
+      console.error('Stored jagden is not an array');
+      return [];
+    }
+    
+    // Convert date strings back to Date objects with validation
+    return parsed.map((j: any) => {
+      try {
+        return {
+          ...j,
+          datum: j.datum ? new Date(j.datum) : new Date(),
+          erstelltAm: j.erstelltAm ? new Date(j.erstelltAm) : new Date(),
+          aktualisiertAm: j.aktualisiertAm ? new Date(j.aktualisiertAm) : new Date(),
+        };
+      } catch (e) {
+        console.error('Error parsing jagd dates:', e);
+        // Return with default dates if parsing fails
+        return {
+          ...j,
+          datum: new Date(),
+          erstelltAm: new Date(),
+          aktualisiertAm: new Date(),
+        };
+      }
+    });
   } catch (e) {
     console.error('Error parsing jagden:', e);
     return [];
@@ -236,11 +254,27 @@ function getStoredJagden(): Gesellschaftsjagd[] {
 function getStoredTeilnehmer(): Teilnehmer[] {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem('jagd_teilnehmer');
-  return stored ? JSON.parse(stored) : [];
+  if (!stored) return [];
+  
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error('Error parsing teilnehmer:', e);
+    return [];
+  }
 }
 
 function getStoredStandorte(): Standort[] {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem('jagd_standorte');
-  return stored ? JSON.parse(stored) : [];
+  if (!stored) return [];
+  
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error('Error parsing standorte:', e);
+    return [];
+  }
 }

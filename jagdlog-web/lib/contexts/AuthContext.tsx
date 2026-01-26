@@ -27,22 +27,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Load user from localStorage
     const storedUser = localStorage.getItem('jagdlog_user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      // Create default user for MVP
-      const defaultUser: User = {
-        id: crypto.randomUUID(),
-        name: 'Demo Jäger',
-        email: 'demo@jagdlog.de',
-        rolle: 'organisator',
-      };
-      setUser(defaultUser);
-      localStorage.setItem('jagdlog_user', JSON.stringify(defaultUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error('Failed to parse stored user:', e);
+        localStorage.removeItem('jagdlog_user');
+      }
     }
+    // Note: Default user creation removed for security
+    // Users must explicitly login
   }, []);
 
   const login = async (email: string, password: string) => {
-    // MVP: Simple login, später mit Backend ersetzen
+    // MVP: Simple login demonstration
+    // TODO: Replace with proper backend authentication
+    // For now, we create a demo user to allow testing
+    // In production, this should validate credentials against a backend
+    if (!email || email.length < 3) {
+      throw new Error('Ungültige E-Mail-Adresse');
+    }
+    
     const user: User = {
       id: crypto.randomUUID(),
       name: email.split('@')[0],

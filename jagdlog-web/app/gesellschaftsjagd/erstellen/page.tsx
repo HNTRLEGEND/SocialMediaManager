@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { createGesellschaftsjagd } from '@/lib/services/gesellschaftsjagdService';
 import { JagdTyp } from '@/lib/types/gesellschaftsjagd';
@@ -17,7 +17,7 @@ interface WizardData {
 export default function ErstellenPage() {
   const { user } = useAuth();
   const [formData, setFormData] = useState<WizardData>({
-    revierId: user?.revierId || crypto.randomUUID(),
+    revierId: '', // Will be set when user is loaded
     name: '',
     beschreibung: '',
     typ: 'drueckjagd',
@@ -27,6 +27,16 @@ export default function ErstellenPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Update revierId when user loads
+  useEffect(() => {
+    if (user && !formData.revierId) {
+      setFormData(prev => ({
+        ...prev,
+        revierId: user.revierId || '', // Empty string if not set, will need to be selected
+      }));
+    }
+  }, [user, formData.revierId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +50,12 @@ export default function ErstellenPage() {
     setError(null);
 
     try {
+      // Validate revierId is set
+      if (!formData.revierId) {
+        setError('Bitte wählen Sie ein Revier aus');
+        return;
+      }
+      
       await createGesellschaftsjagd(
         formData,
         user.id,      // ← Echter User!
@@ -48,7 +64,7 @@ export default function ErstellenPage() {
       setSuccess(true);
       // Reset form
       setFormData({
-        revierId: user.revierId || crypto.randomUUID(),
+        revierId: user.revierId || '',
         name: '',
         beschreibung: '',
         typ: 'drueckjagd',
