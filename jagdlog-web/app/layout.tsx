@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import Navigation from '@/components/Navigation'
 import PWAInstaller from '@/components/PWAInstaller'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
+import { AuthProvider } from '@/lib/contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,12 +32,14 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
       <body className={inter.className}>
-        <ServiceWorkerRegister />
-        <Navigation />
-        <main className="container mx-auto p-4 pt-20 md:pt-28 pb-32 md:pb-8">
-          {children}
-        </main>
-        <PWAInstaller />
+        <AuthProvider>
+          <ServiceWorkerRegister />
+          <Navigation />
+          <main className="container mx-auto p-4 pt-20 md:pt-28 pb-32 md:pb-8">
+            {children}
+          </main>
+          <PWAInstaller />
+        </AuthProvider>
       </body>
     </html>
   )
