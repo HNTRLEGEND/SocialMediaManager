@@ -349,18 +349,21 @@ export default function SicherheitszonenEditor({ jagdId }: SicherheitszonenEdito
   );
 }
 
-// Map click handler
-function MapClickHandler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
-  const L = typeof window !== 'undefined' ? require('leaflet') : null;
+// Separate component for map events to avoid conditional hooks
+function MapClickHandlerInner({ onClick }: { onClick: (lat: number, lon: number) => void }) {
+  const { useMapEvents } = require('react-leaflet');
   
-  if (L) {
-    const { useMapEvents } = require('react-leaflet');
-    useMapEvents({
-      click(e: any) {
-        onClick(e.latlng.lat, e.latlng.lng);
-      },
-    });
-  }
+  useMapEvents({
+    click(e: any) {
+      onClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
   
   return null;
+}
+
+// Map click handler with SSR check
+function MapClickHandler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
+  if (typeof window === 'undefined') return null;
+  return <MapClickHandlerInner onClick={onClick} />;
 }

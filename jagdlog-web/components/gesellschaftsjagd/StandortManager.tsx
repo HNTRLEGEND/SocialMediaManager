@@ -339,18 +339,21 @@ export default function StandortManager({ jagdId }: StandortManagerProps) {
   );
 }
 
-// Map click handler component
-function MapClickHandler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
-  if (typeof window === 'undefined') return null;
-  
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+// Separate component for map events to avoid conditional hooks
+function MapClickHandlerInner({ onClick }: { onClick: (lat: number, lon: number) => void }) {
   const { useMapEvents } = require('react-leaflet');
   
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useMapEvents({
     click(e: any) {
       onClick(e.latlng.lat, e.latlng.lng);
     },
   });
+  
   return null;
+}
+
+// Map click handler component with SSR check
+function MapClickHandler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
+  if (typeof window === 'undefined') return null;
+  return <MapClickHandlerInner onClick={onClick} />;
 }
