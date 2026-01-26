@@ -6,6 +6,10 @@ import dynamic from 'next/dynamic';
 import { auth } from '@/lib/api';
 import { initDatabase, now } from '@/lib/database';
 import { queueSync } from '@/lib/sync';
+import { getEnhancedWeather } from '@/lib/services/weatherService';
+import { EnhancedWeather, WeatherLayerConfig } from '@/lib/types/weather';
+import WeatherPanel from '@/components/weather/WeatherPanel';
+import WeatherOverlay from '@/components/weather/WeatherOverlay';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
@@ -45,6 +49,34 @@ export default function MapPage() {
   const [addMarkerType, setAddMarkerType] = useState<'anschuss' | 'fundort' | 'wildkamera' | 'poi'>('anschuss');
   const [clickToAddMode, setClickToAddMode] = useState(false);
 
+  // Weather State
+  const [weather, setWeather] = useState<EnhancedWeather | null>(null);
+  const [showWeather, setShowWeather] = useState(true);
+  const [weatherConfig, setWeatherConfig] = useState<WeatherLayerConfig>({
+    wind: { 
+      enabled: true, 
+      animated: true, 
+      particleCount: 100, 
+      vectorDensity: 1, 
+      opacity: 0.7 
+    },
+    clouds: { 
+      enabled: true, 
+      showRadar: false, 
+      radarOpacity: 0.3, 
+      showCloudLayers: false 
+    },
+    precipitation: { 
+      enabled: true, 
+      showIntensity: true, 
+      showWarnings: true 
+    },
+    scentCarry: { 
+      enabled: true, 
+      showRange: true 
+    },
+  });
+
   useEffect(() => {
     const currentUser = auth.getCurrentUser();
     if (!currentUser) {
@@ -63,6 +95,25 @@ export default function MapPage() {
       }
     }
   }, [router]);
+
+  // Load weather data
+  useEffect(() => {
+    const loadWeather = async () => {
+      // Use current map center or default coordinates
+      const lat = 50.9375; // Example: Deutschland Mitte
+      const lon = 6.9603;
+      
+      const weatherData = await getEnhancedWeather(lat, lon);
+      setWeather(weatherData);
+    };
+
+    loadWeather();
+    
+    // Refresh every 5 minutes
+    const interval = setInterval(loadWeather, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const loadMapData = async (user: any) => {
     setLoading(true);
@@ -342,6 +393,13 @@ export default function MapPage() {
     }
   };
 
+  const handleWeatherRefresh = async () => {
+    const lat = 50.9375;
+    const lon = 6.9603;
+    const weatherData = await getEnhancedWeather(lat, lon, true);
+    setWeather(weatherData);
+  };
+
   // Apply both filters: Revier and Type
   const filteredFeatures = features.filter((f) => {
     // Filter by Revier if selected
@@ -535,7 +593,7 @@ export default function MapPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Map */}
-        <div className="lg:col-span-2 card p-0 overflow-hidden">
+        <div className="lg:col-span-2 card p-0 overflow-hidden relative">
           <MapComponent
             features={filteredFeatures}
             reviere={filteredReviere}
@@ -545,10 +603,73 @@ export default function MapPage() {
             gpsEnabled={gpsEnabled}
             currentLocation={currentLocation}
           />
+          
+          {/* Weather Overlay */}
+          <WeatherOverlay 
+            weather={weather}
+            config={weatherConfig}
+            visible={showWeather}
+          />
+
+          {/* Weather Toggle */}
+          <button
+            onClick={() => setShowWeather(!showWeather)}
+            className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-3 hover:bg-gray-50"
+            title="Wetter-Overlay ein/ausschalten"
+          >
+            {showWeather ? '🌦️' : '🌤️'}
+          </button>
+
+          {/* Layer Config Panel */}
+          <div className="absolute bottom-4 left-4 z-10 bg-white rounded-lg shadow-lg p-4">
+            <h4 className="text-sm font-bold mb-2">Wetter-Layer</h4>
+            
+            <label className="flex items-center gap-2 text-sm">
+              <input 
+                type="checkbox" 
+                checked={weatherConfig.wind.enabled}
+                onChange={(e) => setWeatherConfig({
+                  ...weatherConfig,
+                  wind: { ...weatherConfig.wind, enabled: e.target.checked }
+                })}
+              />
+              Windanimation
+            </label>
+            
+            <label className="flex items-center gap-2 text-sm mt-2">
+              <input 
+                type="checkbox" 
+                checked={weatherConfig.scentCarry.enabled}
+                onChange={(e) => setWeatherConfig({
+                  ...weatherConfig,
+                  scentCarry: { ...weatherConfig.scentCarry, enabled: e.target.checked }
+                })}
+              />
+              Duftverlauf
+            </label>
+            
+            <label className="flex items-center gap-2 text-sm mt-2">
+              <input 
+                type="checkbox" 
+                checked={weatherConfig.precipitation.showWarnings}
+                onChange={(e) => setWeatherConfig({
+                  ...weatherConfig,
+                  precipitation: { ...weatherConfig.precipitation, showWarnings: e.target.checked }
+                })}
+              />
+              Unwetter-Warnungen
+            </label>
+          </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Weather Panel */}
+          <WeatherPanel 
+            weather={weather}
+            onRefresh={handleWeatherRefresh}
+          />
+
           {/* Legend */}
           <div className="card">
             <h2 className="text-xl font-bold mb-3">📋 Legende</h2>

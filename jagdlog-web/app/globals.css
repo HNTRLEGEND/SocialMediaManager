@@ -61,3 +61,19 @@ body {
   }
 }
 
+/* Wind Drift Animation */
+@keyframes wind-drift {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(200px, 200px);
+    opacity: 0;
+  }
+}
+
+.animate-wind-drift {
+  animation: wind-drift 3s linear infinite;
+}
+
