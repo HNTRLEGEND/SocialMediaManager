@@ -231,6 +231,81 @@ const initializeSchema = async (db: Database): Promise<void> => {
       error_message TEXT,
       created_at TEXT NOT NULL
     )`,
+
+    // === GESELLSCHAFTSJAGD TABLES ===
+    
+    // Gesellschaftsjagd Haupttabelle
+    `CREATE TABLE IF NOT EXISTS gesellschaftsjagd (
+      id TEXT PRIMARY KEY,
+      revier_id TEXT NOT NULL,
+      organisator_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      beschreibung TEXT,
+      datum TEXT NOT NULL,
+      start_zeit TEXT NOT NULL,
+      end_zeit TEXT NOT NULL,
+      jagd_typ TEXT NOT NULL,
+      status TEXT DEFAULT 'planung',
+      erwartete_jaeger INTEGER DEFAULT 1,
+      erwartete_treiber INTEGER DEFAULT 0,
+      sicherheitsregeln TEXT,
+      notfall_kontakte TEXT,
+      erstellt_am TEXT NOT NULL,
+      aktualisiert_am TEXT NOT NULL,
+      erstellt_von TEXT NOT NULL,
+      aktualisiert_von TEXT NOT NULL,
+      version INTEGER DEFAULT 1,
+      FOREIGN KEY (revier_id) REFERENCES reviere(id),
+      FOREIGN KEY (organisator_id) REFERENCES users(id),
+      FOREIGN KEY (erstellt_von) REFERENCES users(id),
+      FOREIGN KEY (aktualisiert_von) REFERENCES users(id)
+    )`,
+
+    // Jagd Teilnehmer
+    `CREATE TABLE IF NOT EXISTS jagd_teilnehmer (
+      id TEXT PRIMARY KEY,
+      jagd_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      email TEXT,
+      telefon TEXT,
+      rolle TEXT NOT NULL,
+      user_id TEXT,
+      notizen TEXT,
+      anwesend INTEGER DEFAULT 0,
+      erstellt_am TEXT NOT NULL,
+      FOREIGN KEY (jagd_id) REFERENCES gesellschaftsjagd(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`,
+
+    // Jagd Standorte
+    `CREATE TABLE IF NOT EXISTS jagd_standorte (
+      id TEXT PRIMARY KEY,
+      jagd_id TEXT NOT NULL,
+      typ TEXT NOT NULL,
+      name TEXT NOT NULL,
+      beschreibung TEXT,
+      gps_lat REAL NOT NULL,
+      gps_lon REAL NOT NULL,
+      zugewiesener_jaeger_id TEXT,
+      zuweisungs_bestaetigt INTEGER DEFAULT 0,
+      zugewiesen_am TEXT,
+      erstellt_am TEXT NOT NULL,
+      FOREIGN KEY (jagd_id) REFERENCES gesellschaftsjagd(id) ON DELETE CASCADE,
+      FOREIGN KEY (zugewiesener_jaeger_id) REFERENCES jagd_teilnehmer(id)
+    )`,
+
+    // Jagd Sicherheitszonen
+    `CREATE TABLE IF NOT EXISTS jagd_sicherheitszonen (
+      id TEXT PRIMARY KEY,
+      jagd_id TEXT NOT NULL,
+      typ TEXT NOT NULL,
+      name TEXT NOT NULL,
+      beschreibung TEXT,
+      polygon_koordinaten TEXT NOT NULL,
+      farbe TEXT DEFAULT '#FF0000',
+      erstellt_am TEXT NOT NULL,
+      FOREIGN KEY (jagd_id) REFERENCES gesellschaftsjagd(id) ON DELETE CASCADE
+    )`,
   ];
 
   // Tabellen erstellen
@@ -248,6 +323,17 @@ const initializeSchema = async (db: Database): Promise<void> => {
     'CREATE INDEX IF NOT EXISTS idx_medien_eintrag ON medien(eintrag_id)',
     'CREATE INDEX IF NOT EXISTS idx_map_features_revier ON map_features(revier_id)',
     'CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(status)',
+    
+    // Gesellschaftsjagd Indizes
+    'CREATE INDEX IF NOT EXISTS idx_gesellschaftsjagd_revier ON gesellschaftsjagd(revier_id)',
+    'CREATE INDEX IF NOT EXISTS idx_gesellschaftsjagd_datum ON gesellschaftsjagd(datum)',
+    'CREATE INDEX IF NOT EXISTS idx_gesellschaftsjagd_status ON gesellschaftsjagd(status)',
+    'CREATE INDEX IF NOT EXISTS idx_gesellschaftsjagd_organisator ON gesellschaftsjagd(organisator_id)',
+    'CREATE INDEX IF NOT EXISTS idx_jagd_teilnehmer_jagd ON jagd_teilnehmer(jagd_id)',
+    'CREATE INDEX IF NOT EXISTS idx_jagd_teilnehmer_rolle ON jagd_teilnehmer(rolle)',
+    'CREATE INDEX IF NOT EXISTS idx_jagd_standorte_jagd ON jagd_standorte(jagd_id)',
+    'CREATE INDEX IF NOT EXISTS idx_jagd_standorte_jaeger ON jagd_standorte(zugewiesener_jaeger_id)',
+    'CREATE INDEX IF NOT EXISTS idx_jagd_sicherheitszonen_jagd ON jagd_sicherheitszonen(jagd_id)',
   ];
 
   for (const sql of indices) {

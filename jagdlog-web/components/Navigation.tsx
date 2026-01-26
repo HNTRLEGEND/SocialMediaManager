@@ -34,6 +34,7 @@ export default function Navigation() {
     { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
     { href: '/hunt-log', label: 'Jagdtagebuch', icon: '📋' },
     { href: '/shot-analysis', label: 'Shot Analysis', icon: '🎯' },
+    { href: '/gesellschaftsjagd', label: 'Gesellschaftsjagd', icon: '🎯' },
     { href: '/map', label: 'Karte', icon: '🗺️' },
     { href: '/reviere', label: 'Reviere', icon: '🏞️' },
     { href: '/statistics', label: 'Statistiken', icon: '📊' },
