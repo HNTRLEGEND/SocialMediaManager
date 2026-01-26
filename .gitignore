@@ -7,6 +7,7 @@ dist
 coverage
 .env
 .env.*
+!.env.example
 .DS_Store
 tmp
 .idea
@@ -14,6 +15,7 @@ tmp
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+*.tsbuildinfo
 
 # Deployment and secrets
 deployment/hetzner/.env
