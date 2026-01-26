@@ -761,8 +761,6 @@ export default function MapPage() {
               </div>
             </div>
           </div>
-            </label>
-          </div>
         </div>
 
         {/* Sidebar */}
