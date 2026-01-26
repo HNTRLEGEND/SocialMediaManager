@@ -52,6 +52,7 @@ export default function MapPage() {
   // Weather State
   const [weather, setWeather] = useState<EnhancedWeather | null>(null);
   const [showWeather, setShowWeather] = useState(true);
+  const [weatherLocation, setWeatherLocation] = useState({ lat: 50.9375, lon: 6.9603 }); // Default: Deutschland Mitte
   const [weatherConfig, setWeatherConfig] = useState<WeatherLayerConfig>({
     wind: { 
       enabled: true, 
@@ -99,11 +100,8 @@ export default function MapPage() {
   // Load weather data
   useEffect(() => {
     const loadWeather = async () => {
-      // Use current map center or default coordinates
-      const lat = 50.9375; // Example: Deutschland Mitte
-      const lon = 6.9603;
-      
-      const weatherData = await getEnhancedWeather(lat, lon);
+      // Use weather location (can be updated based on map center or GPS)
+      const weatherData = await getEnhancedWeather(weatherLocation.lat, weatherLocation.lon);
       setWeather(weatherData);
     };
 
@@ -113,7 +111,7 @@ export default function MapPage() {
     const interval = setInterval(loadWeather, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [weatherLocation]);
 
   const loadMapData = async (user: any) => {
     setLoading(true);
@@ -394,9 +392,7 @@ export default function MapPage() {
   };
 
   const handleWeatherRefresh = async () => {
-    const lat = 50.9375;
-    const lon = 6.9603;
-    const weatherData = await getEnhancedWeather(lat, lon, true);
+    const weatherData = await getEnhancedWeather(weatherLocation.lat, weatherLocation.lon, true);
     setWeather(weatherData);
   };
 

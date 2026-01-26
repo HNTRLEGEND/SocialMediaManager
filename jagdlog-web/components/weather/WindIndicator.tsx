@@ -36,12 +36,12 @@ export default function WindIndicator({ wind }: WindIndicatorProps) {
           }}
         >
           <div 
-            className="w-0 h-0 border-l-8 border-r-8 border-t-16"
             style={{
-              borderLeftColor: 'transparent',
-              borderRightColor: 'transparent',
-              borderTopColor: windColor,
-              borderTopWidth: '40px',
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: `40px solid ${windColor}`,
             }}
           />
         </div>

@@ -88,8 +88,21 @@ async function fetchFromOpenMeteo(
       current.relative_humidity_2m
     );
     
+    // Generate UUID with fallback for older browsers
+    const generateId = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      // Fallback UUID v4 generation
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+    
     const weather: EnhancedWeather = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       location: { latitude: lat, longitude: lon },
       timestamp: new Date().toISOString(),
       
@@ -180,8 +193,20 @@ export async function getWeatherForecast(
       f.precipitation.type === 'none'
     );
     
+    // Generate UUID with fallback
+    const generateId = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+    
     return {
-      id: crypto.randomUUID(),
+      id: generateId(),
       location: { latitude: lat, longitude: lon },
       forecasts,
       summary: 'Gute Bedingungen für die nächsten 3 Tage',
@@ -238,6 +263,9 @@ function calculateMoonPhase(date: Date): { phase: 'new' | 'waxing_crescent' | 'f
     'full', 'waning_gibbous', 'last_quarter', 'waning_crescent'
   ] as const;
   
+  // Note: This is an approximation based on a known new moon date
+  // For production use, consider integrating with an astronomical API
+  // or library for more accurate calculations
   const knownNewMoon = new Date('2024-01-11');
   const daysSince = Math.floor((date.getTime() - knownNewMoon.getTime()) / 86400000);
   const dayInCycle = daysSince % 29.53;
@@ -264,8 +292,20 @@ function generateMockWeather(lat: number, lon: number): EnhancedWeather {
   const randomWind = Math.random() * 360;
   const randomSpeed = Math.random() * 8 + 2;
   
+  // Generate UUID with fallback
+  const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+  
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     location: { latitude: lat, longitude: lon },
     timestamp: now.toISOString(),
     temperature: 12,
