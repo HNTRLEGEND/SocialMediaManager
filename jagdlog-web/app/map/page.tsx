@@ -8,8 +8,12 @@ import { initDatabase, now } from '@/lib/database';
 import { queueSync } from '@/lib/sync';
 import { getEnhancedWeather } from '@/lib/services/weatherService';
 import { EnhancedWeather, WeatherLayerConfig } from '@/lib/types/weather';
+import { Recommendation, HeatmapPoint } from '@/lib/types/ai';
+import { generateRecommendations, generateHeatmap } from '@/lib/services/recommendationEngine';
 import WeatherPanel from '@/components/weather/WeatherPanel';
 import WeatherOverlay from '@/components/weather/WeatherOverlay';
+import AIRecommendationsPanel from '@/components/ai/AIRecommendationsPanel';
+import HeatmapOverlay from '@/components/ai/HeatmapOverlay';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
@@ -78,6 +82,13 @@ export default function MapPage() {
     },
   });
 
+  // AI State
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
+  const [showAI, setShowAI] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [aiLoading, setAiLoading] = useState(false);
+
   useEffect(() => {
     const currentUser = auth.getCurrentUser();
     if (!currentUser) {
@@ -112,6 +123,37 @@ export default function MapPage() {
     
     return () => clearInterval(interval);
   }, [weatherLocation]);
+
+  // Load AI recommendations
+  useEffect(() => {
+    if (!selectedRevierId) return;
+    
+    const loadAIData = async () => {
+      setAiLoading(true);
+      try {
+        // Generate AI recommendations
+        const recs = await generateRecommendations(selectedRevierId);
+        setRecommendations(recs);
+        
+        // Generate heatmap
+        const heatmap = await generateHeatmap(selectedRevierId);
+        setHeatmapData(heatmap);
+        
+        console.log(`[AI] Loaded ${recs.length} recommendations and ${heatmap.length} heatmap points`);
+      } catch (error) {
+        console.error('[AI] Error loading AI data:', error);
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    loadAIData();
+    
+    // Refresh every 5 minutes
+    const interval = setInterval(loadAIData, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [selectedRevierId]);
 
   const loadMapData = async (user: any) => {
     setLoading(true);
@@ -396,6 +438,28 @@ export default function MapPage() {
     setWeather(weatherData);
   };
 
+  const handleAIRefresh = async () => {
+    if (!selectedRevierId) return;
+    
+    setAiLoading(true);
+    try {
+      const recs = await generateRecommendations(selectedRevierId);
+      setRecommendations(recs);
+      
+      const heatmap = await generateHeatmap(selectedRevierId);
+      setHeatmapData(heatmap);
+    } catch (error) {
+      console.error('[AI] Error refreshing:', error);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAIFeedback = async (recommendationId: string, helpful: boolean) => {
+    console.log(`[AI] Feedback for ${recommendationId}: ${helpful ? 'helpful' : 'not helpful'}`);
+    // TODO: Save feedback to database for future improvements
+  };
+
   // Apply both filters: Revier and Type
   const filteredFeatures = features.filter((f) => {
     // Filter by Revier if selected
@@ -607,6 +671,13 @@ export default function MapPage() {
             visible={showWeather}
           />
 
+          {/* AI Heatmap Overlay */}
+          <HeatmapOverlay 
+            heatmapData={heatmapData}
+            visible={showHeatmap && showAI}
+            opacity={0.6}
+          />
+
           {/* Weather Toggle */}
           <button
             onClick={() => setShowWeather(!showWeather)}
@@ -616,44 +687,80 @@ export default function MapPage() {
             {showWeather ? '🌦️' : '🌤️'}
           </button>
 
+          {/* AI Toggle */}
+          <button
+            onClick={() => setShowAI(!showAI)}
+            className="absolute top-4 left-20 z-10 bg-white rounded-lg shadow-lg p-3 hover:bg-gray-50"
+            title="KI-Empfehlungen ein/ausschalten"
+          >
+            {showAI ? '🤖' : '🔬'}
+          </button>
+
           {/* Layer Config Panel */}
-          <div className="absolute bottom-4 left-4 z-10 bg-white rounded-lg shadow-lg p-4">
-            <h4 className="text-sm font-bold mb-2">Wetter-Layer</h4>
+          <div className="absolute bottom-4 left-4 z-10 bg-white rounded-lg shadow-lg p-4 max-w-xs">
+            <h4 className="text-sm font-bold mb-3">🎛️ Layer-Einstellungen</h4>
             
-            <label className="flex items-center gap-2 text-sm">
-              <input 
-                type="checkbox" 
-                checked={weatherConfig.wind.enabled}
-                onChange={(e) => setWeatherConfig({
-                  ...weatherConfig,
-                  wind: { ...weatherConfig.wind, enabled: e.target.checked }
-                })}
-              />
-              Windanimation
-            </label>
-            
-            <label className="flex items-center gap-2 text-sm mt-2">
-              <input 
-                type="checkbox" 
-                checked={weatherConfig.scentCarry.enabled}
-                onChange={(e) => setWeatherConfig({
-                  ...weatherConfig,
-                  scentCarry: { ...weatherConfig.scentCarry, enabled: e.target.checked }
-                })}
-              />
-              Duftverlauf
-            </label>
-            
-            <label className="flex items-center gap-2 text-sm mt-2">
-              <input 
-                type="checkbox" 
-                checked={weatherConfig.precipitation.showWarnings}
-                onChange={(e) => setWeatherConfig({
-                  ...weatherConfig,
-                  precipitation: { ...weatherConfig.precipitation, showWarnings: e.target.checked }
-                })}
-              />
-              Unwetter-Warnungen
+            {/* Weather Section */}
+            <div className="mb-3">
+              <p className="text-xs font-semibold text-gray-600 mb-1">Wetter</p>
+              <label className="flex items-center gap-2 text-sm">
+                <input 
+                  type="checkbox" 
+                  checked={weatherConfig.wind.enabled}
+                  onChange={(e) => setWeatherConfig({
+                    ...weatherConfig,
+                    wind: { ...weatherConfig.wind, enabled: e.target.checked }
+                  })}
+                />
+                Windanimation
+              </label>
+              
+              <label className="flex items-center gap-2 text-sm mt-2">
+                <input 
+                  type="checkbox" 
+                  checked={weatherConfig.scentCarry.enabled}
+                  onChange={(e) => setWeatherConfig({
+                    ...weatherConfig,
+                    scentCarry: { ...weatherConfig.scentCarry, enabled: e.target.checked }
+                  })}
+                />
+                Duftverlauf
+              </label>
+              
+              <label className="flex items-center gap-2 text-sm mt-2">
+                <input 
+                  type="checkbox" 
+                  checked={weatherConfig.precipitation.showWarnings}
+                  onChange={(e) => setWeatherConfig({
+                    ...weatherConfig,
+                    precipitation: { ...weatherConfig.precipitation, showWarnings: e.target.checked }
+                  })}
+                />
+                Unwetter-Warnungen
+              </label>
+            </div>
+
+            {/* AI Section */}
+            <div className="border-t pt-3">
+              <p className="text-xs font-semibold text-gray-600 mb-1">KI-Features</p>
+              <label className="flex items-center gap-2 text-sm">
+                <input 
+                  type="checkbox" 
+                  checked={showHeatmap}
+                  onChange={(e) => setShowHeatmap(e.target.checked)}
+                />
+                Erfolgs-Heatmap
+              </label>
+              
+              <div className="mt-2 text-xs text-gray-500">
+                {recommendations.length > 0 ? (
+                  <>✅ {recommendations.length} KI-Empfehlungen aktiv</>
+                ) : (
+                  <>⏳ Wähle ein Revier für KI-Analyse</>
+                )}
+              </div>
+            </div>
+          </div>
             </label>
           </div>
         </div>
@@ -753,6 +860,16 @@ export default function MapPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Recommendations Panel */}
+      {showAI && (
+        <AIRecommendationsPanel
+          recommendations={recommendations}
+          loading={aiLoading}
+          onRefresh={handleAIRefresh}
+          onFeedback={handleAIFeedback}
+        />
+      )}
     </div>
   );
 }
