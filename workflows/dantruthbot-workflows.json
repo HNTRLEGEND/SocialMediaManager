@@ -1,0 +1,1505 @@
+[
+  {
+    "name": "dantruthbot - 00 Central Configuration",
+    "nodes": [
+      {
+        "parameters": {},
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "notes": "Startpunkt zur Aktualisierung globaler Konfigurationswerte"
+      },
+      {
+        "parameters": {
+          "mode": "keepKeyMatches",
+          "options": {
+            "setAllData": false
+          },
+          "values": {
+            "string": [
+              {
+                "name": "brandVoice",
+                "value": "Analytisch, vertrauenswürdig und handlungsorientiert"
+              },
+              {
+                "name": "targetAudience",
+                "value": "Entrepreneur:innen, Marketing-Teams und Tech-Enthusiast:innen"
+              },
+              {
+                "name": "defaultPlatform",
+                "value": "telegram"
+              },
+              {
+                "name": "contentCalendarSheet",
+                "value": "GOOGLE_SHEET_ID_ContentCalendar"
+              },
+              {
+                "name": "metricsSheet",
+                "value": "GOOGLE_SHEET_ID_Performance"
+              },
+              {
+                "name": "errorSheet",
+                "value": "GOOGLE_SHEET_ID_Errors"
+              }
+            ]
+          }
+        },
+        "name": "Set - Core Configuration",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 2,
+        "position": [
+          220,
+          0
+        ],
+        "notes": "Pflegt die Kernparameter und Sheet-Referenzen für alle Module"
+      },
+      {
+        "parameters": {
+          "mode": "keepKeyMatches",
+          "options": {
+            "setAllData": false
+          },
+          "values": {
+            "string": [
+              {
+                "name": "openAICredential",
+                "value": "={{$credentials.openAiApi}}"
+              },
+              {
+                "name": "telegramCredential",
+                "value": "={{$credentials.telegramApi}}"
+              },
+              {
+                "name": "googleSheetsCredential",
+                "value": "={{$credentials.googleSheetsOAuth2Api}}"
+              }
+            ]
+          }
+        },
+        "name": "Set - Credential Placeholders",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 2,
+        "position": [
+          460,
+          -80
+        ],
+        "notes": "Stellt Credential-Platzhalter für Entwickler:innen bereit"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json[\"brandVoice\"]}}",
+                "operation": "isEmpty"
+              }
+            ]
+          }
+        },
+        "name": "IF - Config Missing?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          460,
+          120
+        ],
+        "notes": "Validiert Pflichtwerte und verzweigt zu Fehlerbehandlung"
+      },
+      {
+        "parameters": {
+          "chatId": "TELEGRAM_ADMIN_CHAT_ID",
+          "text": "=⚠️ dantruthbot Konfiguration unvollständig!\nBitte prüfe brandVoice und weitere Pflichtfelder im Konfig-Workflow."
+        },
+        "name": "Telegram - Config Alert",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          700,
+          200
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Admin Bot"
+          }
+        },
+        "notes": "Benachrichtigt das Team über fehlende Einstellungen"
+      }
+    ],
+    "connections": {
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "Set - Core Configuration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set - Core Configuration": {
+        "main": [
+          [
+            {
+              "node": "Set - Credential Placeholders",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "IF - Config Missing?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Config Missing?": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Telegram - Config Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "timezone": "UTC"
+    },
+    "id": "dantruthbot-config"
+  },
+  {
+    "name": "dantruthbot - 01 Content Creation",
+    "nodes": [
+      {
+        "parameters": {
+          "triggerTimes": [
+            {
+              "hour": 7,
+              "minute": 0
+            }
+          ]
+        },
+        "name": "Cron - Daily Content",
+        "type": "n8n-nodes-base.cron",
+        "typeVersion": 2,
+        "position": [
+          0,
+          400
+        ],
+        "notes": "Löst jeden Tag um 07:00 UTC die Content-Produktion aus"
+      },
+      {
+        "parameters": {
+          "mode": "keepKeyMatches",
+          "values": {
+            "string": [
+              {
+                "name": "topics",
+                "value": "KI-Ethik, Produktivität, Automatisierung, Marketing"
+              },
+              {
+                "name": "tone",
+                "value": "Faktenbasiert, inspirierend, klar"
+              },
+              {
+                "name": "contentCalendarSheet",
+                "value": "GOOGLE_SHEET_ID_ContentCalendar"
+              }
+            ]
+          }
+        },
+        "name": "Set - Content Context",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 2,
+        "position": [
+          220,
+          400
+        ],
+        "notes": "Definiert Themen und Tonalität für die KI"
+      },
+      {
+        "parameters": {
+          "operation": "chat",
+          "model": "gpt-4.1-mini",
+          "messages": {
+            "message": [
+              {
+                "role": "system",
+                "content": "Du bist der Social-Media-Ghostwriter des AI-Agents dantruthbot."
+              },
+              {
+                "role": "user",
+                "content": "Erstelle einen kreativen Social-Media-Post in unter 80 Wörtern. Nutze den Ton: {{$json[\"tone\"]}}. Nutze eines der Themen: {{$json[\"topics\"]}}. Füge drei relevante Hashtags hinzu und einen CTA zum Kommentieren."
+              }
+            ]
+          },
+          "additionalFields": {
+            "temperature": 0.7
+          }
+        },
+        "name": "OpenAI - Generate Post",
+        "type": "n8n-nodes-base.openAi",
+        "typeVersion": 3,
+        "position": [
+          440,
+          400
+        ],
+        "credentials": {
+          "openAiApi": {
+            "name": "OpenAI Main"
+          }
+        },
+        "continueOnFail": true,
+        "notes": "Erstellt einen Post-Entwurf über die OpenAI Chat API"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json[\"error\"]}}",
+                "operation": "isEmpty"
+              }
+            ]
+          }
+        },
+        "name": "IF - OpenAI Success?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          660,
+          400
+        ],
+        "notes": "Prüft, ob der OpenAI-Call erfolgreich war"
+      },
+      {
+        "parameters": {
+          "jsCode": "const content = $json.choices?.[0]?.message?.content || '';\nreturn [{ json: {\n  Draft: content.trim(),\n  CreatedAt: new Date().toISOString(),\n  Source: 'OpenAI',\n  Status: 'Draft',\n  contentCalendarSheet: 'GOOGLE_SHEET_ID_ContentCalendar'\n}}];"
+        },
+        "name": "Code - Normalize Draft",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          340
+        ],
+        "notes": "Formatiert das OpenAI-Ergebnis und ergänzt Metadaten"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "={{$json[\"contentCalendarSheet\"] || 'GOOGLE_SHEET_ID_ContentCalendar'}}",
+          "sheetName": "Drafts",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "CreatedAt": "={{$json[\"CreatedAt\"]}}",
+              "Content": "={{$json[\"Draft\"]}}",
+              "Status": "={{$json[\"Status\"]}}",
+              "Source": "={{$json[\"Source\"]}}"
+            }
+          }
+        },
+        "name": "Google Sheets - Store Draft",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          1100,
+          340
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "name": "Google Sheets Main"
+          }
+        },
+        "notes": "Speichert den Entwurf im Content-Kalender"
+      },
+      {
+        "parameters": {
+          "chatId": "TELEGRAM_ADMIN_CHAT_ID",
+          "text": "=❗ OpenAI Content-Generierung fehlgeschlagen.\nFehler: {{$json[\"error\"][\"message\"] || 'Unbekannt'}}"
+        },
+        "name": "Telegram - Content Failure",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          880,
+          500
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Admin Bot"
+          }
+        },
+        "notes": "Alarmiert bei fehlgeschlagenen Content-Anfragen"
+      }
+    ],
+    "connections": {
+      "Cron - Daily Content": {
+        "main": [
+          [
+            {
+              "node": "Set - Content Context",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set - Content Context": {
+        "main": [
+          [
+            {
+              "node": "OpenAI - Generate Post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI - Generate Post": {
+        "main": [
+          [
+            {
+              "node": "IF - OpenAI Success?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - OpenAI Success?": {
+        "main": [
+          [
+            {
+              "node": "Code - Normalize Draft",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram - Content Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Normalize Draft": {
+        "main": [
+          [
+            {
+              "node": "Google Sheets - Store Draft",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "timezone": "UTC"
+    },
+    "id": "dantruthbot-content"
+  },
+  {
+    "name": "dantruthbot - 02 Planning & Publishing",
+    "nodes": [
+      {
+        "parameters": {
+          "triggerTimes": [
+            {
+              "hour": 8,
+              "minute": 0
+            },
+            {
+              "hour": 12,
+              "minute": 0
+            },
+            {
+              "hour": 16,
+              "minute": 0
+            }
+          ]
+        },
+        "name": "Cron - Publishing Window",
+        "type": "n8n-nodes-base.cron",
+        "typeVersion": 2,
+        "position": [
+          0,
+          920
+        ],
+        "notes": "Überprüft dreimal täglich den Veröffentlichungsplan"
+      },
+      {
+        "parameters": {
+          "operation": "read",
+          "sheetName": "Queue",
+          "documentId": "={{$json[\"contentCalendarSheet\"] || 'GOOGLE_SHEET_ID_ContentCalendar'}}",
+          "options": {
+            "returnAll": true,
+            "dataPropertyName": "queue"
+          }
+        },
+        "name": "Google Sheets - Fetch Queue",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          240,
+          920
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "name": "Google Sheets Main"
+          }
+        },
+        "notes": "Liest geplante Beiträge aus dem Content-Kalender"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $json.queue || [];\nconst now = new Date();\nreturn items\n  .filter(item => item.Status === 'Scheduled')\n  .filter(item => {\n    if (!item.ScheduledAt) return false;\n    const scheduled = new Date(item.ScheduledAt);\n    return scheduled <= now;\n  })\n  .map(item => ({ json: { ...item } }));"
+        },
+        "name": "Code - Due Posts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          920
+        ],
+        "notes": "Filtert Beiträge, deren Veröffentlichungszeit erreicht ist"
+      },
+      {
+        "parameters": {
+          "chatId": "={{$json[\"ChannelId\"] || 'TELEGRAM_CHANNEL_ID'}}",
+          "text": "={{$json[\"Content\"]}}"
+        },
+        "name": "Telegram - Publish",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          960,
+          780
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Channel Bot"
+          }
+        },
+        "continueOnFail": true,
+        "notes": "Veröffentlicht Beiträge auf Telegram"
+      },
+      {
+        "parameters": {
+          "url": "https://api.twitter.com/2/tweets",
+          "method": "POST",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "twitterOAuth2Api",
+          "sendBody": true,
+          "jsonBody": "={\"text\": $json['Content']}"
+        },
+        "name": "HTTP - Publish Twitter",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          960,
+          920
+        ],
+        "credentials": {
+          "twitterOAuth2Api": {
+            "name": "Twitter OAuth"
+          }
+        },
+        "continueOnFail": true,
+        "notes": "Optionaler Twitter-Post via OAuth2"
+      },
+      {
+        "parameters": {
+          "url": "https://graph.facebook.com/v19.0/{{IG_BUSINESS_ID}}/media",
+          "method": "POST",
+          "sendBody": true,
+          "jsonBody": "={\n  \"caption\": $json['Content'],\n  \"access_token\": 'FACEBOOK_ACCESS_TOKEN',\n  \"media_type\": 'CAROUSEL'\n}"
+        },
+        "name": "HTTP - Prepare Instagram",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          960,
+          1060
+        ],
+        "continueOnFail": true,
+        "notes": "Stellt einen Instagram-Container bereit (Platzhalter)"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json[\"error\"]}}",
+                "operation": "isEmpty"
+              }
+            ]
+          }
+        },
+        "name": "IF - Publish Success?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1180,
+          920
+        ],
+        "notes": "Bewertet die Antwort der jeweiligen Plattform"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": "={{$json[\"contentCalendarSheet\"] || 'GOOGLE_SHEET_ID_ContentCalendar'}}",
+          "sheetName": "Queue",
+          "key": "Id",
+          "updateFields": {
+            "fields": [
+              {
+                "fieldId": "Status",
+                "fieldValue": "Published"
+              },
+              {
+                "fieldId": "PublishedAt",
+                "fieldValue": "={{$now.toISO()}}"
+              }
+            ]
+          }
+        },
+        "name": "Google Sheets - Mark Published",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          1400,
+          840
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "name": "Google Sheets Main"
+          }
+        },
+        "notes": "Aktualisiert den Veröffentlichungsstatus in der Queue"
+      },
+      {
+        "parameters": {
+          "chatId": "TELEGRAM_ADMIN_CHAT_ID",
+          "text": "=🚨 Veröffentlichung fehlgeschlagen für Plattform {{$json[\"Platform\"]}}.\nBeitragstitel: {{$json[\"Title\"] || 'n/a'}}\nFehlermeldung: {{$json[\"error\"][\"message\"] || 'Unbekannt'}}"
+        },
+        "name": "Telegram - Publish Failure",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1400,
+          1020
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Admin Bot"
+          }
+        },
+        "notes": "Alarmiert bei fehlgeschlagenen Veröffentlichungen"
+      },
+      {
+        "parameters": {
+          "mode": "keepKeyMatches",
+          "values": {
+            "string": [
+              {
+                "name": "contentCalendarSheet",
+                "value": "GOOGLE_SHEET_ID_ContentCalendar"
+              }
+            ]
+          }
+        },
+        "name": "Set - Publishing Config",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 2,
+        "position": [
+          120,
+          1080
+        ],
+        "notes": "Bereitstellt globale Publishing-Parameter für Expressions"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json['Platform'] || ''}}",
+                "operation": "contains",
+                "value2": "telegram"
+              }
+            ]
+          }
+        },
+        "name": "IF - Platform Telegram?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          720,
+          860
+        ],
+        "notes": "Leitet Telegram-Inhalte an das passende Node weiter"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json['Platform'] || ''}}",
+                "operation": "contains",
+                "value2": "twitter"
+              }
+            ]
+          }
+        },
+        "name": "IF - Platform Twitter?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          720,
+          980
+        ],
+        "notes": "Leitet Twitter-Inhalte zum API-Call"
+      }
+    ],
+    "connections": {
+      "Cron - Publishing Window": {
+        "main": [
+          [
+            {
+              "node": "Set - Publishing Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Sheets - Fetch Queue": {
+        "main": [
+          [
+            {
+              "node": "Code - Due Posts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Due Posts": {
+        "main": [
+          [
+            {
+              "node": "IF - Platform Telegram?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram - Publish": {
+        "main": [
+          [
+            {
+              "node": "IF - Publish Success?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP - Publish Twitter": {
+        "main": [
+          [
+            {
+              "node": "IF - Publish Success?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP - Prepare Instagram": {
+        "main": [
+          [
+            {
+              "node": "IF - Publish Success?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Publish Success?": {
+        "main": [
+          [
+            {
+              "node": "Google Sheets - Mark Published",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram - Publish Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set - Publishing Config": {
+        "main": [
+          [
+            {
+              "node": "Google Sheets - Fetch Queue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Platform Telegram?": {
+        "main": [
+          [
+            {
+              "node": "Telegram - Publish",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF - Platform Twitter?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Platform Twitter?": {
+        "main": [
+          [
+            {
+              "node": "HTTP - Publish Twitter",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP - Prepare Instagram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "timezone": "UTC"
+    },
+    "id": "dantruthbot-publishing"
+  },
+  {
+    "name": "dantruthbot - 03 Community Interaction",
+    "nodes": [
+      {
+        "parameters": {
+          "updates": [
+            "message"
+          ],
+          "additionalFields": {
+            "allowed_updates": "message"
+          }
+        },
+        "name": "Telegram Trigger - Inbox",
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          1480
+        ],
+        "webhookId": "dantruthbot_community",
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Inbox Bot"
+          }
+        },
+        "notes": "Empfängt eingehende Nachrichten für dantruthbot"
+      },
+      {
+        "parameters": {
+          "mode": "keepKeyMatches",
+          "values": {
+            "string": [
+              {
+                "name": "fallbackReply",
+                "value": "Danke für deine Nachricht! Unser Team meldet sich bald."
+              },
+              {
+                "name": "keywords",
+                "value": "pricing,support,automations"
+              }
+            ]
+          }
+        },
+        "name": "Set - Interaction Settings",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 2,
+        "position": [
+          240,
+          1480
+        ],
+        "notes": "Konfiguriert automatische Antwortregeln"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json[\"message\"][\"text\"] || ''}}",
+                "operation": "regex",
+                "value2": "(?i)(pricing|kosten|preis)"
+              }
+            ]
+          }
+        },
+        "name": "IF - Pricing Intent?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          460,
+          1380
+        ],
+        "notes": "Erkennt Preisanfragen"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json[\"message\"][\"text\"] || ''}}",
+                "operation": "regex",
+                "value2": "(?i)(support|hilfe|problem)"
+              }
+            ]
+          }
+        },
+        "name": "IF - Support Intent?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          460,
+          1580
+        ],
+        "notes": "Erkennt Supportanfragen"
+      },
+      {
+        "parameters": {
+          "chatId": "={{$json[\"message\"][\"chat\"][\"id\"]}}",
+          "text": "=🚀 Unsere aktuellen Pakete findest du hier: https://dantruthbot.ai/pricing\nSag Bescheid, wenn du Fragen hast!"
+        },
+        "name": "Telegram - Pricing Reply",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          700,
+          1340
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Inbox Bot"
+          }
+        },
+        "notes": "Automatische Antwort auf Preisfragen"
+      },
+      {
+        "parameters": {
+          "operation": "chat",
+          "model": "gpt-4.1-mini",
+          "messages": {
+            "message": [
+              {
+                "role": "system",
+                "content": "Du unterstützt als Social Media Agent dantruthbot und beantwortest Nutzerfragen freundlich und präzise."
+              },
+              {
+                "role": "user",
+                "content": "={{$json[\"message\"][\"text\"] || ''}}"
+              }
+            ]
+          },
+          "additionalFields": {
+            "temperature": 0.3
+          }
+        },
+        "name": "OpenAI - Draft Reply",
+        "type": "n8n-nodes-base.openAi",
+        "typeVersion": 3,
+        "position": [
+          700,
+          1580
+        ],
+        "credentials": {
+          "openAiApi": {
+            "name": "OpenAI Main"
+          }
+        },
+        "continueOnFail": true,
+        "notes": "KI-Antwort für allgemeine Nachrichten"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json[\"error\"]}}",
+                "operation": "isEmpty"
+              }
+            ]
+          }
+        },
+        "name": "IF - AI Reply Success?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          920,
+          1580
+        ],
+        "notes": "Validiert die Antwort der OpenAI-API"
+      },
+      {
+        "parameters": {
+          "chatId": "={{$json[\"message\"][\"chat\"][\"id\"]}}",
+          "text": "={{$json[\"choices\"][0][\"message\"][\"content\"] || $json[\"fallbackReply\"]}}"
+        },
+        "name": "Telegram - Send AI Reply",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1140,
+          1500
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Inbox Bot"
+          }
+        },
+        "notes": "Sendet KI-generierte Antworten an Nutzer"
+      },
+      {
+        "parameters": {
+          "chatId": "TELEGRAM_ADMIN_CHAT_ID",
+          "text": "=⚠️ Community-Antwort fehlgeschlagen. Nachricht: {{$json[\"message\"][\"text\"] || 'n/a'}}\nFehler: {{$json[\"error\"][\"message\"] || 'Unbekannt'}}"
+        },
+        "name": "Telegram - Reply Failure",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1140,
+          1660
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Admin Bot"
+          }
+        },
+        "notes": "Informiert das Team bei fehlgeschlagenen KI-Antworten"
+      }
+    ],
+    "connections": {
+      "Telegram Trigger - Inbox": {
+        "main": [
+          [
+            {
+              "node": "Set - Interaction Settings",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set - Interaction Settings": {
+        "main": [
+          [
+            {
+              "node": "IF - Pricing Intent?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "IF - Support Intent?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Pricing Intent?": {
+        "main": [
+          [
+            {
+              "node": "Telegram - Pricing Reply",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF - Support Intent?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Support Intent?": {
+        "main": [
+          [
+            {
+              "node": "OpenAI - Draft Reply",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OpenAI - Draft Reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI - Draft Reply": {
+        "main": [
+          [
+            {
+              "node": "IF - AI Reply Success?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - AI Reply Success?": {
+        "main": [
+          [
+            {
+              "node": "Telegram - Send AI Reply",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram - Reply Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "UTC"
+    },
+    "id": "dantruthbot-community"
+  },
+  {
+    "name": "dantruthbot - 04 Performance Analysis",
+    "nodes": [
+      {
+        "parameters": {
+          "triggerTimes": [
+            {
+              "hour": 20,
+              "minute": 0
+            }
+          ]
+        },
+        "name": "Cron - Daily Analytics",
+        "type": "n8n-nodes-base.cron",
+        "typeVersion": 2,
+        "position": [
+          0,
+          2080
+        ],
+        "notes": "Startet die tägliche Performance-Auswertung um 20:00 UTC"
+      },
+      {
+        "parameters": {
+          "mode": "keepKeyMatches",
+          "values": {
+            "string": [
+              {
+                "name": "accounts",
+                "value": "telegram:CHANNEL_ID,twitter:ACCOUNT_ID,instagram:IG_BUSINESS_ID"
+              },
+              {
+                "name": "metricsSheet",
+                "value": "GOOGLE_SHEET_ID_Performance"
+              }
+            ]
+          }
+        },
+        "name": "Set - Analytics Context",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 2,
+        "position": [
+          240,
+          2080
+        ],
+        "notes": "Definiert die zu analysierenden Kanäle"
+      },
+      {
+        "parameters": {
+          "url": "https://api.socialmetrics.example/v1/performance",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "accounts",
+                "value": "={{$json[\"accounts\"]}}"
+              },
+              {
+                "name": "range",
+                "value": "24h"
+              }
+            ]
+          }
+        },
+        "name": "HTTP - Fetch Metrics",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          460,
+          2080
+        ],
+        "continueOnFail": true,
+        "notes": "Ruft aggregierte Performance-Kennzahlen ab (Platzhalter-API)"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json[\"error\"]}}",
+                "operation": "isEmpty"
+              }
+            ]
+          }
+        },
+        "name": "IF - Metrics Success?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          680,
+          2080
+        ],
+        "notes": "Überprüft die API-Antwort auf Fehler"
+      },
+      {
+        "parameters": {
+          "jsCode": "const metrics = $json.data || [];\nreturn metrics.map(entry => ({ json: {\n  Platform: entry.platform,\n  Posts: entry.posts,\n  Likes: entry.likes,\n  Comments: entry.comments,\n  Shares: entry.shares,\n  PeriodStart: entry.periodStart,\n  PeriodEnd: entry.periodEnd,\n  metricsSheet: 'GOOGLE_SHEET_ID_Performance'\n}}));"
+        },
+        "name": "Code - Normalize Metrics",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          900,
+          2020
+        ],
+        "notes": "Bereitet Metriken für Google Sheets auf"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "={{$json[\"metricsSheet\"] || 'GOOGLE_SHEET_ID_Performance'}}",
+          "sheetName": "Daily",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Platform": "={{$json[\"Platform\"]}}",
+              "Posts": "={{$json[\"Posts\"]}}",
+              "Likes": "={{$json[\"Likes\"]}}",
+              "Comments": "={{$json[\"Comments\"]}}",
+              "Shares": "={{$json[\"Shares\"]}}",
+              "PeriodStart": "={{$json[\"PeriodStart\"]}}",
+              "PeriodEnd": "={{$json[\"PeriodEnd\"]}}"
+            }
+          }
+        },
+        "name": "Google Sheets - Log Metrics",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          1120,
+          2020
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "name": "Google Sheets Main"
+          }
+        },
+        "notes": "Schreibt Performance-Daten in Google Sheets"
+      },
+      {
+        "parameters": {
+          "chatId": "TELEGRAM_ADMIN_CHAT_ID",
+          "text": "=📈 Analyse erfolgreich abgeschlossen. Verarbeitete Plattformen: {{$json[\"Platform\"]}}"
+        },
+        "name": "Telegram - Analysis Summary",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1340,
+          2020
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Admin Bot"
+          }
+        },
+        "notes": "Informiert das Team über neue Analysen"
+      },
+      {
+        "parameters": {
+          "chatId": "TELEGRAM_ADMIN_CHAT_ID",
+          "text": "=❗ Performance-API-Call fehlgeschlagen. Fehler: {{$json[\"error\"][\"message\"] || 'Unbekannt'}}"
+        },
+        "name": "Telegram - Metrics Failure",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          900,
+          2140
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Admin Bot"
+          }
+        },
+        "notes": "Sendet einen Alarm bei fehlgeschlagenen Analysen"
+      }
+    ],
+    "connections": {
+      "Cron - Daily Analytics": {
+        "main": [
+          [
+            {
+              "node": "Set - Analytics Context",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set - Analytics Context": {
+        "main": [
+          [
+            {
+              "node": "HTTP - Fetch Metrics",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP - Fetch Metrics": {
+        "main": [
+          [
+            {
+              "node": "IF - Metrics Success?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Metrics Success?": {
+        "main": [
+          [
+            {
+              "node": "Code - Normalize Metrics",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram - Metrics Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Normalize Metrics": {
+        "main": [
+          [
+            {
+              "node": "Google Sheets - Log Metrics",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Sheets - Log Metrics": {
+        "main": [
+          [
+            {
+              "node": "Telegram - Analysis Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "timezone": "UTC"
+    },
+    "id": "dantruthbot-analytics"
+  },
+  {
+    "name": "dantruthbot - 05 Error & Log Handling",
+    "nodes": [
+      {
+        "parameters": {},
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          2640
+        ],
+        "notes": "Reagiert auf Fehler in allen dantruthbot-Workflows"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "={{$json[\"errorSheet\"] || 'GOOGLE_SHEET_ID_Errors'}}",
+          "sheetName": "Errors",
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Timestamp": "={{$now.toISO()}}",
+              "Workflow": "={{$json[\"workflow\"][\"name\"]}}",
+              "Node": "={{$json[\"error\"][\"node\"][\"name\"]}}",
+              "Message": "={{$json[\"error\"][\"message\"]}}",
+              "ExecutionId": "={{$json[\"execution\"][\"id\"]}}"
+            }
+          }
+        },
+        "name": "Google Sheets - Log Error",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          240,
+          2600
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "name": "Google Sheets Main"
+          }
+        },
+        "notes": "Speichert Fehler in einem zentralen Log"
+      },
+      {
+        "parameters": {
+          "chatId": "TELEGRAM_ADMIN_CHAT_ID",
+          "text": "=🚨 Fehler in Workflow {{$json[\"workflow\"][\"name\"]}}\nNode: {{$json[\"error\"][\"node\"][\"name\"]}}\nMeldung: {{$json[\"error\"][\"message\"]}}"
+        },
+        "name": "Telegram - Error Alert",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          240,
+          2720
+        ],
+        "credentials": {
+          "telegramApi": {
+            "name": "Telegram Admin Bot"
+          }
+        },
+        "notes": "Sendet detaillierte Fehlerbenachrichtigungen"
+      },
+      {
+        "parameters": {
+          "mode": "keepKeyMatches",
+          "values": {
+            "string": [
+              {
+                "name": "errorSheet",
+                "value": "GOOGLE_SHEET_ID_Errors"
+              }
+            ]
+          }
+        },
+        "name": "Set - Error Sheet",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 2,
+        "position": [
+          160,
+          2680
+        ],
+        "notes": "Hält den Sheet-Platzhalter für Fehlerprotokolle bereit"
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Set - Error Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set - Error Sheet": {
+        "main": [
+          [
+            {
+              "node": "Google Sheets - Log Error",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Telegram - Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "timezone": "UTC"
+    },
+    "id": "dantruthbot-errors"
+  }
+]
